@@ -1,4 +1,4 @@
-namespace Dococo.Util.Text {
+namespace Dodoco.Util.Text {
 
     public static class StringUtil {
 

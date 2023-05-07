@@ -2,7 +2,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using System.Reflection;
-using Dococo.Util.Log;
+using Dodoco.Util.Log;
 
 namespace Dodoco.Application {
 
@@ -148,7 +148,7 @@ namespace Dodoco.Application {
 
             Logger.GetInstance().Log($"Application finished with exit code {exitCode} {(exitCode == 0 ? "(Success)" : "(Error)" )}");
 
-            Console.WriteLine(Dococo.Util.Log.Logger.GetInstance().GetFullLogText());
+            Console.WriteLine(Dodoco.Util.Log.Logger.GetInstance().GetFullLogText());
             System.Environment.Exit(exitCode);
 
         }

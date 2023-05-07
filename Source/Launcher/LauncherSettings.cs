@@ -1,4 +1,4 @@
-using Dococo.Util.Log;
+using Dodoco.Util.Log;
 
 namespace Dodoco.Launcher {
 

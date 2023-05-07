@@ -2,7 +2,7 @@ using System.Reflection;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 
-namespace Dococo.Util.Log {
+namespace Dodoco.Util.Log {
 
     public sealed class Logger {
 
@@ -22,11 +22,11 @@ namespace Dococo.Util.Log {
 
         private Logger() {
 
-            Dodoco.Controller.ServerSentEvents.RegisterEvent("Dococo.Util.Log.Logger.GetLastLogJson", () => {
+            Dodoco.Controller.ServerSentEvents.RegisterEvent("Dodoco.Util.Log.Logger.GetLastLogJson", () => {
 
                 return new Dodoco.HTTP.SSE.Event {
 
-                    eventName = "Dococo.Util.Log.Logger.GetLastLogJson",
+                    eventName = "Dodoco.Util.Log.Logger.GetLastLogJson",
                     data = GetLastLogJson()
                     
                 };
@@ -171,19 +171,19 @@ namespace Dococo.Util.Log {
 
             }
 
-            return Dococo.Util.Text.StringUtil.StringToUTF8(String.Join("\n", fullLog.ToArray()));
+            return Dodoco.Util.Text.StringUtil.StringToUTF8(String.Join("\n", fullLog.ToArray()));
 
         }
 
         public string GetFullLogJson() {
 
-            return Dococo.Util.Text.StringUtil.StringToUTF8(JsonSerializer.Serialize<List<LogEntry>>(logEntries));
+            return Dodoco.Util.Text.StringUtil.StringToUTF8(JsonSerializer.Serialize<List<LogEntry>>(logEntries));
 
         }
 
         public string GetLastLogJson() {
 
-            return Dococo.Util.Text.StringUtil.StringToUTF8(JsonSerializer.Serialize<LogEntry>(logEntries.Last()));
+            return Dodoco.Util.Text.StringUtil.StringToUTF8(JsonSerializer.Serialize<LogEntry>(logEntries.Last()));
 
         }
 

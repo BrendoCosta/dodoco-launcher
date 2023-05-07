@@ -10,8 +10,8 @@ namespace Dodoco.Controller {
             context.Response.ContentType = Grapevine.ContentType.Json;
 
             await context.Response.SendResponseAsync(
-                Dococo.Util.Text.StringUtil.UTF8StringToUTF8Bytes(
-                    Dococo.Util.Log.Logger.GetInstance().GetFullLogJson()
+                Dodoco.Util.Text.StringUtil.UTF8StringToUTF8Bytes(
+                    Dodoco.Util.Log.Logger.GetInstance().GetFullLogJson()
                 )
             );
             

@@ -27,7 +27,7 @@ namespace Dodoco.HTTP.SSE {
 
             if (this.context != null) {
 
-                byte[] txt = Dococo.Util.Text.StringUtil.UTF8StringToUTF8Bytes(_event.ToString());
+                byte[] txt = Dodoco.Util.Text.StringUtil.UTF8StringToUTF8Bytes(_event.ToString());
 
                 await this.context.Response.OutputStream.WriteAsync(txt, 0, txt.Length);
 

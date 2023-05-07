@@ -9,7 +9,7 @@
 
     onMount(async () => {
 
-		DodocoSSE.addEventListener("Dococo.Util.Log.Logger.GetLastLogJson", (event: MessageEvent<string>) => {
+		DodocoSSE.addEventListener("Dodoco.Util.Log.Logger.GetLastLogJson", (event: MessageEvent<string>) => {
 
             let data: LogEntry = JSON.parse(event.data);
             logMessage = data.message;

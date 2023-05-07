@@ -1,4 +1,4 @@
-using Dococo.Util.Log;
+using Dodoco.Util.Log;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using Dodoco.Application;

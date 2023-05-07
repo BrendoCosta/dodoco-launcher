@@ -1,4 +1,4 @@
-namespace Dococo.Util.Log {
+namespace Dodoco.Util.Log {
 
     public class LogEntry {
 
