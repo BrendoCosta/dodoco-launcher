@@ -14,7 +14,6 @@ namespace Dodoco.Launcher {
 
         private PhotinoNET.PhotinoWindow? window = null;
         private Thread? windowThread;
-        private bool running = false;
         public static LauncherExecutionState executionState { get; private set; } = LauncherExecutionState.UNINITIALIZED;
         public static LauncherActivityState activityState { get; private set; } = LauncherActivityState.UNREADY;
         public static LauncherSettings settings = new LauncherSettings();
