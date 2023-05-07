@@ -1,3 +1,4 @@
+using Dodoco.Game;
 using Dodoco.Util.Log;
 
 namespace Dodoco.Launcher {
@@ -24,17 +25,17 @@ namespace Dodoco.Launcher {
 
         public record Game {
 
-            public string server = "global";
+            public GameServer server = GameServer.global;
             public string installation_path = Path.Join(LauncherConstants.LAUNCHER_HOME_DIRECTORY, "game");
 
         }
 
         public record Api {
 
-            public Dictionary<string, CompanyApi> company = new Dictionary<string, CompanyApi> {
+            public Dictionary<GameServer, CompanyApi> company = new Dictionary<GameServer, CompanyApi> {
 
-                { "global", new CompanyApi() },
-                { "chinese", new CompanyApi {
+                { GameServer.global, new CompanyApi() },
+                { GameServer.chinese, new CompanyApi {
 
                     url = System.Text.Encoding.UTF8.GetString(Convert.FromBase64String("aHR0cHM6Ly9zZGstc3RhdGljLm1paG95by5jb20vaGs0ZV9jbi9tZGsvbGF1bmNoZXIvYXBp")),
                     key = System.Text.Encoding.UTF8.GetString(Convert.FromBase64String("ZVlkODlKbUo=")),
