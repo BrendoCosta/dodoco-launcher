@@ -13,7 +13,6 @@ namespace Dodoco.Application {
         public int port { get; private set; } = ApplicationConstants.DEFAULT_APPLICATION_TCP_PORT;
         private static Application? instance = null;
         public string title { get; private set; }
-        public string identifier { get; private set; }
         public string version { get; private set; }
         public string company { get; private set; }
         public string description { get; private set; }
@@ -31,21 +30,7 @@ namespace Dodoco.Application {
 
         private Application() {
 
-            this.LoadAssemblyMetadata();
-            
-            Logger.GetInstance().Log($"{this.title} - {this.company}");
-            Logger.GetInstance().Log($"Version: {this.version} ({this.description})");
-            Logger.GetInstance().Log($"Identifier: {this.identifier}");
-            Logger.GetInstance().Log("Starting application...");
-
-            this.StartServer();
-            this.StartClient();
-
-            Logger.GetInstance().Log("Successfully started application");
-
-        }
-
-        public void LoadAssemblyMetadata() {
+            // Loads assembly metadata
 
             AssemblyProductAttribute? productAttribute         = (AssemblyProductAttribute?) Attribute.GetCustomAttribute(System.Reflection.Assembly.GetExecutingAssembly(), typeof(System.Reflection.AssemblyProductAttribute), false);
             AssemblyTitleAttribute? titleAttribute             = (AssemblyTitleAttribute?) Attribute.GetCustomAttribute(System.Reflection.Assembly.GetExecutingAssembly(), typeof(System.Reflection.AssemblyTitleAttribute), false);
@@ -54,10 +39,19 @@ namespace Dodoco.Application {
             AssemblyDescriptionAttribute? descriptionAttribute = (AssemblyDescriptionAttribute?) Attribute.GetCustomAttribute(System.Reflection.Assembly.GetExecutingAssembly(), typeof(System.Reflection.AssemblyDescriptionAttribute), false);
 
             this.title = productAttribute?.Product ?? "[Assembly product attribute not found]";
-            this.identifier = titleAttribute?.Title ?? "dodoco-launcher";
             this.version = fileVersionAttribute?.Version ?? "[Assembly file version attribute not found]";
             this.company = companyAttribute?.Company ?? "[Assembly company attribute not found]";
             this.description = descriptionAttribute?.Description ?? "[Assembly description attribute not found]";
+            
+            Logger.GetInstance().Log($"{this.title} - {this.company}");
+            Logger.GetInstance().Log($"Version: {this.version} ({this.description})");
+            Logger.GetInstance().Log($"Identifier: {ApplicationConstants.DEFAULT_APPLICATION_IDENTIFIER}");
+            Logger.GetInstance().Log("Starting application...");
+
+            this.StartServer();
+            this.StartClient();
+
+            Logger.GetInstance().Log("Successfully started application");
 
         }
 
