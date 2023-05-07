@@ -1,0 +1,3 @@
+[submodule "Web/Modules/i18next-parser"]
+	path = Web/Modules/i18next-parser
+	url = https://github.com/BrendoCosta/i18next-parser.git
