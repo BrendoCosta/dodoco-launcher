@@ -1,8 +1,11 @@
+using Dodoco.Api.Company;
+using Dodoco.Api.Company.Launcher.Resource;
+using Dodoco.Application;
 using Dodoco.Util.Log;
+using Dodoco.Game;
+
 using System.Text.Json;
 using System.Text.Json.Serialization;
-using Dodoco.Application;
-using Dodoco.Api.Company.Launcher.Resource;
 
 namespace Dodoco.Launcher {
 
@@ -17,7 +20,7 @@ namespace Dodoco.Launcher {
         public static LauncherExecutionState executionState { get; private set; } = LauncherExecutionState.UNINITIALIZED;
         public static LauncherActivityState activityState { get; private set; } = LauncherActivityState.UNREADY;
         public static LauncherSettings settings = new LauncherSettings();
-        public Resource launcherResource { get; private set; } = new Resource();
+        public Resource launcherResource { get; private set; }
         public static JsonSerializerOptions jsonOptions = new JsonSerializerOptions() {
             NumberHandling = JsonNumberHandling.AllowReadingFromString
         };
@@ -69,9 +72,15 @@ namespace Dodoco.Launcher {
 
         private void ManageSettings() {
 
-            if (!settings.SearchSettingsFile())
-                if (!settings.WriteDefaultSettings())
+            if (!settings.SearchSettingsFile()) {
+                
+                if (!settings.WriteDefaultSettings()) {
+
                     return;
+
+                }
+
+            }
 
             settings = settings.LoadSettings();
 
@@ -107,7 +116,7 @@ namespace Dodoco.Launcher {
                 this.window.RegisterWindowCreatingHandler(new EventHandler((object? sender, EventArgs e) => Logger.GetInstance().Log("Creating launcher's window...") ));
                 this.window.RegisterWindowCreatedHandler(new EventHandler((object? sender, EventArgs e) => Logger.GetInstance().Log("Successfully created launcher's window") ));
                 //this.window.RegisterWindowCreatedHandler(new EventHandler((object? sender, EventArgs e) => Task.Run(async () => { await Task.Delay(3000); this.SearchSettings(); return; }) ));
-                this.window.RegisterWindowCreatedHandler(new EventHandler((object? sender, EventArgs e) => this.Main() ));
+                this.window.RegisterWindowCreatedHandler(new EventHandler(async (object? sender, EventArgs e) => await this.Main() ));
                 this.window.RegisterWindowClosingHandler(new PhotinoNET.PhotinoWindow.NetClosingDelegate((object sender, EventArgs e) => {
             
                     Logger.GetInstance().Log("Closing launcher's window...");
@@ -133,36 +142,64 @@ namespace Dodoco.Launcher {
 
         private async Task Main() {
 
-            Logger.GetInstance().Log("STARTING MAIN");
+            try {
 
-            this.UpdateActivityState(LauncherActivityState.FETCHING_LAUNCHER_SETTINGS);
-            this.ManageSettings();
-            this.UpdateActivityState(LauncherActivityState.FETCHING_WEB_DATA);
-            await this.FetchResource();
+                this.UpdateActivityState(LauncherActivityState.FETCHING_LAUNCHER_SETTINGS);
+                this.ManageSettings();
 
-            // @TODO: compare fetched version with installed game's version
+                Logger.GetInstance().Log($"Fetching APIs...");
+                this.UpdateActivityState(LauncherActivityState.FETCHING_WEB_DATA);
 
-        }
+                CompanyApiFactory factory = new CompanyApiFactory(
+                    settings.api.company[settings.game.server].url,
+                    settings.api.company[settings.game.server].key,
+                    settings.api.company[settings.game.server].launcher_id
+                );
 
-        private async Task FetchResource() {
+                launcherResource = await factory.FetchLauncherResource();
 
-            string urlToFetch = $"{settings.api.company[settings.game.server].url}/resource?key={settings.api.company[settings.game.server].key}&launcher_id={settings.api.company[settings.game.server].launcher_id}";
-            Logger.GetInstance().Log($"Trying to fetch latest game's launcher's resource data from remote servers ({urlToFetch})...");
-            
-            HttpResponseMessage response = await Application.Application.GetInstance().client.GetAsync(urlToFetch);
-            
-            if (response.IsSuccessStatusCode) {
+                Logger.GetInstance().Log($"Finished fetching APIs");
 
-                Logger.GetInstance().Log("Successfully fetch latest game's launcher's resource data from remote servers");
+                /*
+                 *
+                */
 
-                Logger.GetInstance().Log("Trying to parse the received data...");
-                try { launcherResource = JsonSerializer.Deserialize<Resource>(await response.Content.ReadAsStringAsync(), jsonOptions); }
-                catch (JsonException e) { Logger.GetInstance().Error("Failed to parse latest game's launcher's resource data. Maybe the API has been changed.", e); }
-                Logger.GetInstance().Log("Successfully parsed the received data");
+                if (launcherResource.IsSuccessfull()) {
 
-            } else {
+                    Game.Stable.Game.GetInstance().version = Version.Parse(launcherResource.data.game.latest.version);
 
-                Logger.GetInstance().Error($"Failed to fetch latest game's launcher's resource data from remote servers (received HTTP status code {response.StatusCode})");
+                }
+
+                /*
+                 *
+                */
+
+                if (!GameInstallationManager.CheckGameInstallation(settings.game.installation_path, settings.game.server)) {
+
+                    // TODO: download game
+                    this.UpdateActivityState(LauncherActivityState.NEEDS_GAME_DOWNLOAD);
+
+                } else {
+
+                    Version installedGameVersion = GameInstallationManager.SearchForGameVersion(settings.game.installation_path, settings.game.server);
+                    Version remoteGameVersion = Version.Parse(launcherResource.data.game.latest.version);
+
+                    if (remoteGameVersion > installedGameVersion) {
+
+                        // TODO: update game
+                        this.UpdateActivityState(LauncherActivityState.NEEDS_GAME_UPDATE);
+
+                    } else {
+
+                        this.UpdateActivityState(LauncherActivityState.READY_TO_PLAY);
+
+                    }
+
+                }
+
+            } catch (Exception e) {
+
+                Logger.GetInstance().Error($"A fatal erro occurred", e);
 
             }
 
@@ -236,14 +273,14 @@ namespace Dodoco.Launcher {
 
         private void UpdateExecutionState(LauncherExecutionState newState) {
 
-            Logger.GetInstance().Log($"Updating launcher's execution state from {executionState.ToString()} to {newState.ToString()}");
+            Logger.GetInstance().Debug($"Updating launcher's execution state from {executionState.ToString()} to {newState.ToString()}");
             executionState = newState;
 
         }
 
         private void UpdateActivityState(LauncherActivityState newState) {
 
-            Logger.GetInstance().Log($"Updating launcher's activity state from {activityState.ToString()} to {newState.ToString()}");
+            Logger.GetInstance().Debug($"Updating launcher's activity state from {activityState.ToString()} to {newState.ToString()}");
             activityState = newState;
 
         }
