@@ -91,23 +91,7 @@ namespace Dodoco.Util.Log {
 
         private void Write(LogType type, string method, string message, System.Exception? exception) {
 
-            if (exception != null) {
-
-                logEntries.Add(new LogEntry(type, $"{message}: {exception.Message}", method));
-                this.Debug(@$"
-                ================== DEBUG START ==================
-                EXCEPTION TYPE: {exception.GetType().ToString()}
-                EXCEPTION MESSAGE: {exception.Message}
-                STACK TRACE: {exception.StackTrace}
-                ================== DEBUG END ==================");
-                
-                //logEntries.Add(new LogEntry(type, $"{message}\nException type:\n{exception.GetType().ToString()}\nException message:\n{exception.Message}\n{exception.StackTrace}", method));
-
-            } else {
-
-                logEntries.Add(new LogEntry(type, message, method));
-
-            }
+            logEntries.Add(new LogEntry(type, message, method));
             
             ConsoleColor color = ConsoleColor.Gray;
 
@@ -129,8 +113,29 @@ namespace Dodoco.Util.Log {
             }
             
             Console.ForegroundColor = color;
-            
             Console.WriteLine($"{logEntries.Last().prependMessage} {logEntries.Last().message}");
+            Console.ForegroundColor = ConsoleColor.Gray;
+
+            // Log exceptions and inner exceptions
+
+            if (exception != null) {
+
+                Exception? e = exception;
+                
+                this.Debug($"=========== DEBUG START ===========");
+
+                while (e != null) {
+
+                    this.Debug($"EXCEPTION MESSAGE: {e.Message}");
+                    this.Debug($"EXCEPTION TYPE: {e.GetType().ToString()}");
+                    this.Debug($"EXCEPTION STRACK TRACE: {e.StackTrace}");
+                    e = e.InnerException ?? null;
+
+                }
+
+                this.Debug($"===========  DEBUG END  ===========");
+
+            }
 
         }
 
