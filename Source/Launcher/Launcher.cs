@@ -1,5 +1,8 @@
 using Dococo.Util.Log;
 using System.Text.Json;
+using System.Text.Json.Serialization;
+using Dodoco.Application;
+using Dodoco.Api.Company.Launcher.Resource;
 
 namespace Dodoco.Launcher {
 
@@ -15,6 +18,10 @@ namespace Dodoco.Launcher {
         public static LauncherExecutionState executionState { get; private set; } = LauncherExecutionState.UNINITIALIZED;
         public static LauncherActivityState activityState { get; private set; } = LauncherActivityState.UNREADY;
         public static LauncherSettings settings = new LauncherSettings();
+        public Resource launcherResource { get; private set; } = new Resource();
+        public static JsonSerializerOptions jsonOptions = new JsonSerializerOptions() {
+            NumberHandling = JsonNumberHandling.AllowReadingFromString
+        };
 
         public static Launcher GetInstance() {
 
@@ -61,151 +68,13 @@ namespace Dodoco.Launcher {
 
         }
 
-        private void SearchSettings() {
+        private void ManageSettings() {
 
-            Logger.GetInstance().Log($"Trying to find launcher's settings directory ({LauncherConstants.LAUNCHER_HOME_DIRECTORY})...");
-            
-            if (Directory.Exists(LauncherConstants.LAUNCHER_HOME_DIRECTORY)) {
+            if (!settings.SearchSettingsFile())
+                if (!settings.WriteDefaultSettings())
+                    return;
 
-                Logger.GetInstance().Log("Successfully found launcher's settings directory");
-                Logger.GetInstance().Log($"Trying to find launcher's settings file ({Path.Join(LauncherConstants.LAUNCHER_HOME_DIRECTORY, LauncherConstants.LAUNCHER_SETTINGS_FILENAME)})...");
-
-                if (File.Exists(Path.Join(LauncherConstants.LAUNCHER_HOME_DIRECTORY, LauncherConstants.LAUNCHER_SETTINGS_FILENAME))) {
-
-                    Logger.GetInstance().Log("Successfully found launcher's settings file");
-
-                } else {
-
-                    Logger.GetInstance().Warning("Unable to find launcher's settings file. Will be assumed as first time initialization");
-                    this.WriteDefaultSettings();
-
-                }
-
-            } else {
-
-                Logger.GetInstance().Warning("Unable to find launcher's settings directory. Will be assumed as first time initialization");
-                this.WriteDefaultSettings();
-
-            }
-
-            this.ReadSettings();
-
-        }
-
-        private void ReadSettings() {
-
-            string fullFilePath = Path.Join(LauncherConstants.LAUNCHER_HOME_DIRECTORY, LauncherConstants.LAUNCHER_SETTINGS_FILENAME);
-
-            Logger.GetInstance().Log("Reading launcher's settings from settings file...");
-            string settingsText = "";
-
-            try {
-
-                settingsText = File.ReadAllText(fullFilePath, System.Text.Encoding.UTF8);
-                Logger.GetInstance().Log("Succesfully read launcher's settings from settings file");
-                
-
-            } catch (Exception e) {
-
-                Logger.GetInstance().Error("Failed to read launcher's settings from settings file", e);
-                Dodoco.Application.Application.GetInstance().End(1);
-
-            }
-
-            Logger.GetInstance().Log("Parsing and loading launcher's settings...");
-            bool parsingSuccess = false;
-
-            try {
-
-                YamlDotNet.Serialization.IDeserializer des = new YamlDotNet.Serialization.DeserializerBuilder().IgnoreUnmatchedProperties().Build();
-                settings = des.Deserialize<LauncherSettings>(settingsText);
-                Logger.GetInstance().Log("Successfully parsed and loaded launcher's settings");
-                Logger.GetInstance().Log(settings.api.company["global"].url);
-                parsingSuccess = true;
-
-            } catch (Exception e) {
-
-                Logger.GetInstance().Error("Failed to parse and load launcher's settings", e);
-                Dodoco.Application.Application.GetInstance().End(1);
-
-            }
-
-            //System.Security.Cryptography.MD5 md5Hash = System.Security.Cryptography.MD5.Create();
-            //byte[] data = md5Hash.ComputeHash(System.Text.Encoding.UTF8.GetBytes("Hellow world"));
-            //Logger.GetInstance().Debug(System.Convert.ToHexString(data));
-
-        }
-
-        private void WriteDefaultSettings() {
-
-            if (!Directory.Exists(LauncherConstants.LAUNCHER_HOME_DIRECTORY)) {
-
-                Logger.GetInstance().Log($"Creating launcher's settings directory ({LauncherConstants.LAUNCHER_HOME_DIRECTORY})...");
-
-                try {
-
-                    Directory.CreateDirectory(LauncherConstants.LAUNCHER_HOME_DIRECTORY);
-                    Logger.GetInstance().Log("Successfully created launcher's settings directory");
-
-                } catch (Exception e) {
-
-                    Logger.GetInstance().Error("Failed to create launcher's settings directory", e);
-                    Dodoco.Application.Application.GetInstance().End(1);
-
-                }
-
-            }
-
-            string fullFilePath = Path.Join(LauncherConstants.LAUNCHER_HOME_DIRECTORY, LauncherConstants.LAUNCHER_SETTINGS_FILENAME);
-
-            if (!File.Exists(fullFilePath)) {
-
-                Logger.GetInstance().Log($"Creating launcher's settings file ({Path.Join(LauncherConstants.LAUNCHER_HOME_DIRECTORY, LauncherConstants.LAUNCHER_SETTINGS_FILENAME)})...");
-
-                try {
-
-                    File.Create(fullFilePath).Close();
-                    Logger.GetInstance().Log("Successfully created launcher's settings file");
-
-                } catch (Exception e) {
-
-                    Logger.GetInstance().Error("Failed to create launcher's settings file", e);
-                    Dodoco.Application.Application.GetInstance().End(1);
-
-                }
-
-            }
-
-            Logger.GetInstance().Log("Loading launcher's default settings...");
-
-            string defaultSettingsYaml = "";
-
-            try {
-
-                YamlDotNet.Serialization.Serializer ser = new YamlDotNet.Serialization.Serializer();
-                defaultSettingsYaml = ser.Serialize(new Dodoco.Launcher.LauncherSettings());
-                Logger.GetInstance().Log("Successfully loaded launcher's default settings");
-
-            } catch (Exception e) {
-
-                Logger.GetInstance().Error("Failed to load launcher's default settings", e);
-                Dodoco.Application.Application.GetInstance().End(1);
-
-            }
-
-            Logger.GetInstance().Log("Writing launcher's default settings to settings file...");
-
-            try {
-
-                File.WriteAllText(fullFilePath, defaultSettingsYaml, System.Text.Encoding.UTF8);
-                Logger.GetInstance().Log("Successfully wrote launcher's default settings to settings file");
-
-            } catch (Exception e) {
-
-                Logger.GetInstance().Error("Failed to write launcher's default settings into the settings file", e);
-                Dodoco.Application.Application.GetInstance().End(1);
-
-            }
+            settings = settings.LoadSettings();
 
         }
 
@@ -268,14 +137,35 @@ namespace Dodoco.Launcher {
             Logger.GetInstance().Log("STARTING MAIN");
 
             this.UpdateActivityState(LauncherActivityState.FETCHING_LAUNCHER_SETTINGS);
-            this.SearchSettings();
+            this.ManageSettings();
+            this.UpdateActivityState(LauncherActivityState.FETCHING_WEB_DATA);
+            await this.FetchResource();
 
-            //LauncherSettings k = new LauncherSettings();
+            // @TODO: compare fetched version with installed game's version
 
-            Logger.GetInstance().Log("=========================================");
-            Logger.GetInstance().Log(settings.api.company["global"].url);
-            Logger.GetInstance().Log(settings.api.company["global"].key);
-            Logger.GetInstance().Log("=========================================");
+        }
+
+        private async Task FetchResource() {
+
+            string urlToFetch = $"{settings.api.company[settings.game.server].url}/resource?key={settings.api.company[settings.game.server].key}&launcher_id={settings.api.company[settings.game.server].launcher_id}";
+            Logger.GetInstance().Log($"Trying to fetch latest game's launcher's resource data from remote servers ({urlToFetch})...");
+            
+            HttpResponseMessage response = await Application.Application.GetInstance().client.GetAsync(urlToFetch);
+            
+            if (response.IsSuccessStatusCode) {
+
+                Logger.GetInstance().Log("Successfully fetch latest game's launcher's resource data from remote servers");
+
+                Logger.GetInstance().Log("Trying to parse the received data...");
+                try { launcherResource = JsonSerializer.Deserialize<Resource>(await response.Content.ReadAsStringAsync(), jsonOptions); }
+                catch (JsonException e) { Logger.GetInstance().Error("Failed to parse latest game's launcher's resource data. Maybe the API has been changed.", e); }
+                Logger.GetInstance().Log("Successfully parsed the received data");
+
+            } else {
+
+                Logger.GetInstance().Error($"Failed to fetch latest game's launcher's resource data from remote servers (received HTTP status code {response.StatusCode})");
+
+            }
 
         }
 

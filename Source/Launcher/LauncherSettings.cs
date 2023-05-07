@@ -1,3 +1,5 @@
+using Dococo.Util.Log;
+
 namespace Dodoco.Launcher {
 
     public record LauncherSettings {
@@ -50,6 +52,160 @@ namespace Dodoco.Launcher {
 
             }
             
+        }
+
+        public bool SearchSettingsFile() {
+
+            Logger.GetInstance().Log($"Trying to find launcher's settings directory ({LauncherConstants.LAUNCHER_HOME_DIRECTORY})...");
+            
+            if (Directory.Exists(LauncherConstants.LAUNCHER_HOME_DIRECTORY)) {
+
+                Logger.GetInstance().Log("Successfully found launcher's settings directory");
+                Logger.GetInstance().Log($"Trying to find launcher's settings file ({Path.Join(LauncherConstants.LAUNCHER_HOME_DIRECTORY, LauncherConstants.LAUNCHER_SETTINGS_FILENAME)})...");
+
+                if (File.Exists(Path.Join(LauncherConstants.LAUNCHER_HOME_DIRECTORY, LauncherConstants.LAUNCHER_SETTINGS_FILENAME))) {
+
+                    Logger.GetInstance().Log("Successfully found launcher's settings file");
+
+                } else {
+
+                    Logger.GetInstance().Warning("Unable to find launcher's settings file. Will be assumed as first time initialization");
+                    return false;
+
+                }
+
+            } else {
+
+                Logger.GetInstance().Warning("Unable to find launcher's settings directory. Will be assumed as first time initialization");
+                return false;
+
+            }
+
+            return true;
+
+        }
+
+        public LauncherSettings LoadSettings() {
+
+            Logger.GetInstance().Log("Loading launcher's settings...");
+
+            string fullFilePath = Path.Join(LauncherConstants.LAUNCHER_HOME_DIRECTORY, LauncherConstants.LAUNCHER_SETTINGS_FILENAME);
+
+            Logger.GetInstance().Log("Reading launcher's settings from settings file...");
+            string settingsText = "";
+
+            try {
+
+                settingsText = File.ReadAllText(fullFilePath, System.Text.Encoding.UTF8);
+                Logger.GetInstance().Log("Succesfully read launcher's settings from settings file");
+                
+
+            } catch (Exception e) {
+
+                Logger.GetInstance().Error("Failed to read launcher's settings from settings file", e);
+                Dodoco.Application.Application.GetInstance().End(1);
+
+            }
+
+            Logger.GetInstance().Log("Parsing launcher's settings...");
+            LauncherSettings settings = new LauncherSettings();
+
+            try {
+
+                YamlDotNet.Serialization.IDeserializer des = new YamlDotNet.Serialization.DeserializerBuilder().IgnoreUnmatchedProperties().Build();
+                settings = des.Deserialize<LauncherSettings>(settingsText);
+                Logger.GetInstance().Log("Successfully parsed launcher's settings");
+
+            } catch (Exception e) {
+
+                Logger.GetInstance().Error("Failed to parse launcher's settings", e);
+                Dodoco.Application.Application.GetInstance().End(1);
+
+            }
+
+            Logger.GetInstance().Log("Successfully loaded launcher's settings");
+
+            return settings;
+
+            //System.Security.Cryptography.MD5 md5Hash = System.Security.Cryptography.MD5.Create();
+            //byte[] data = md5Hash.ComputeHash(System.Text.Encoding.UTF8.GetBytes("Hellow world"));
+            //Logger.GetInstance().Debug(System.Convert.ToHexString(data));
+
+        }
+
+        public bool WriteDefaultSettings() {
+
+            if (!Directory.Exists(LauncherConstants.LAUNCHER_HOME_DIRECTORY)) {
+
+                Logger.GetInstance().Log($"Creating launcher's settings directory ({LauncherConstants.LAUNCHER_HOME_DIRECTORY})...");
+
+                try {
+
+                    Directory.CreateDirectory(LauncherConstants.LAUNCHER_HOME_DIRECTORY);
+                    Logger.GetInstance().Log("Successfully created launcher's settings directory");
+
+                } catch (Exception e) {
+
+                    Logger.GetInstance().Error("Failed to create launcher's settings directory", e);
+                    Dodoco.Application.Application.GetInstance().End(1);
+
+                }
+
+            }
+
+            string fullFilePath = Path.Join(LauncherConstants.LAUNCHER_HOME_DIRECTORY, LauncherConstants.LAUNCHER_SETTINGS_FILENAME);
+
+            if (!File.Exists(fullFilePath)) {
+
+                Logger.GetInstance().Log($"Creating launcher's settings file ({Path.Join(LauncherConstants.LAUNCHER_HOME_DIRECTORY, LauncherConstants.LAUNCHER_SETTINGS_FILENAME)})...");
+
+                try {
+
+                    File.Create(fullFilePath).Close();
+                    Logger.GetInstance().Log("Successfully created launcher's settings file");
+
+                } catch (Exception e) {
+
+                    Logger.GetInstance().Error("Failed to create launcher's settings file", e);
+                    Dodoco.Application.Application.GetInstance().End(1);
+
+                }
+
+            }
+
+            Logger.GetInstance().Log("Loading launcher's default settings...");
+
+            string defaultSettingsYaml = "";
+
+            try {
+
+                YamlDotNet.Serialization.Serializer ser = new YamlDotNet.Serialization.Serializer();
+                defaultSettingsYaml = ser.Serialize(new Dodoco.Launcher.LauncherSettings());
+                Logger.GetInstance().Log("Successfully loaded launcher's default settings");
+
+            } catch (Exception e) {
+
+                Logger.GetInstance().Error("Failed to load launcher's default settings", e);
+                Dodoco.Application.Application.GetInstance().End(1);
+
+            }
+
+            Logger.GetInstance().Log("Writing launcher's default settings to settings file...");
+
+            try {
+
+                File.WriteAllText(fullFilePath, defaultSettingsYaml, System.Text.Encoding.UTF8);
+                Logger.GetInstance().Log("Successfully wrote launcher's default settings to settings file");
+
+            } catch (Exception e) {
+
+                Logger.GetInstance().Error("Failed to write launcher's default settings into the settings file", e);
+                Dodoco.Application.Application.GetInstance().End(1);
+
+            }
+
+            return true;
+
         }
 
     }
