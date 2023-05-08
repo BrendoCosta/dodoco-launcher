@@ -5,7 +5,7 @@ using System.Globalization;
 
 namespace Dodoco.Launcher {
 
-    public record LauncherSettings: LauncherFile {
+    public record LauncherSettings: LauncherFile<LauncherSettings> {
 
         public LauncherSettings(): base(
             "settings",
