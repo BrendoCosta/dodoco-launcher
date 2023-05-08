@@ -23,9 +23,9 @@ namespace Dodoco.HTTP.SSE {
 
         }
 
-        public async Task WriteEventToResponseOutputStream(Dodoco.HTTP.SSE.Event _event) {
+        public async Task WriteEventToResponseOutputStream(Event? _event) {
 
-            if (this.context != null) {
+            if (this.context != null && _event != null) {
 
                 byte[] txt = Dodoco.Util.Text.StringUtil.UTF8StringToUTF8Bytes(_event.ToString());
 

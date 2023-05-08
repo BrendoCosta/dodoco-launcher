@@ -1,6 +1,6 @@
 namespace Dodoco.HTTP.SSE {
 
-    public struct Event {
+    public record Event {
 
         public string? eventName;
         public string? data;

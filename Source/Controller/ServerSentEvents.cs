@@ -1,12 +1,18 @@
+using  Dodoco.HTTP.SSE;
+
+using System.Collections;
+
 namespace Dodoco.Controller {
 
     [Grapevine.RestResource(BasePath = "/Dodoco/SSE")]
     public static class ServerSentEvents {
 
-        private static Dictionary<string, Func<Dodoco.HTTP.SSE.Event>> events = new Dictionary<string, Func<Dodoco.HTTP.SSE.Event>>();
+        private static Queue eventQueue = Queue.Synchronized(new Queue());
+        private static Dictionary<string, Func<Event>> events = new Dictionary<string, Func<Event>>();
 
-        public static void RegisterEvent(string key, Func<Dodoco.HTTP.SSE.Event> function) => events.Add(key, function);
+        public static void RegisterEvent(string key, Func<Event> function) => events.Add(key, function);
         public static void UnregisterEvent(string key) => events.Remove(key);
+        public static async Task PushEvent(Event e) => await Task.Run(async () => eventQueue.Enqueue(e));
 
         [Grapevine.RestRoute("Get", "/")]
         public static async Task Root(Grapevine.IHttpContext context) {
@@ -17,14 +23,31 @@ namespace Dodoco.Controller {
 
                 while (true) {
 
+                    /*
+                     * Push registered events
+                    */
+
                     foreach (KeyValuePair<string, Func<HTTP.SSE.Event>> entry in events) {
 
-                        Dodoco.HTTP.SSE.Event _event = entry.Value.Invoke();
+                        Event _event = entry.Value.Invoke();
                         await ctx.WriteEventToResponseOutputStream(_event);
 
                     }
 
-                    await Task.Delay(500);
+                    /*
+                     * Push events from the queue
+                    */
+
+                    if (eventQueue.Count != 0) {
+
+                        Event? _event = (Event?) eventQueue.Dequeue();
+
+                        if (_event != null)
+                            await ctx.WriteEventToResponseOutputStream(_event);
+
+                    }
+
+                    await Task.Delay(50);
 
                 }
 
