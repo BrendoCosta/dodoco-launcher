@@ -21,17 +21,17 @@ namespace Dodoco.Game {
 
                 } else {
 
-                    Logger.GetInstance().Log($"Unable to find game's executable ({gameExecutableFileName}) inside the specified directory");
+                    Logger.GetInstance().Warning($"Unable to find game's executable ({gameExecutableFileName}) inside the specified directory");
 
                 }
 
             } else {
 
-                Logger.GetInstance().Log($"The specified game installation directory ({gameInstallationDirectory}) doesn't exists");
+                Logger.GetInstance().Warning($"The specified game installation directory ({gameInstallationDirectory}) doesn't exists");
 
             }
 
-            Logger.GetInstance().Log($"Game not found in specified directory");
+            Logger.GetInstance().Warning($"Game not found in specified directory");
 
             return false;
 
