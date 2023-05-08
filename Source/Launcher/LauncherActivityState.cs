@@ -5,6 +5,7 @@ namespace Dodoco.Launcher {
         UNREADY,
         READY,
         FETCHING_LAUNCHER_SETTINGS,
+        FETCHING_LAUNCHER_CACHE,
         FETCHING_WEB_DATA,
         NEEDS_GAME_DOWNLOAD,
         NEEDS_GAME_UPDATE,
