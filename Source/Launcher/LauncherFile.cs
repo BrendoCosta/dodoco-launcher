@@ -3,7 +3,7 @@ using Dodoco.Util;
 
 namespace Dodoco.Launcher {
 
-    public abstract record LauncherFile {
+    public abstract record LauncherFile<T> {
 
         string internalName;
         string directory;
@@ -48,7 +48,7 @@ namespace Dodoco.Launcher {
 
         }
 
-        public LauncherFile? Load<LauncherFile>() where LauncherFile: new() {
+        public T LoadFile() {
 
             Logger.GetInstance().Log($"Loading launcher's {internalName} file...");
 
@@ -65,13 +65,12 @@ namespace Dodoco.Launcher {
 
             } catch (Exception e) {
 
-                Logger.GetInstance().Error($"Failed to read launcher's {internalName} from {internalName} file", e);
-                Dodoco.Application.Application.GetInstance().End(1);
+                throw new LauncherException($"Failed to read launcher's {internalName} from {internalName} file", e);
 
             }
 
             Logger.GetInstance().Log($"Parsing launcher's {internalName} file...");
-            LauncherFile? file = new LauncherFile();
+            T file = Activator.CreateInstance<T>();
 
             try {
 
@@ -79,13 +78,12 @@ namespace Dodoco.Launcher {
                     .IgnoreUnmatchedProperties()
                     .WithTypeConverter(new CultureInfoYamlConverter())
                     .Build();
-                file = des.Deserialize<LauncherFile>(fileContents);
+                file = des.Deserialize<T>(fileContents);
                 Logger.GetInstance().Log($"Successfully parsed launcher's {internalName} file");
 
             } catch (Exception e) {
 
-                Logger.GetInstance().Error($"Failed to parse launcher's {internalName} file", e);
-                Dodoco.Application.Application.GetInstance().End(1);
+                throw new LauncherException($"Failed to parse launcher's {internalName} file", e);
 
             }
 
@@ -99,7 +97,7 @@ namespace Dodoco.Launcher {
 
         }
 
-        public bool WriteDefault<LauncherFile>() where LauncherFile: new() {
+        public void CreateFile() {
 
             if (!Directory.Exists(this.directory)) {
 
@@ -112,8 +110,7 @@ namespace Dodoco.Launcher {
 
                 } catch (Exception e) {
 
-                    Logger.GetInstance().Error($"Failed to create launcher's {internalName} directory", e);
-                    Dodoco.Application.Application.GetInstance().End(1);
+                    throw new LauncherException($"Failed to create launcher's {internalName} directory", e);
 
                 }
 
@@ -132,10 +129,13 @@ namespace Dodoco.Launcher {
 
                 } catch (Exception e) {
 
-                    Logger.GetInstance().Error($"Failed to create launcher's {internalName} file", e);
-                    Dodoco.Application.Application.GetInstance().End(1);
+                    throw new LauncherException($"Failed to create launcher's {internalName} file", e);
 
                 }
+
+            } else {
+
+                return;
 
             }
 
@@ -148,13 +148,12 @@ namespace Dodoco.Launcher {
                 YamlDotNet.Serialization.ISerializer ser = new YamlDotNet.Serialization.SerializerBuilder()
                     .WithTypeConverter(new CultureInfoYamlConverter())
                     .Build();
-                fileContents = ser.Serialize(new LauncherFile());
+                fileContents = ser.Serialize(this);
                 Logger.GetInstance().Log($"Successfully loaded launcher's default {internalName}");
 
             } catch (Exception e) {
 
-                Logger.GetInstance().Error($"Failed to load launcher's default {internalName}", e);
-                Dodoco.Application.Application.GetInstance().End(1);
+                throw new LauncherException($"Failed to load launcher's default {internalName}", e);
 
             }
 
@@ -167,12 +166,48 @@ namespace Dodoco.Launcher {
 
             } catch (Exception e) {
 
-                Logger.GetInstance().Error($"Failed to write launcher's default {internalName} into the {internalName} file", e);
-                Dodoco.Application.Application.GetInstance().End(1);
+                throw new LauncherException($"Failed to write launcher's default {internalName} into the {internalName} file", e);
 
             }
 
-            return true;
+        }
+
+        public void UpdateFile() {
+
+            Logger.GetInstance().Log($"Updating launcher's {internalName} file...");
+
+            string fullFilePath = Path.Join(this.directory, this.fileName);
+            string fileContents = "";
+
+            try {
+
+                Logger.GetInstance().Log($"Serializing launcher's {internalName} file...");
+                YamlDotNet.Serialization.ISerializer ser = new YamlDotNet.Serialization.SerializerBuilder()
+                    .WithTypeConverter(new CultureInfoYamlConverter())
+                    .Build();
+                fileContents = ser.Serialize(this);
+                Logger.GetInstance().Log($"Successfully serialized launcher's {internalName} file");
+
+            } catch (Exception e) {
+
+                throw new LauncherException($"Failed to serialize launcher's {internalName} file", e);
+
+            }
+
+            Logger.GetInstance().Log($"Writing launcher's {internalName} file to storage...");
+
+            try {
+
+                File.WriteAllText(fullFilePath, fileContents, System.Text.Encoding.UTF8);
+                Logger.GetInstance().Log($"Successfully wrote launcher's {internalName} file to storage");
+
+            } catch (Exception e) {
+
+                throw new LauncherException($"Failed to write launcher's {internalName} file to storage", e);
+
+            }
+
+            Logger.GetInstance().Log($"Successfully updated launcher's {internalName} file");
 
         }
 
