@@ -27,8 +27,7 @@ namespace Dodoco.Api.Company {
         public async Task<Content?> FetchLauncherContent() {
 
             Logger.GetInstance().Log("Fetching latest game's launcher's content data from remote servers...");
-            string urlToFetch = $"{this.apiBaseUrl}/content?key={this.key}&launcher_id={this.launcherId}&language={this.language.Name.ToLower()}";
-            Content? content = await this.FetchApi<Content>(urlToFetch);
+            Content? content = await this.FetchApi<Content>($"/content?key={this.key}&launcher_id={this.launcherId}&language={this.language.Name.ToLower()}");
             return content;
 
         }
@@ -36,16 +35,15 @@ namespace Dodoco.Api.Company {
         public async Task<Resource?> FetchLauncherResource() {
 
             Logger.GetInstance().Log("Fetching latest game's launcher's resource data from remote servers...");
-            string urlToFetch = $"{this.apiBaseUrl}/resource?key={this.key}&launcher_id={this.launcherId}";
-            Resource? res = await this.FetchApi<Resource>(urlToFetch);
+            Resource? res = await this.FetchApi<Resource>($"/resource?key={this.key}&launcher_id={this.launcherId}");
             return res;
 
         }
 
-        private async Task<CompanyApi?> FetchApi<CompanyApi>(string urlToFetch) {
+        private async Task<CompanyApi?> FetchApi<CompanyApi>(string apiUri) {
 
             CompanyApi? data = default(CompanyApi);
-
+            string urlToFetch = this.apiBaseUrl + apiUri;
             HttpResponseMessage response = await Application.Application.GetInstance().client.FetchAsync(urlToFetch);
         
             if (response.IsSuccessStatusCode) {
