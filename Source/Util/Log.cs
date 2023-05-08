@@ -1,4 +1,6 @@
-using System.Reflection;
+using Dodoco.Controller;
+using Dodoco.Util;
+
 using System.Text.Json;
 using System.Text.Json.Serialization;
 
@@ -22,64 +24,93 @@ namespace Dodoco.Util.Log {
 
         private Logger() {
 
-            Dodoco.Controller.ServerSentEvents.RegisterEvent("Dodoco.Util.Log.Logger.GetLastLogJson", () => {
-
-                return new Dodoco.HTTP.SSE.Event {
-
-                    eventName = "Dodoco.Util.Log.Logger.GetLastLogJson",
-                    data = GetLastLogJson()
-                    
-                };
-
-            });
-
         }
 
         public void Log(string message) {
 
-            this.Write(LogType.LOG, this.GetCallingMethod(), message);
+            this.Write(LogType.LOG, Reflection.GetCallingMethod(), message);
+            // Push event
+            ServerSentEvents.PushEvent(new Dodoco.HTTP.SSE.Event() {
+                eventName = Reflection.GetCurrentMethod(),
+                data = this.GetLastEntryJson(LogType.LOG)
+            });
 
         }
 
         public void Log(string message, System.Exception? exception) {
 
-            this.Write(LogType.LOG, this.GetCallingMethod(), message, exception);
+            this.Write(LogType.LOG, Reflection.GetCallingMethod(), message, exception);
+            // Push event
+            ServerSentEvents.PushEvent(new Dodoco.HTTP.SSE.Event() {
+                eventName = Reflection.GetCurrentMethod(),
+                data = this.GetLastEntryJson(LogType.LOG)
+            });
 
         }
 
         public void Error(string message) {
 
-            this.Write(LogType.ERROR, this.GetCallingMethod(), message);
+            this.Write(LogType.ERROR, Reflection.GetCallingMethod(), message);
+            // Push event
+            ServerSentEvents.PushEvent(new Dodoco.HTTP.SSE.Event() {
+                eventName = Reflection.GetCurrentMethod(),
+                data = this.GetLastEntryJson(LogType.ERROR)
+            });
 
         }
 
         public void Error(string message, System.Exception? exception) {
 
-            this.Write(LogType.ERROR, this.GetCallingMethod(), message, exception);
+            this.Write(LogType.ERROR, Reflection.GetCallingMethod(), message, exception);
+            // Push event
+            ServerSentEvents.PushEvent(new Dodoco.HTTP.SSE.Event() {
+                eventName = Reflection.GetCurrentMethod(),
+                data = this.GetLastEntryJson(LogType.ERROR)
+            });
 
         }
 
         public void Debug(string message) {
 
-            this.Write(LogType.DEBUG, this.GetCallingMethod(), message);
+            this.Write(LogType.DEBUG, Reflection.GetCallingMethod(), message);
+            // Push event
+            ServerSentEvents.PushEvent(new Dodoco.HTTP.SSE.Event() {
+                eventName = Reflection.GetCurrentMethod(),
+                data = this.GetLastEntryJson(LogType.DEBUG)
+            });
 
         }
 
         public void Debug(string message, System.Exception? exception) {
 
-            this.Write(LogType.DEBUG, this.GetCallingMethod(), message, exception);
+            this.Write(LogType.DEBUG, Reflection.GetCallingMethod(), message, exception);
+            // Push event
+            ServerSentEvents.PushEvent(new Dodoco.HTTP.SSE.Event() {
+                eventName = Reflection.GetCurrentMethod(),
+                data = this.GetLastEntryJson(LogType.DEBUG)
+            });
 
         }
 
         public void Warning(string message) {
 
-            this.Write(LogType.WARNING, this.GetCallingMethod(), message);
+            this.Write(LogType.WARNING, Reflection.GetCallingMethod(), message);
+            // Push event
+            ServerSentEvents.PushEvent(new Dodoco.HTTP.SSE.Event() {
+                eventName = Reflection.GetCurrentMethod(),
+                data = this.GetLastEntryJson(LogType.WARNING)
+            });
 
         }
 
         public void Warning(string message, System.Exception? exception) {
 
-            this.Write(LogType.WARNING, this.GetCallingMethod(), message, exception);
+            this.Write(LogType.WARNING, Reflection.GetCallingMethod(), message, exception);
+            // Push event
+            ServerSentEvents.PushEvent(new Dodoco.HTTP.SSE.Event() {
+                eventName = Reflection.GetCurrentMethod(),
+                data = GetLastEntryJson(LogType.WARNING)
+            });
 
         }
 
@@ -139,33 +170,6 @@ namespace Dodoco.Util.Log {
 
         }
 
-        private string GetCallingMethod() {
-
-            MethodBase? methodInfo = new System.Diagnostics.StackTrace().GetFrame(2)?.GetMethod();
-
-            string className = "UnknownClass";
-            string methodName = "UnknownMethod";
-
-            if (methodInfo != null) {
-
-                methodName = methodInfo.IsConstructor ? "Constructor" : methodInfo.Name;
-                
-                if (methodInfo.ReflectedType?.FullName != null) {
-
-                    className = methodInfo.ReflectedType.FullName;
-
-                } else if (methodInfo.ReflectedType != null) {
-
-                    className = methodInfo.ReflectedType.Name;
-
-                }
-
-            }
-
-            return $"{className}.{methodName}";
-
-        }
-
         public string GetFullLogText() {
 
             List<String> fullLog = new List<String>();
@@ -186,12 +190,26 @@ namespace Dodoco.Util.Log {
 
         }
 
-        public string GetLastLogJson() {
+        public string GetLastEntryJson() {
 
             return Dodoco.Util.Text.StringUtil.StringToUTF8(JsonSerializer.Serialize<LogEntry>(logEntries.Last()));
 
         }
 
+        public string? GetLastEntryJson(LogType type) {
+
+            string? jsonContent = null;
+
+            foreach (LogEntry entry in logEntries) {
+
+                if (entry.type == type)
+                    jsonContent = Dodoco.Util.Text.StringUtil.StringToUTF8(JsonSerializer.Serialize<LogEntry>(entry));
+
+            }
+
+            return jsonContent;
+
+        }
 
     }
 

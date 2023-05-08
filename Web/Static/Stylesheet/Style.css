@@ -45,3 +45,9 @@ html, body {
     padding-right: 1rem;
 
 }
+
+#app-wrapper small.splash-text.warning {
+
+    color: #f5b340;
+
+}
