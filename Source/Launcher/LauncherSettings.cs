@@ -1,6 +1,8 @@
 using Dodoco.Game;
 using Dodoco.Util.Log;
 
+using System.Globalization;
+
 namespace Dodoco.Launcher {
 
     public record LauncherSettings {
@@ -12,7 +14,7 @@ namespace Dodoco.Launcher {
 
         public record Launcher {
 
-            public string language = "en-us";
+            public CultureInfo language = new CultureInfo("en-US");
             public bool display_splash_screen = true;
 
         }
