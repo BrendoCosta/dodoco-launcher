@@ -1,8 +1,10 @@
 using Dodoco.Api.Company;
 using Dodoco.Api.Company.Launcher;
 using Dodoco.Application;
-using Dodoco.Util.Log;
+using Dodoco.Controller;
 using Dodoco.Game;
+using Dodoco.Util;
+using Dodoco.Util.Log;
 
 using System.Text.Json;
 using System.Text.Json.Serialization;
@@ -43,52 +45,8 @@ namespace Dodoco.Launcher {
 
             Logger.GetInstance().Log("Initializing launcher...");
 
-            Logger.GetInstance().Log("Registering launcher's events...");
-            
-            Dodoco.Controller.ServerSentEvents.RegisterEvent("Dodoco.Launcher.Launcher.executionState", () => {
-
-                return new Dodoco.HTTP.SSE.Event {
-
-                    eventName = $"Dodoco.Launcher.Launcher.executionState",
-                    data = executionState.ToString()
-                    
-                };
-
-            });
-
-            Dodoco.Controller.ServerSentEvents.RegisterEvent("Dodoco.Launcher.Launcher.activityState", () => {
-
-                return new Dodoco.HTTP.SSE.Event {
-
-                    eventName = $"Dodoco.Launcher.Launcher.activityState",
-                    data = activityState.ToString()
-                    
-                };
-
-            });
-
             this.UpdateExecutionState(LauncherExecutionState.INITIALIZING);
             this.CreateThread();
-
-        }
-
-        private void ManageSettings() {
-
-            if (!settings.Exists())
-                if (!settings.WriteDefault<LauncherSettings>())
-                    return;
-
-            settings = settings.Load<LauncherSettings>() ?? new LauncherSettings();
-
-        }
-
-        private void ManageCache() {
-
-            if (!cache.Exists())
-                if (!cache.WriteDefault<LauncherCache>())
-                    return;
-
-            cache = cache.Load<LauncherCache>() ?? new LauncherCache();
 
         }
 
@@ -115,9 +73,9 @@ namespace Dodoco.Launcher {
                     return new MemoryStream(System.Text.Encoding.UTF8.GetBytes(@"( () => window.location.reload(true) )();"));
                 });
                 // ---- For debugging ----
-                //this.window.Load(new Uri($"http://localhost:5173/?id={(new Random().Next())}"));
+                this.window.Load(new Uri($"http://localhost:5173/?id={(new Random().Next())}"));
                 // -----------------------
-                this.window.Load(new Uri($"http://localhost:{Dodoco.Application.Application.GetInstance().port}/?id={(new Random().Next())}"));
+                //this.window.Load(new Uri($"http://localhost:{Dodoco.Application.Application.GetInstance().port}/?id={(new Random().Next())}"));
 
                 this.window.RegisterWindowCreatingHandler(new EventHandler((object? sender, EventArgs e) => Logger.GetInstance().Log("Creating launcher's window...") ));
                 this.window.RegisterWindowCreatedHandler(new EventHandler((object? sender, EventArgs e) => Logger.GetInstance().Log("Successfully created launcher's window") ));
@@ -150,9 +108,23 @@ namespace Dodoco.Launcher {
 
             try {
 
+                /*
+                 * Manages settings' file
+                */
+
                 this.UpdateActivityState(LauncherActivityState.FETCHING_LAUNCHER_SETTINGS);
-                this.ManageSettings();
-                this.ManageCache();
+                if (!settings.Exists()) settings.CreateFile();
+                settings = settings.LoadFile();
+
+                /*
+                 * Manages cache's file
+                */
+
+                this.UpdateActivityState(LauncherActivityState.FETCHING_LAUNCHER_CACHE);
+                if (!cache.Exists()) cache.CreateFile();
+                cache = cache.LoadFile();
+                cache.background_image.md5_hash = "test";
+                cache.UpdateFile();
 
                 Logger.GetInstance().Log($"Fetching APIs...");
                 this.UpdateActivityState(LauncherActivityState.FETCHING_WEB_DATA);
@@ -164,7 +136,14 @@ namespace Dodoco.Launcher {
                     settings.launcher.language
                 );
 
+                /*
+                 * Manages content API
+                */
+
                 launcherContent = await factory.FetchLauncherContent();
+                await cache.UpdateFromContentApi(launcherContent);
+
+                
                 launcherResource = await factory.FetchLauncherResource();
 
                 Logger.GetInstance().Log($"Finished fetching APIs");
@@ -205,6 +184,15 @@ namespace Dodoco.Launcher {
                     }
 
                 }
+
+                await Task.Run(async () => {
+
+                    await Task.Delay(5000);
+
+                    Logger.GetInstance().Log($"Test");
+
+
+                });
 
             } catch (Exception e) {
 
@@ -284,6 +272,10 @@ namespace Dodoco.Launcher {
 
             Logger.GetInstance().Debug($"Updating launcher's execution state from {executionState.ToString()} to {newState.ToString()}");
             executionState = newState;
+            ServerSentEvents.PushEvent(new Dodoco.HTTP.SSE.Event() {
+                eventName = Reflection.GetCurrentMethod(),
+                data = newState.ToString()
+            });
 
         }
 
@@ -291,6 +283,10 @@ namespace Dodoco.Launcher {
 
             Logger.GetInstance().Debug($"Updating launcher's activity state from {activityState.ToString()} to {newState.ToString()}");
             activityState = newState;
+            ServerSentEvents.PushEvent(new Dodoco.HTTP.SSE.Event() {
+                eventName = Reflection.GetCurrentMethod(),
+                data = newState.ToString()
+            });
 
         }
 
