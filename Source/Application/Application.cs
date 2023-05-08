@@ -2,6 +2,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using System.Reflection;
+using Dodoco.HTTP;
 using Dodoco.Util.Log;
 
 namespace Dodoco.Application {
@@ -9,7 +10,7 @@ namespace Dodoco.Application {
     public sealed class Application {
 
         private Grapevine.IRestServer? server;
-        public HttpClient client { get; private set; }
+        public DodocoHttpClient client { get; private set; }
         public int port { get; private set; } = ApplicationConstants.DEFAULT_APPLICATION_TCP_PORT;
         private static Application? instance = null;
         public string title { get; private set; }
@@ -133,7 +134,7 @@ namespace Dodoco.Application {
 
             Logger.GetInstance().Log("Starting HTTP client...");
             
-            this.client = new HttpClient();
+            this.client = new DodocoHttpClient();
 
             Logger.GetInstance().Log("Successfully started HTTP client");
 
