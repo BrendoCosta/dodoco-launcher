@@ -20,6 +20,7 @@ namespace Dodoco.Launcher {
         public static LauncherExecutionState executionState { get; private set; } = LauncherExecutionState.UNINITIALIZED;
         public static LauncherActivityState activityState { get; private set; } = LauncherActivityState.UNREADY;
         public static LauncherSettings settings = new LauncherSettings();
+        public static LauncherCache cache = new LauncherCache();
         public Content launcherContent { get; private set; }
         public Resource launcherResource { get; private set; }
         public static JsonSerializerOptions jsonOptions = new JsonSerializerOptions() {
@@ -73,17 +74,21 @@ namespace Dodoco.Launcher {
 
         private void ManageSettings() {
 
-            if (!settings.SearchSettingsFile()) {
-                
-                if (!settings.WriteDefaultSettings()) {
-
+            if (!settings.Exists())
+                if (!settings.WriteDefault<LauncherSettings>())
                     return;
 
-                }
+            settings = settings.Load<LauncherSettings>() ?? new LauncherSettings();
 
-            }
+        }
 
-            settings = settings.LoadSettings();
+        private void ManageCache() {
+
+            if (!cache.Exists())
+                if (!cache.WriteDefault<LauncherCache>())
+                    return;
+
+            cache = cache.Load<LauncherCache>() ?? new LauncherCache();
 
         }
 
@@ -147,6 +152,7 @@ namespace Dodoco.Launcher {
 
                 this.UpdateActivityState(LauncherActivityState.FETCHING_LAUNCHER_SETTINGS);
                 this.ManageSettings();
+                this.ManageCache();
 
                 Logger.GetInstance().Log($"Fetching APIs...");
                 this.UpdateActivityState(LauncherActivityState.FETCHING_WEB_DATA);
