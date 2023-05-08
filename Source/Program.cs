@@ -7,7 +7,6 @@ using WebSocketSharp;
 using WebSocketSharp.Server;
 using System.Text.Json;
 using System.Text.Json.Serialization;
-using Dodoco.Api.Company.Launcher.Resource;
 
 namespace Dodoco {
 
