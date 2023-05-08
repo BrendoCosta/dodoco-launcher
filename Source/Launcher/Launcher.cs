@@ -1,5 +1,5 @@
 using Dodoco.Api.Company;
-using Dodoco.Api.Company.Launcher.Resource;
+using Dodoco.Api.Company.Launcher;
 using Dodoco.Application;
 using Dodoco.Util.Log;
 using Dodoco.Game;
@@ -20,6 +20,7 @@ namespace Dodoco.Launcher {
         public static LauncherExecutionState executionState { get; private set; } = LauncherExecutionState.UNINITIALIZED;
         public static LauncherActivityState activityState { get; private set; } = LauncherActivityState.UNREADY;
         public static LauncherSettings settings = new LauncherSettings();
+        public Content launcherContent { get; private set; }
         public Resource launcherResource { get; private set; }
         public static JsonSerializerOptions jsonOptions = new JsonSerializerOptions() {
             NumberHandling = JsonNumberHandling.AllowReadingFromString
@@ -153,9 +154,11 @@ namespace Dodoco.Launcher {
                 CompanyApiFactory factory = new CompanyApiFactory(
                     settings.api.company[settings.game.server].url,
                     settings.api.company[settings.game.server].key,
-                    settings.api.company[settings.game.server].launcher_id
+                    settings.api.company[settings.game.server].launcher_id,
+                    settings.launcher.language
                 );
 
+                launcherContent = await factory.FetchLauncherContent();
                 launcherResource = await factory.FetchLauncherResource();
 
                 Logger.GetInstance().Log($"Finished fetching APIs");
