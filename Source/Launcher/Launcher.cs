@@ -180,14 +180,14 @@ namespace Dodoco.Launcher {
                  *
                 */
 
-                if (!GameInstallationManager.CheckGameInstallation(this.settings.game.installation_path, this.settings.game.server)) {
+                if (!GameManager.CheckGameInstallation(this.settings.game.installation_path, this.settings.game.server)) {
 
                     // TODO: download game
                     this.UpdateActivityState(LauncherActivityState.NEEDS_GAME_DOWNLOAD);
 
                 } else {
 
-                    Version installedGameVersion = GameInstallationManager.SearchForGameVersion(this.settings.game.installation_path, this.settings.game.server);
+                    Version installedGameVersion = GameManager.SearchForGameVersion(this.settings.game.installation_path, this.settings.game.server);
                     Version remoteGameVersion = Version.Parse(resource.data.game.latest.version);
 
                     if (remoteGameVersion > installedGameVersion) {
@@ -200,6 +200,8 @@ namespace Dodoco.Launcher {
                         this.UpdateActivityState(LauncherActivityState.READY_TO_PLAY);
 
                     }
+
+                    Game.IGame game = GameManager.CreateFromVersion(installedGameVersion);
 
                 }
 
