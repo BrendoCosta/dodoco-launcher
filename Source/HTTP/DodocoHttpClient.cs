@@ -15,7 +15,6 @@ namespace Dodoco.HTTP {
             Logger.GetInstance().Debug($"RESPONSE CONTENT ENCODING: {res.Content.Headers.ContentEncoding}");
             Logger.GetInstance().Debug($"RESPONSE CONTENT LENGTH: {res.Content.Headers.ContentLength}");
             Logger.GetInstance().Debug($"RESPONSE CONTENT TYPE: {res.Content.Headers.ContentType}");
-            Logger.GetInstance().Debug(await res.Content.ReadAsStringAsync());
             Logger.GetInstance().Debug($"=================  HTTP GET END  =================");
             return res;
 
