@@ -21,6 +21,12 @@ namespace Dodoco.Util.Log {
 
         }
 
+        public string GetAsText() {
+
+            return $"{this.prependMessage} {this.message}";
+
+        }
+
     }
 
 }

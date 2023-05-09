@@ -8,7 +8,12 @@ namespace Dodoco.Util.Log {
 
     public sealed class Logger {
 
-        private static List<LogEntry> logEntries = new List<LogEntry>();
+        public static List<LogEntry> Entries = new List<LogEntry>();
+        public event EventHandler<LogEntry> OnWrite;
+        public event EventHandler<LogEntry> OnLog;
+        public event EventHandler<LogEntry> OnDebug;
+        public event EventHandler<LogEntry> OnError;
+        public event EventHandler<LogEntry> OnWarning;
         private static Logger? instance = null;
 
         public static Logger GetInstance() {
@@ -122,7 +127,34 @@ namespace Dodoco.Util.Log {
 
         private void Write(LogType type, string method, string message, System.Exception? exception) {
 
-            logEntries.Add(new LogEntry(type, message, method));
+            // Add the new log entry
+            
+            LogEntry newEntry = new LogEntry(type, message, method);
+            Entries.Add(newEntry);
+
+            // Pass event to listners with the new entry as the argument
+
+            switch (type) {
+
+                case LogType.LOG:
+                    this.OnLog?.Invoke(this, newEntry);
+                    break;
+                case LogType.ERROR:
+                    this.OnError?.Invoke(this, newEntry);
+                    break;
+                case LogType.WARNING:
+                    this.OnWarning?.Invoke(this, newEntry);
+                    break;
+                case LogType.DEBUG:
+                    this.OnDebug?.Invoke(this, newEntry);
+                    break;
+
+            }
+
+            this.OnWrite?.Invoke(this, newEntry);
+
+            // Write the entry to the STDOUT
+            // TODO: turn this a optional feature through LauncherSettings
             
             ConsoleColor color = ConsoleColor.Gray;
 
@@ -144,7 +176,7 @@ namespace Dodoco.Util.Log {
             }
             
             Console.ForegroundColor = color;
-            Console.WriteLine($"{logEntries.Last().prependMessage} {logEntries.Last().message}");
+            Console.WriteLine(newEntry.GetAsText());
             Console.ForegroundColor = ConsoleColor.Gray;
 
             // Log exceptions and inner exceptions
@@ -174,7 +206,7 @@ namespace Dodoco.Util.Log {
 
             List<String> fullLog = new List<String>();
 
-            foreach (LogEntry entry in logEntries) {
+            foreach (LogEntry entry in Entries) {
 
                 fullLog.Add($"{entry.prependMessage} {entry.message}");
 
@@ -186,13 +218,13 @@ namespace Dodoco.Util.Log {
 
         public string GetFullLogJson() {
 
-            return Dodoco.Util.Text.StringUtil.StringToUTF8(JsonSerializer.Serialize<List<LogEntry>>(logEntries));
+            return Dodoco.Util.Text.StringUtil.StringToUTF8(JsonSerializer.Serialize<List<LogEntry>>(Entries));
 
         }
 
         public string GetLastEntryJson() {
 
-            return Dodoco.Util.Text.StringUtil.StringToUTF8(JsonSerializer.Serialize<LogEntry>(logEntries.Last()));
+            return Dodoco.Util.Text.StringUtil.StringToUTF8(JsonSerializer.Serialize<LogEntry>(Entries.Last()));
 
         }
 
@@ -200,7 +232,7 @@ namespace Dodoco.Util.Log {
 
             string? jsonContent = null;
 
-            foreach (LogEntry entry in logEntries) {
+            foreach (LogEntry entry in Entries) {
 
                 if (entry.type == type)
                     jsonContent = Dodoco.Util.Text.StringUtil.StringToUTF8(JsonSerializer.Serialize<LogEntry>(entry));
