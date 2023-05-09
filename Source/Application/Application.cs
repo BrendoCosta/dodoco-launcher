@@ -13,10 +13,13 @@ namespace Dodoco.Application {
         public DodocoHttpClient client { get; private set; }
         public int port { get; private set; } = ApplicationConstants.DEFAULT_APPLICATION_TCP_PORT;
         private static Application? instance = null;
+        
         public string title { get; private set; }
         public string version { get; private set; }
         public string company { get; private set; }
         public string description { get; private set; }
+
+        public ApplicationLog log = new ApplicationLog();
 
         public static Application GetInstance() {
 
@@ -31,7 +34,20 @@ namespace Dodoco.Application {
 
         private Application() {
 
-            // Loads assembly metadata
+            /*
+             * Manages application's log file
+            */
+
+            if (!this.log.Exists()) {
+
+                this.log.CreateFile();
+                this.log.StartWritingToLog();
+
+            }
+
+            /*
+             * Load assembly metadata
+            */
 
             AssemblyProductAttribute? productAttribute         = (AssemblyProductAttribute?) Attribute.GetCustomAttribute(System.Reflection.Assembly.GetExecutingAssembly(), typeof(System.Reflection.AssemblyProductAttribute), false);
             AssemblyTitleAttribute? titleAttribute             = (AssemblyTitleAttribute?) Attribute.GetCustomAttribute(System.Reflection.Assembly.GetExecutingAssembly(), typeof(System.Reflection.AssemblyTitleAttribute), false);
@@ -49,14 +65,9 @@ namespace Dodoco.Application {
             Logger.GetInstance().Log($"Identifier: {ApplicationConstants.DEFAULT_APPLICATION_IDENTIFIER}");
             Logger.GetInstance().Log("Starting application...");
 
-            this.StartServer();
-            this.StartClient();
-
-            Logger.GetInstance().Log("Successfully started application");
-
-        }
-
-        private void StartServer() {
+            /*
+             * Manages application's HTTP server
+            */
 
             Logger.GetInstance().Log("Starting HTTP server...");
 
@@ -128,15 +139,15 @@ namespace Dodoco.Application {
 
             }
 
-        }
-
-        public void StartClient() {
+            /*
+             * Manages application's HTTP client
+            */
 
             Logger.GetInstance().Log("Starting HTTP client...");
-            
             this.client = new DodocoHttpClient();
-
             Logger.GetInstance().Log("Successfully started HTTP client");
+
+            Logger.GetInstance().Log("Successfully started application");
 
         }
 
@@ -149,6 +160,7 @@ namespace Dodoco.Application {
 
             Logger.GetInstance().Log($"Application finished with exit code {exitCode} {(exitCode == 0 ? "(Success)" : "(Error)" )}");
 
+            this.log.StopWritingToLog();
             Console.WriteLine(Dodoco.Util.Log.Logger.GetInstance().GetFullLogText());
             System.Environment.Exit(exitCode);
 
