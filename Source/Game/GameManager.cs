@@ -118,8 +118,7 @@ namespace Dodoco.Game {
 
             } catch (KeyNotFoundException e) {
 
-                Logger.GetInstance().Warning($"There is no game interface for the given version ({gameVersion.ToString()}). The current stable interface will be used instead, but be aware that unknown errors may occur. Newer launcher updates may support new game interfaces.");
-                Logger.GetInstance().Debug(game.GetVersion().ToString());
+                Logger.GetInstance().Warning($"There is no game interface for the given version ({gameVersion.ToString()}). The current stable interface will be used instead, but be aware that unknown errors may occur. Newer launcher updates may add new game interfaces who support the given version.");
 
             }
 
