@@ -1,3 +1,4 @@
+using Dodoco.Application;
 using Dodoco.Game;
 using Dodoco.Util.Log;
 
@@ -5,11 +6,11 @@ using System.Globalization;
 
 namespace Dodoco.Launcher {
 
-    public record LauncherSettings: LauncherFile<LauncherSettings> {
+    public record LauncherSettings: ApplicationFile<LauncherSettings> {
 
         public LauncherSettings(): base(
             "settings",
-            LauncherConstants.LAUNCHER_HOME_DIRECTORY,
+            ApplicationConstants.APPLICATION_HOME_DIRECTORY,
             LauncherConstants.LAUNCHER_SETTINGS_FILENAME
         ) {}
 
@@ -17,6 +18,8 @@ namespace Dodoco.Launcher {
         public Wine wine = new Wine();
         public Game game = new Game();
         public Api api = new Api();
+
+        // Schema
 
         public record Launcher {
 
@@ -27,14 +30,18 @@ namespace Dodoco.Launcher {
 
         public record Wine {
 
-            public string prefix_path = Path.Join(LauncherConstants.LAUNCHER_HOME_DIRECTORY, "wine");
+            public string prefix_path = Path.Join(ApplicationConstants.APPLICATION_HOME_DIRECTORY, "wine");
 
         }
 
         public record Game {
 
+            public CultureInfo language = new CultureInfo("en-US");
             public GameServer server = GameServer.global;
-            public string installation_path = Path.Join(LauncherConstants.LAUNCHER_HOME_DIRECTORY, "game");
+            public string installation_path = Path.Join(ApplicationConstants.APPLICATION_HOME_DIRECTORY, "game");
+            public List<CultureInfo> voices = new List<CultureInfo>{
+                GameConstants.DEFAULT_VOICE_LANGUAGE
+            };
 
         }
 
