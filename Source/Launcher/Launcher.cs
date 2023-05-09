@@ -21,10 +21,16 @@ namespace Dodoco.Launcher {
         private Thread? windowThread;
         public static LauncherExecutionState executionState { get; private set; } = LauncherExecutionState.UNINITIALIZED;
         public static LauncherActivityState activityState { get; private set; } = LauncherActivityState.UNREADY;
-        public static LauncherSettings settings = new LauncherSettings();
-        public static LauncherCache cache = new LauncherCache();
-        public Content launcherContent { get; private set; }
-        public Resource launcherResource { get; private set; }
+        
+        /*
+         * Launcher's files managed by Main() method
+        */
+
+        public LauncherSettings settings = new LauncherSettings();
+        public LauncherCache cache = new LauncherCache();
+        
+        public Content? content { get; private set; }
+        public Resource? resource { get; private set; }
         public static JsonSerializerOptions jsonOptions = new JsonSerializerOptions() {
             NumberHandling = JsonNumberHandling.AllowReadingFromString
         };
@@ -109,42 +115,64 @@ namespace Dodoco.Launcher {
             try {
 
                 /*
-                 * Manages settings' file
+                 * Manages launcher's settings file
                 */
 
                 this.UpdateActivityState(LauncherActivityState.FETCHING_LAUNCHER_SETTINGS);
-                if (!settings.Exists()) settings.CreateFile();
-                settings = settings.LoadFile();
+                
+                if (!this.settings.Exists()) {
+
+                    this.settings.CreateFile();
+                    this.settings.WriteFile();
+
+                }
+
+                this.settings = this.settings.LoadFile();
 
                 /*
-                 * Manages cache's file
+                 * Manages launcher's cache file
                 */
 
                 this.UpdateActivityState(LauncherActivityState.FETCHING_LAUNCHER_CACHE);
-                if (!cache.Exists()) cache.CreateFile();
+                
+                if (!cache.Exists()) {
+
+                    cache.CreateFile();
+                    cache.WriteFile();
+
+                }
+
                 cache = cache.LoadFile();
-                cache.background_image.md5_hash = "test";
-                cache.UpdateFile();
+
+                /*
+                 * Manages APIs
+                */
 
                 Logger.GetInstance().Log($"Fetching APIs...");
                 this.UpdateActivityState(LauncherActivityState.FETCHING_WEB_DATA);
 
                 CompanyApiFactory factory = new CompanyApiFactory(
-                    settings.api.company[settings.game.server].url,
-                    settings.api.company[settings.game.server].key,
-                    settings.api.company[settings.game.server].launcher_id,
-                    settings.launcher.language
+                    this.settings.api.company[this.settings.game.server].url,
+                    this.settings.api.company[this.settings.game.server].key,
+                    this.settings.api.company[this.settings.game.server].launcher_id,
+                    this.settings.game.language
                 );
 
                 /*
                  * Manages content API
                 */
 
-                launcherContent = await factory.FetchLauncherContent();
-                await cache.UpdateFromContentApi(launcherContent);
+                content = await factory.FetchLauncherContent();
+                if (content != null && content.IsSuccessfull())
+                    await cache.UpdateFromContent(content);
 
+                /*
+                 * Manages resource API
+                */
                 
-                launcherResource = await factory.FetchLauncherResource();
+                resource = await factory.FetchLauncherResource();
+                if (resource != null && resource.IsSuccessfull())
+                    Game.Stable.Game.GetInstance().SetVersion(Version.Parse(resource.data.game.latest.version));
 
                 Logger.GetInstance().Log($"Finished fetching APIs");
 
@@ -152,25 +180,15 @@ namespace Dodoco.Launcher {
                  *
                 */
 
-                if (launcherResource.IsSuccessfull()) {
-
-                    Game.Stable.Game.GetInstance().version = Version.Parse(launcherResource.data.game.latest.version);
-
-                }
-
-                /*
-                 *
-                */
-
-                if (!GameInstallationManager.CheckGameInstallation(settings.game.installation_path, settings.game.server)) {
+                if (!GameInstallationManager.CheckGameInstallation(this.settings.game.installation_path, this.settings.game.server)) {
 
                     // TODO: download game
                     this.UpdateActivityState(LauncherActivityState.NEEDS_GAME_DOWNLOAD);
 
                 } else {
 
-                    Version installedGameVersion = GameInstallationManager.SearchForGameVersion(settings.game.installation_path, settings.game.server);
-                    Version remoteGameVersion = Version.Parse(launcherResource.data.game.latest.version);
+                    Version installedGameVersion = GameInstallationManager.SearchForGameVersion(this.settings.game.installation_path, this.settings.game.server);
+                    Version remoteGameVersion = Version.Parse(resource.data.game.latest.version);
 
                     if (remoteGameVersion > installedGameVersion) {
 
