@@ -1,10 +1,12 @@
+using Dodoco.Game.Stable;
 using Dodoco.Util.Log;
+
 using System.Text;
 using System.Text.RegularExpressions;
 
 namespace Dodoco.Game {
 
-    public static class GameInstallationManager {
+    public static class GameManager {
 
         public static bool CheckGameInstallation(string gameInstallationDirectory, GameServer gameServer) {
 
@@ -97,6 +99,31 @@ namespace Dodoco.Game {
                 throw new GameException($"Game's data directory ({dataDirectory}) doesn't exists");
 
             }
+
+        }
+
+        public static IGame CreateFromVersion(Version gameVersion) {
+
+            Dictionary<Version, IGame> gameInterface = new Dictionary<Version, IGame> {
+
+                { Version.Parse("3.6.5"), Stable.Game.GetInstance() }
+                
+            };
+
+            IGame game = Stable.Game.GetInstance();
+
+            try {
+
+                game = gameInterface[gameVersion];
+
+            } catch (KeyNotFoundException e) {
+
+                Logger.GetInstance().Warning($"There is no game interface for the given version ({gameVersion.ToString()}). The current stable interface will be used instead, but be aware that unknown errors may occur. Newer launcher updates may support new game interfaces.");
+                Logger.GetInstance().Debug(game.GetVersion().ToString());
+
+            }
+
+            return game;
 
         }
 
