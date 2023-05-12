@@ -1,5 +1,6 @@
 namespace Dodoco.Util.Log {
 
+    [Tapper.TranspilationSource]
     public class LogEntry {
 
         public LogType type { get; private set; }

@@ -1,5 +1,6 @@
 namespace Dodoco.Util.Log {
 
+    [Tapper.TranspilationSource]
     public enum LogType {
 
         LOG = 0,
