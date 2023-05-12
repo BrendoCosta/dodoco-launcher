@@ -2,14 +2,10 @@
 
     import { onMount } from "svelte";
     import { DodocoSSE } from "../Service";
-    import type { LogEntry } from "../Common/Util";
+    import { LogEntry, LogType } from "@Dodoco/Generated/Dodoco.Util.Log";
 
     let title: string = "LOADING...";
-    let logMessage: LogEntry = {
-        type: 0,
-        message: "",
-        prependMessage: "",
-    };
+    let logMessage: LogEntry = { type: LogType.LOG, message: "", prependMessage: "" };
 
     onMount(async () => {
 
