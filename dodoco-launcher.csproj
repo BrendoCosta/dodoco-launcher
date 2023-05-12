@@ -11,7 +11,8 @@
     <PropertyGroup>
         <StartupObject>Dodoco.Program</StartupObject>
         <OutputType>Exe</OutputType>
-        <TargetFramework>net6.0</TargetFramework>
+        <TargetFramework>net7.0</TargetFramework>
+        <PlatformTarget>x64</PlatformTarget>
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
     </PropertyGroup>
@@ -23,12 +24,17 @@
         </None>
     </ItemGroup>
     <ItemGroup>
-        <PackageReference Include="AutoMapper" Version="12.0.1" />
         <PackageReference Include="Grapevine" Version="5.0.0-rc.10" />
         <PackageReference Include="Photino.Native" Version="2.4.1" />
         <PackageReference Include="Photino.NET" Version="2.4.0" />
-        <PackageReference Include="SharpWebview" Version="0.7.0" />
-        <PackageReference Include="WebSocketSharp" Version="1.0.3-rc11" />
+        <PackageReference Include="Tapper.Analyzer" Version="1.8.2">
+          <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+          <PrivateAssets>all</PrivateAssets>
+        </PackageReference>
+        <PackageReference Include="Tapper.Attributes" Version="1.8.2" />
         <PackageReference Include="YamlDotNet" Version="13.1.0" />
     </ItemGroup>
+    <Target Name="GenerateTypescriptTypes" BeforeTargets="BeforeBuild">
+        <Exec Command="dotnet tool run tapper -p ./dodoco-launcher.csproj -o ./Web/Source/Generated/"/>
+    </Target>
 </Project>
