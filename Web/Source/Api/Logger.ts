@@ -1,4 +1,4 @@
-import type { LogEntry } from "./LogEntry";
+import type { LogEntry } from "@Dodoco/Generated/Dodoco.Util.Log";
 
 export class Logger {
 
