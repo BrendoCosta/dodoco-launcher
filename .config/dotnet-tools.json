@@ -1,0 +1,12 @@
+{
+  "version": 1,
+  "isRoot": true,
+  "tools": {
+    "tapper.generator": {
+      "version": "1.8.2",
+      "commands": [
+        "tapper"
+      ]
+    }
+  }
+}
