@@ -21,5 +21,10 @@ export default defineConfig({
 		fs: {
 			allow: [ projectRootPath ]
 		}
+	},
+	resolve:{
+		alias:{
+			"@Dodoco" : Path.resolve(__dirname, DodocoConfig.paths.source)
+		}
 	}
 });
