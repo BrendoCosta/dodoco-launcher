@@ -12,7 +12,7 @@ namespace Dodoco.Controller {
 
         public static void RegisterEvent(string key, Func<Event> function) => events.Add(key, function);
         public static void UnregisterEvent(string key) => events.Remove(key);
-        public static async Task PushEvent(Event e) => await Task.Run(async () => eventQueue.Enqueue(e));
+        public static void PushEvent(Event e) => eventQueue.Enqueue(e);
 
         [Grapevine.RestRoute("Get", "/")]
         public static async Task Root(Grapevine.IHttpContext context) {
