@@ -1,6 +1,7 @@
 using Dodoco.Network.Api.Company;
 using Dodoco.Network.Api.Company.Launcher;
 using Dodoco.Application;
+using Dodoco.Network;
 using Dodoco.Network.Controller;
 using Dodoco.Game;
 using Dodoco.Util;
@@ -136,22 +137,41 @@ namespace Dodoco.Launcher {
                  * Manages content API
                 */
 
-                content = await factory.FetchLauncherContent();
-                if (content != null && content.IsSuccessfull())
-                    await cache.UpdateFromContent(content);
+                try { content = await factory.FetchLauncherContent(); }
+                catch (NetworkException e) {
+
+                    /* Since content API it is not strictly
+                     * necessary for launcher's work, the exception
+                     * will be simply reported to the log.
+                    */
+
+                    Logger.GetInstance().Error(e.Message, e);
+
+                }
+
+                if (content != null) {
+
+                    if (content.IsSuccessfull())
+                        await cache.UpdateFromContent(content);
+                    else
+                        Logger.GetInstance().Error($"Failed to fetch content API from remote servers (return code: {content.retcode}, message: \"{content.message}\")");
+
+                }
 
                 /*
                  * Manages resource API
                 */
                 
                 resource = await factory.FetchLauncherResource();
-                if (resource != null && resource.IsSuccessfull())
+                if (resource.IsSuccessfull())
                     Game.Stable.Game.GetInstance().SetVersion(Version.Parse(resource.data.game.latest.version));
+                else
+                    new LauncherException($"Failed to fetch resource API from remote servers (return code: {resource.retcode}, message: \"{resource.message}\")");
 
                 Logger.GetInstance().Log($"Finished fetching APIs");
 
                 /*
-                 *
+                 * Manages game
                 */
 
                 if (!GameManager.CheckGameInstallation(this.settings.game.installation_path, this.settings.game.server)) {
@@ -179,18 +199,9 @@ namespace Dodoco.Launcher {
 
                 }
 
-                await Task.Run(async () => {
-
-                    await Task.Delay(5000);
-
-                    Logger.GetInstance().Log($"Test");
-
-
-                });
-
             } catch (Exception e) {
 
-                Logger.GetInstance().Error($"A fatal erro occurred", e);
+                Logger.GetInstance().Error($"A fatal error occurred", e);
 
             }
 
@@ -202,23 +213,9 @@ namespace Dodoco.Launcher {
 
                 Logger.GetInstance().Log("Finishing launcher...");
                 this.UpdateExecutionState(LauncherExecutionState.FINISHING);
-
-                Logger.GetInstance().Log("Finishing launcher's window's thread asynchronously...");
-                
-                Task<bool>.Run(() => {
-
-                    this.windowThread?.Join();
-                    
-                    return true;
-                    
-
-                }).ContinueWith((result) => {
-
-                    Logger.GetInstance().Log("Successfully finished launcher's window's thread");
-                    Logger.GetInstance().Log("Successfully finished launcher");
-                    this.UpdateExecutionState(LauncherExecutionState.FINISHED);
-
-                });
+                if (this.window.IsOpen())
+                    this.window.Close();
+                Logger.GetInstance().Log("Successfully finished launcher");
 
             } else {
 

@@ -24,25 +24,29 @@ namespace Dodoco.Network.Api.Company {
 
         }
 
-        public async Task<Content?> FetchLauncherContent() {
+        public async Task<Content> FetchLauncherContent() {
 
             Logger.GetInstance().Log("Fetching latest game's launcher's content data from remote servers...");
             Content? content = await this.FetchApi<Content>($"/content?key={this.key}&launcher_id={this.launcherId}&language={this.language.Name.ToLower()}");
+            if (content == null)
+                throw new NetworkException("Failed to fetch content API");
             return content;
 
         }
 
-        public async Task<Resource?> FetchLauncherResource() {
+        public async Task<Resource> FetchLauncherResource() {
 
             Logger.GetInstance().Log("Fetching latest game's launcher's resource data from remote servers...");
-            Resource? res = await this.FetchApi<Resource>($"/resource?key={this.key}&launcher_id={this.launcherId}");
-            return res;
+            Resource? resource = await this.FetchApi<Resource>($"/resource?key={this.key}&launcher_id={this.launcherId}");
+            if (resource == null)
+                throw new NetworkException("Failed to fetch resource API");
+            return resource;
 
         }
 
-        private async Task<CompanyApi?> FetchApi<CompanyApi>(string apiUri) {
+        private async Task<T?> FetchApi<T>(string apiUri) where T: CompanyApi {
 
-            CompanyApi? data = default(CompanyApi);
+            T? data = Activator.CreateInstance<T>();
             string urlToFetch = this.apiBaseUrl + apiUri;
             HttpResponseMessage response = await Application.Application.GetInstance().client.FetchAsync(urlToFetch);
         
@@ -51,15 +55,15 @@ namespace Dodoco.Network.Api.Company {
                 Logger.GetInstance().Log("Successfully fetch latest data from remote servers");
 
                 Logger.GetInstance().Log("Trying to parse the received data...");
-                try { data = JsonSerializer.Deserialize<CompanyApi>(await response.Content.ReadAsStringAsync(), new JsonSerializerOptions() {
+                try { data = JsonSerializer.Deserialize<T>(await response.Content.ReadAsStringAsync(), new JsonSerializerOptions() {
                     NumberHandling = JsonNumberHandling.AllowReadingFromString
                 }); }
-                catch (JsonException e) { Logger.GetInstance().Error("Failed to parse the received. Maybe the API has been changed?", e); }
+                catch (JsonException e) { throw new NetworkException("Failed to parse the received. Maybe the API has been changed?", e); }
                 Logger.GetInstance().Log("Successfully parsed the received data");
 
             } else {
 
-                Logger.GetInstance().Error($"Failed to fetch latest data from remote servers (received HTTP status code {response.StatusCode})");
+                throw new NetworkException($"Failed to fetch latest data from remote servers (received HTTP status code {response.StatusCode})");
 
             }
 
