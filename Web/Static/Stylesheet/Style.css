@@ -11,6 +11,12 @@ html, body {
 
 }
 
+*:not(input[type="text"]) {
+
+    caret-color: transparent;
+
+}
+
 #app-wrapper {
 
     width: 100%;
@@ -19,7 +25,6 @@ html, body {
     align-items: center;
     justify-content: center;
     flex-direction: column;
-    caret-color: transparent;
 
 }
 
