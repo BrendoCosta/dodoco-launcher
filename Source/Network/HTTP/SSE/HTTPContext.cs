@@ -1,4 +1,4 @@
-namespace Dodoco.HTTP.SSE {
+namespace Dodoco.Network.HTTP.SSE {
 
     public class HTTPContext {
 

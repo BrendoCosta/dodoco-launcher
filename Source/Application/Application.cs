@@ -2,7 +2,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using System.Reflection;
-using Dodoco.HTTP;
+using Dodoco.Network.HTTP;
 using Dodoco.Util.Log;
 
 namespace Dodoco.Application {

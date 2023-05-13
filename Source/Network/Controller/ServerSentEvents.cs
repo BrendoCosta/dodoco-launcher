@@ -1,8 +1,8 @@
-using  Dodoco.HTTP.SSE;
+using  Dodoco.Network.HTTP.SSE;
 
 using System.Collections;
 
-namespace Dodoco.Controller {
+namespace Dodoco.Network.Controller {
 
     [Grapevine.RestResource(BasePath = "/Dodoco/SSE")]
     public static class ServerSentEvents {
@@ -17,7 +17,7 @@ namespace Dodoco.Controller {
         [Grapevine.RestRoute("Get", "/")]
         public static async Task Root(Grapevine.IHttpContext context) {
 
-            Dodoco.HTTP.SSE.HTTPContext ctx = new Dodoco.HTTP.SSE.HTTPContext(context);
+            Dodoco.Network.HTTP.SSE.HTTPContext ctx = new Dodoco.Network.HTTP.SSE.HTTPContext(context);
 
             await Task.Run(async () => {
 

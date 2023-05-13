@@ -1,5 +1,5 @@
 using Dodoco.Application;
-using Dodoco.Api.Company.Launcher;
+using Dodoco.Network.Api.Company.Launcher;
 using Dodoco.Util.Hash;
 using Dodoco.Util.Log;
 

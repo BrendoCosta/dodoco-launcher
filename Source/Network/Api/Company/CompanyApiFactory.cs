@@ -1,11 +1,11 @@
-using Dodoco.Api.Company.Launcher;
+using Dodoco.Network.Api.Company.Launcher;
 using Dodoco.Util.Log;
 
 using System.Globalization;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 
-namespace Dodoco.Api.Company {
+namespace Dodoco.Network.Api.Company {
 
     public class CompanyApiFactory {
 

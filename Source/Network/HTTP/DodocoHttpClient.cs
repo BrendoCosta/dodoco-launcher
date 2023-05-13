@@ -1,6 +1,6 @@
 using Dodoco.Util.Log;
 
-namespace Dodoco.HTTP {
+namespace Dodoco.Network.HTTP {
 
     public class DodocoHttpClient: HttpClient {
 

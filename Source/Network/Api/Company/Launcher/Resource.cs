@@ -1,4 +1,4 @@
-namespace Dodoco.Api.Company.Launcher {
+namespace Dodoco.Network.Api.Company.Launcher {
 
     public class Resource: CompanyApi {
 

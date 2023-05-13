@@ -1,4 +1,4 @@
-namespace Dodoco.Api.Company {
+namespace Dodoco.Network.Api.Company {
 
     public abstract class CompanyApi {
 

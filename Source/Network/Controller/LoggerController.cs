@@ -1,4 +1,4 @@
-namespace Dodoco.Controller {
+namespace Dodoco.Network.Controller {
 
     [Grapevine.RestResource(BasePath = "/Dodoco/LoggerController")]
     public class LoggerController {

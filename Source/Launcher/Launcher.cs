@@ -1,7 +1,7 @@
-using Dodoco.Api.Company;
-using Dodoco.Api.Company.Launcher;
+using Dodoco.Network.Api.Company;
+using Dodoco.Network.Api.Company.Launcher;
 using Dodoco.Application;
-using Dodoco.Controller;
+using Dodoco.Network.Controller;
 using Dodoco.Game;
 using Dodoco.Util;
 using Dodoco.Util.Log;
@@ -238,7 +238,7 @@ namespace Dodoco.Launcher {
 
             Logger.GetInstance().Debug($"Updating launcher's execution state from {executionState.ToString()} to {newState.ToString()}");
             executionState = newState;
-            ServerSentEvents.PushEvent(new Dodoco.HTTP.SSE.Event() {
+            ServerSentEvents.PushEvent(new Dodoco.Network.HTTP.SSE.Event() {
                 eventName = Reflection.GetCurrentMethod(),
                 data = newState.ToString()
             });
@@ -249,7 +249,7 @@ namespace Dodoco.Launcher {
 
             Logger.GetInstance().Debug($"Updating launcher's activity state from {activityState.ToString()} to {newState.ToString()}");
             activityState = newState;
-            ServerSentEvents.PushEvent(new Dodoco.HTTP.SSE.Event() {
+            ServerSentEvents.PushEvent(new Dodoco.Network.HTTP.SSE.Event() {
                 eventName = Reflection.GetCurrentMethod(),
                 data = newState.ToString()
             });

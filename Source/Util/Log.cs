@@ -1,4 +1,4 @@
-using Dodoco.Controller;
+using Dodoco.Network.Controller;
 using Dodoco.Util;
 
 using System.Text.Json;
@@ -35,7 +35,7 @@ namespace Dodoco.Util.Log {
 
             this.Write(LogType.LOG, Reflection.GetCallingMethod(), message);
             // Push event
-            ServerSentEvents.PushEvent(new Dodoco.HTTP.SSE.Event() {
+            ServerSentEvents.PushEvent(new Dodoco.Network.HTTP.SSE.Event() {
                 eventName = Reflection.GetCurrentMethod(),
                 data = this.GetLastEntryJson(LogType.LOG)
             });
@@ -46,7 +46,7 @@ namespace Dodoco.Util.Log {
 
             this.Write(LogType.LOG, Reflection.GetCallingMethod(), message, exception);
             // Push event
-            ServerSentEvents.PushEvent(new Dodoco.HTTP.SSE.Event() {
+            ServerSentEvents.PushEvent(new Dodoco.Network.HTTP.SSE.Event() {
                 eventName = Reflection.GetCurrentMethod(),
                 data = this.GetLastEntryJson(LogType.LOG)
             });
@@ -57,7 +57,7 @@ namespace Dodoco.Util.Log {
 
             this.Write(LogType.ERROR, Reflection.GetCallingMethod(), message);
             // Push event
-            ServerSentEvents.PushEvent(new Dodoco.HTTP.SSE.Event() {
+            ServerSentEvents.PushEvent(new Dodoco.Network.HTTP.SSE.Event() {
                 eventName = Reflection.GetCurrentMethod(),
                 data = this.GetLastEntryJson(LogType.ERROR)
             });
@@ -68,7 +68,7 @@ namespace Dodoco.Util.Log {
 
             this.Write(LogType.ERROR, Reflection.GetCallingMethod(), message, exception);
             // Push event
-            ServerSentEvents.PushEvent(new Dodoco.HTTP.SSE.Event() {
+            ServerSentEvents.PushEvent(new Dodoco.Network.HTTP.SSE.Event() {
                 eventName = Reflection.GetCurrentMethod(),
                 data = this.GetLastEntryJson(LogType.ERROR)
             });
@@ -79,7 +79,7 @@ namespace Dodoco.Util.Log {
 
             this.Write(LogType.DEBUG, Reflection.GetCallingMethod(), message);
             // Push event
-            ServerSentEvents.PushEvent(new Dodoco.HTTP.SSE.Event() {
+            ServerSentEvents.PushEvent(new Dodoco.Network.HTTP.SSE.Event() {
                 eventName = Reflection.GetCurrentMethod(),
                 data = this.GetLastEntryJson(LogType.DEBUG)
             });
@@ -90,7 +90,7 @@ namespace Dodoco.Util.Log {
 
             this.Write(LogType.DEBUG, Reflection.GetCallingMethod(), message, exception);
             // Push event
-            ServerSentEvents.PushEvent(new Dodoco.HTTP.SSE.Event() {
+            ServerSentEvents.PushEvent(new Dodoco.Network.HTTP.SSE.Event() {
                 eventName = Reflection.GetCurrentMethod(),
                 data = this.GetLastEntryJson(LogType.DEBUG)
             });
@@ -101,7 +101,7 @@ namespace Dodoco.Util.Log {
 
             this.Write(LogType.WARNING, Reflection.GetCallingMethod(), message);
             // Push event
-            ServerSentEvents.PushEvent(new Dodoco.HTTP.SSE.Event() {
+            ServerSentEvents.PushEvent(new Dodoco.Network.HTTP.SSE.Event() {
                 eventName = Reflection.GetCurrentMethod(),
                 data = this.GetLastEntryJson(LogType.WARNING)
             });
@@ -112,7 +112,7 @@ namespace Dodoco.Util.Log {
 
             this.Write(LogType.WARNING, Reflection.GetCallingMethod(), message, exception);
             // Push event
-            ServerSentEvents.PushEvent(new Dodoco.HTTP.SSE.Event() {
+            ServerSentEvents.PushEvent(new Dodoco.Network.HTTP.SSE.Event() {
                 eventName = Reflection.GetCurrentMethod(),
                 data = GetLastEntryJson(LogType.WARNING)
             });
