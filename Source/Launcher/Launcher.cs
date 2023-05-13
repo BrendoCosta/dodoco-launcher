@@ -17,7 +17,7 @@ namespace Dodoco.Launcher {
 
         // https://github.com/Raxdiam/photino.API
 
-        private PhotinoNET.PhotinoWindow? window = null;
+        private IApplicationWindow window;
         private Thread? windowThread;
         public static LauncherExecutionState executionState { get; private set; } = LauncherExecutionState.UNINITIALIZED;
         public static LauncherActivityState activityState { get; private set; } = LauncherActivityState.UNREADY;
@@ -52,65 +52,39 @@ namespace Dodoco.Launcher {
             Logger.GetInstance().Log("Initializing launcher...");
 
             this.UpdateExecutionState(LauncherExecutionState.INITIALIZING);
-            this.CreateThread();
+            
+            this.window = new ApplicationWindow();
 
         }
 
-        private void CreateThread() {
+        public void Run() {
 
-            Logger.GetInstance().Log("Creating launcher's window's thread...");
+            if (!this.IsRunning()) {
 
-            this.windowThread = new Thread(() => {
-
-                Logger.GetInstance().Log("Configuring launcher's window's...");
-
-                this.window = new PhotinoNET.PhotinoWindow();
-
-                this.window.SetLogVerbosity(0);
                 this.window.SetTitle(Dodoco.Application.Application.GetInstance().title);
-                this.window.SetUseOsDefaultLocation(true);
-                this.window.SetUseOsDefaultSize(false);
                 this.window.SetSize(new System.Drawing.Size(300, 400));
-                this.window.Center();
                 this.window.SetResizable(false);
-                this.window.SetChromeless(false);
-                this.window.RegisterCustomSchemeHandler("app", (object sender, string scheme, string url, out string contentType) => {
-                    contentType = "text/javascript";
-                    return new MemoryStream(System.Text.Encoding.UTF8.GetBytes(@"( () => window.location.reload(true) )();"));
-                });
-                // ---- For debugging ----
-                this.window.Load(new Uri($"http://localhost:5173/?id={(new Random().Next())}"));
+                this.window.SetFrameless(false);
+                this.window.SetUri(new Uri($"http://localhost:5173/?id={(new Random().Next())}"));
                 // -----------------------
-                //this.window.Load(new Uri($"http://localhost:{Dodoco.Application.Application.GetInstance().port}/?id={(new Random().Next())}"));
+                //this.window.SetUri(new Uri($"http://localhost:{Dodoco.Application.Application.GetInstance().port}/?id={(new Random().Next())}"));
+                
+                this.window.OnOpen += new EventHandler(async (object? sender, EventArgs e) => this.Main());
+                this.window.OnClose += new EventHandler((object? sender, EventArgs e) => this.Finish());
+                
+                this.window.Open();
 
-                this.window.RegisterWindowCreatingHandler(new EventHandler((object? sender, EventArgs e) => Logger.GetInstance().Log("Creating launcher's window...") ));
-                this.window.RegisterWindowCreatedHandler(new EventHandler((object? sender, EventArgs e) => Logger.GetInstance().Log("Successfully created launcher's window") ));
-                //this.window.RegisterWindowCreatedHandler(new EventHandler((object? sender, EventArgs e) => Task.Run(async () => { await Task.Delay(3000); this.SearchSettings(); return; }) ));
-                this.window.RegisterWindowCreatedHandler(new EventHandler(async (object? sender, EventArgs e) => await this.Main() ));
-                this.window.RegisterWindowClosingHandler(new PhotinoNET.PhotinoWindow.NetClosingDelegate((object sender, EventArgs e) => {
-            
-                    Logger.GetInstance().Log("Closing launcher's window...");
-                    this.window.Close();
-                    Logger.GetInstance().Log("Successfully closed launcher's window");
-                    
-                    return false;
+            } else {
 
-                }));
+                Logger.GetInstance().Error("Launcher is already running");
 
-                Logger.GetInstance().Log("Successfully configured launcher's window's");
-
-                this.window.WaitForClose();
-                this.Finish();
-
-            });
-
-            this.windowThread.TrySetApartmentState(ApartmentState.STA);
-
-            Logger.GetInstance().Log("Successfully created launcher's window's thread");
+            }
 
         }
 
         private async Task Main() {
+
+            this.UpdateExecutionState(LauncherExecutionState.RUNNING);
 
             try {
 
@@ -217,34 +191,6 @@ namespace Dodoco.Launcher {
             } catch (Exception e) {
 
                 Logger.GetInstance().Error($"A fatal erro occurred", e);
-
-            }
-
-        }
-
-        public void Open() {
-
-            if (!this.IsRunning()) {
-
-                Logger.GetInstance().Log("Starting launcher's window's thread...");
-
-                this.windowThread?.Start();
-
-                if (this.windowThread?.ThreadState == ThreadState.Running) {
-
-                    Logger.GetInstance().Log("Successfully started launcher's window's thread");
-                    this.UpdateExecutionState(LauncherExecutionState.RUNNING);
-
-                } else {
-
-                    Logger.GetInstance().Error("Failed to start launcher's window's thread");
-                    this.Finish();
-
-                }
-
-            } else {
-
-                Logger.GetInstance().Error("Launcher is already opened");
 
             }
 
