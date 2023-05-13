@@ -3,8 +3,6 @@ using System;
 using System.Drawing;
 using System.IO;
 using System.Text;
-using WebSocketSharp;
-using WebSocketSharp.Server;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 
@@ -19,7 +17,7 @@ namespace Dodoco {
             Dodoco.Application.Application app = Dodoco.Application.Application.GetInstance();
             Dodoco.Launcher.Launcher launcher = Dodoco.Launcher.Launcher.GetInstance();
             
-            launcher.Open();
+            launcher.Run();
 
             while (launcher.IsRunning()) {
 
