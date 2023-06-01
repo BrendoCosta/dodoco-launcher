@@ -1,4 +1,4 @@
-using Dodoco.Game.Stable;
+using Dodoco.Network.Api.Company.Launcher.Resource;
 using Dodoco.Util.Log;
 
 using System.Text;
@@ -12,11 +12,11 @@ namespace Dodoco.Game {
 
             Logger.GetInstance().Log($"Checking game installation in ({gameInstallationDirectory})...");
             string gameExecutableFileName = $"{GameConstants.GAME_TITLE[gameServer]}.exe";
-            string gameExecutablePath = Path.Join(gameInstallationDirectory, gameExecutableFileName);
+            FileInfo gameExecutable = new FileInfo(Path.Join(gameInstallationDirectory, gameExecutableFileName));
 
             if (Directory.Exists(gameInstallationDirectory)) {
 
-                if (File.Exists(gameExecutablePath)) {
+                if (gameExecutable.Exists) {
 
                     Logger.GetInstance().Log($"Successfully found game's executable ({gameExecutableFileName}) inside the specified directory ({gameInstallationDirectory})");
                     return true;
@@ -41,88 +41,87 @@ namespace Dodoco.Game {
 
         public static Version SearchForGameVersion(string gameInstallationDirectory, GameServer gameServer) {
 
-            string dataDirectory = Path.Join(gameInstallationDirectory, $"{GameConstants.GAME_TITLE[gameServer]}_Data");
-            string gameManagerFileName = "globalgamemanagers";
-            string gameManagerFilePath = Path.Join(dataDirectory, gameManagerFileName);
+            DirectoryInfo dataDirectory = new DirectoryInfo(Path.Join(gameInstallationDirectory, $"{GameConstants.GAME_TITLE[gameServer]}_Data"));
+            FileInfo globalGameManagerFile = new FileInfo(Path.Join(dataDirectory.FullName, "globalgamemanagers"));
 
-            Logger.GetInstance().Log($"Trying to find game's data directory ({dataDirectory}) exists...");
+            Logger.GetInstance().Log($"Trying to find game's data directory ({dataDirectory.FullName})...");
             
-            if (Directory.Exists(dataDirectory)) {
+            if (dataDirectory.Exists) {
 
                 Logger.GetInstance().Log($"Successfully found game's data directory");
-                Logger.GetInstance().Log($"Trying to find \"{gameManagerFileName}\" file inside data directory...");
+                Logger.GetInstance().Log($"Trying to find \"{globalGameManagerFile.Name}\" file inside data directory...");
 
-                if (File.Exists(gameManagerFilePath)) {
+                if (globalGameManagerFile.Exists) {
 
-                    Logger.GetInstance().Log($"Successfully found \"{gameManagerFileName}\" file inside data directory");
-                    Logger.GetInstance().Log($"Trying to read \"{gameManagerFileName}\" file from data directory...");
+                    Logger.GetInstance().Log($"Successfully found \"{globalGameManagerFile.Name}\" file inside data directory");
+                    Logger.GetInstance().Log($"Trying to read \"{globalGameManagerFile.Name}\" file from data directory...");
 
                     try {
 
-                        byte[] buffer = File.ReadAllBytes(gameManagerFilePath);
+                        byte[] buffer = File.ReadAllBytes(globalGameManagerFile.FullName);
 
                         if (buffer.Length == 0) {
 
-                            throw new GameException($"The file \"{gameManagerFileName}\" ({gameManagerFilePath}) is empty");
+                            throw new GameException($"The file \"{globalGameManagerFile.Name}\" ({globalGameManagerFile.FullName}) is empty");
 
                         }
 
-                        Logger.GetInstance().Log($"Successfully read \"{gameManagerFileName}\" file from data directory");
-                        Logger.GetInstance().Log($"Trying to find the game version inside the \"{gameManagerFileName}\" file...");
+                        Logger.GetInstance().Log($"Successfully read \"{globalGameManagerFile.Name}\" file from data directory");
+                        Logger.GetInstance().Log($"Trying to find the game version inside the \"{globalGameManagerFile.Name}\" file...");
 
                         string fileContents = Encoding.ASCII.GetString(buffer);
                         
                         foreach (Match match in Regex.Matches(fileContents, @"([1-9]+\.[0-9]+\.[0-9]+)_[\d]+_[\d]+")) {
 
                             Version version = Version.Parse(match.ToString().Split("_")[0]);
-                            Logger.GetInstance().Log($"Successfully found game version ({version}) inside the \"{gameManagerFileName}\" file");
+                            Logger.GetInstance().Log($"Successfully found game version ({version}) inside the \"{globalGameManagerFile.Name}\" file");
                             return version;
 
                         }
 
-                        throw new GameException($"Can't find the game version inside the \"{gameManagerFileName}\" file");
+                        throw new GameException($"Can't find the game version inside the \"{globalGameManagerFile.Name}\" file");
 
                     } catch (Exception e) {
 
-                        throw new GameException($"Failed to read the file \"{gameManagerFileName}\" ({gameManagerFilePath})", e);
+                        throw new GameException($"Failed to read the file \"{globalGameManagerFile.Name}\" ({globalGameManagerFile.FullName})", e);
 
                     }
 
                 } else {
 
-                    throw new GameException($"The file \"{gameManagerFileName}\" is missing");
+                    throw new GameException($"The file \"{globalGameManagerFile.Name}\" is missing");
 
                 }
 
             } else {
 
-                throw new GameException($"Game's data directory ({dataDirectory}) doesn't exists");
+                throw new GameException($"Game's data directory ({dataDirectory.FullName}) doesn't exists");
 
             }
 
         }
 
-        public static IGame CreateFromVersion(Version gameVersion) {
+        public static IGame CreateGame(Version version, GameServer server, Resource resource, string directory, GameState state) {
 
-            Dictionary<Version, IGame> gameInterface = new Dictionary<Version, IGame> {
-
-                { Version.Parse("3.6.5"), Stable.Game.GetInstance() }
-                
-            };
-
-            IGame game = Stable.Game.GetInstance();
+            Logger.GetInstance().Log($"Creating game instance...");
+            
+            IGame stable = new GameStable(version, server, resource, directory, state);
 
             try {
 
-                game = gameInterface[gameVersion];
+                return new Dictionary<Version, IGame> {
 
-            } catch (KeyNotFoundException e) {
+                    //{ Version.Parse("3.7.0"), stable },
+                    //{ Version.Parse("3.6.0"), stable }
 
-                Logger.GetInstance().Warning($"There is no game interface for the given version ({gameVersion.ToString()}). The current stable interface will be used instead, but be aware that unknown errors may occur. Newer launcher updates may add new game interfaces who support the given version.");
+                }[version];
+
+            } catch (KeyNotFoundException) {
+
+                Logger.GetInstance().Warning($"There is no game interface for the given version ({version.ToString()}). The current stable interface will be used instead, but be aware that unknown errors may occur. Newer launcher updates may add new game interfaces who support the given version.");
+                return stable;
 
             }
-
-            return game;
 
         }
 
