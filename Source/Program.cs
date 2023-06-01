@@ -17,7 +17,7 @@ namespace Dodoco {
             Dodoco.Application.Application app = Dodoco.Application.Application.GetInstance();
             Dodoco.Launcher.Launcher launcher = Dodoco.Launcher.Launcher.GetInstance();
             
-            launcher.Run();
+            launcher.Start();
 
             while (launcher.IsRunning()) {
 
