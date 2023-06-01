@@ -1,15 +1,30 @@
-import Router, { push } from "svelte-spa-router";
+import { Nullable, GlobalInstances } from "@Dodoco/index";
+import { RpcClient } from "@Dodoco/Backend";
+import { onMount } from "svelte";
+
+// Stylesheets
+import { install } from "@twind/core";
+import config from "@Dodoco/../twind.config.js";
+install(config);
+import "@Dodoco/Stylesheet/Style.css";
+
+// Generated types
+
+import { ILauncher } from "./Generated/Dodoco/Launcher/ILauncher";
 
 // Pages
 
 import Main from "./Pages/Main.svelte";
 import Splash from "./Pages/Splash.svelte";
+import Launcher from "./Pages/Launcher.svelte";
 
 // Setup routes
 
 const routes: any = {
 
-    "/splash": Splash
+    "/": Main,
+    "/Splash": Splash,
+    "/Launcher": Launcher
 
 }
 
@@ -18,19 +33,19 @@ const routes: any = {
 import i18next from "i18next";
 import HttpBackend from "i18next-http-backend";
 import YAML from "yaml";
-import { LocaleConstants } from "./Locale";
+import { LanguageConstants } from "./Language";
 
 (async function() {
 
     await i18next.use(HttpBackend).init({
 
         debug: false,
-        supportedLngs: LocaleConstants.supportedLocales,
-        lng: LocaleConstants.defaultLocale,
-        fallbackLng: LocaleConstants.defaultLocale,
+        supportedLngs: LanguageConstants.SupportedLanguages,
+        lng: LanguageConstants.DefaultLanguage,
+        fallbackLng: LanguageConstants.DefaultLanguage,
         backend: {
 
-            loadPath: LocaleConstants.localesLoadPath,
+            loadPath: LanguageConstants.LanguagesLoadPath,
             parse: function(data: any) { return YAML.parse(data) },
 
         }
@@ -41,6 +56,24 @@ import { LocaleConstants } from "./Locale";
     console.log(i18next.t("test.world"));
 
 })()
+
+setInterval(async () => {
+
+    let result: Nullable<ILauncher> = await RpcClient.GetInstance().Call("Dodoco.Network.Controller.RpcGlobalInstancesController.GetLauncherInstance");
+    
+    if (result != null) {
+
+        GlobalInstances.LauncherInstance.set(result);
+
+        if (result.Game != null) {
+
+            GlobalInstances.GameInstance.set(result.Game);
+
+        }
+
+    }  
+
+}, 500);
 
 // Run
 
