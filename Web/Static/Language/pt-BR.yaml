@@ -1,0 +1,22 @@
+test:
+  hello: ''
+  world: ''
+settings:
+  title: Configurações
+  settings_menu:
+    launcher: Launcher
+    game: Jogo
+  settings_content:
+    launcher:
+      update:
+        title: Atualização
+        description: A versão instalada do launcher é {{version}}
+        button_text: Buscar por atualizações do launcher
+        search_for_updates_on_start: Buscar por atualizações automaticamente ao inicializar
+      language:
+        title: Idioma
+    game:
+      integrity:
+        title: Integridade
+        description: Verificar e corrigir arquivos do jogo em falta ou corrompidos
+        button_text: Iniciar verificação

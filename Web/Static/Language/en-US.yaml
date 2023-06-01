@@ -1,0 +1,22 @@
+test:
+  hello: Hello
+  world: World
+settings:
+  title: Settings
+  settings_menu:
+    launcher: Launcher
+    game: Game
+  settings_content:
+    launcher:
+      update:
+        title: Update
+        description: Installed launcher's version is {{version}}
+        button_text: Search for launcher's updates
+        search_for_updates_on_start: Automatically search for updates on start
+      language:
+        title: Language
+    game:
+      integrity:
+        title: Integrity
+        description: Verify and fix missing or corrupted game's files
+        button_text: Start verify
