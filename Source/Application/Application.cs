@@ -41,9 +41,10 @@ namespace Dodoco.Application {
             if (!this.log.Exists()) {
 
                 this.log.CreateFile();
-                this.log.StartWritingToLog();
 
             }
+
+            this.log.StartWritingToLog();
 
             /*
              * Load assembly metadata
@@ -66,6 +67,27 @@ namespace Dodoco.Application {
             Logger.GetInstance().Log("Starting application...");
 
             /*
+             * Create the application's home directory if it not exists
+            */
+
+            if (Directory.Exists(ApplicationConstants.APPLICATION_HOME_DIRECTORY)) {
+
+                Logger.GetInstance().Log($"Successfully found application's home directory ({ApplicationConstants.APPLICATION_HOME_DIRECTORY})");
+
+            } else {
+
+                Logger.GetInstance().Warning($"The application's home directory ({ApplicationConstants.APPLICATION_HOME_DIRECTORY}) doesn't exists and it will be created.");
+
+                try {
+
+                    Directory.CreateDirectory(ApplicationConstants.APPLICATION_HOME_DIRECTORY);
+                    Logger.GetInstance().Log($"Successfully created application's home directory");
+
+                } catch (Exception e) { throw new ApplicationException($"Failed to create application's home directory", e); }
+
+            }
+
+            /*
              * Manages application's HTTP server
             */
 
@@ -84,8 +106,22 @@ namespace Dodoco.Application {
             
             Action<Grapevine.IRestServer> configServer = (server) => {
 
+                /*
+                 * Manages HTTP server's content-types
+                */
+
                 Grapevine.ContentType.Add("js", new Grapevine.ContentType("application/javascript", false, "utf-8"));
 
+                /*
+                 * Manages HTTP server's global response headers
+                */
+                
+                server.GlobalResponseHeaders.Add(new Grapevine.GlobalResponseHeaders("Cache-Control", "no-store"));
+                
+                /*
+                 * Manages HTTP server content-folders
+                */
+                
                 string? binaryPath = Path.GetDirectoryName(Assembly.GetEntryAssembly()?.Location);
 
                 if (binaryPath != null) {
@@ -94,27 +130,34 @@ namespace Dodoco.Application {
 
                     if (Directory.Exists(bundlePath)) {
 
-                        Logger.GetInstance().Log($"Serving application's bundle's files from {bundlePath}");
-
                         server.Prefixes.Add($"http://localhost:{this.port}/");
                         // ---- For debugging ----
                         server.GlobalResponseHeaders.Add(new Grapevine.GlobalResponseHeaders("Access-Control-Allow-Origin", "http://localhost:5173"));
                         // -----------------------
+
+                        /*
+                         * NOTE: In order to Grapevine serve files from content folders,
+                         * the path must not end with "/" character, otherwise a HTTP 501
+                         * message will be sent as the response.
+                        */
+
                         server.ContentFolders.Add(new Grapevine.ContentFolder(bundlePath));
+                        server.ContentFolders.Add(new Grapevine.ContentFolder(ApplicationConstants.APPLICATION_HOME_DIRECTORY));
                         Grapevine.MiddlewareExtensions.UseContentFolders(server);
                         server.Router.Options.SendExceptionMessages = true;
 
+                        Logger.GetInstance().Log($"Serving application's bundle's files from {bundlePath}");
+                        Logger.GetInstance().Log($"Serving application's home directory's files from {ApplicationConstants.APPLICATION_HOME_DIRECTORY}");
+
                     } else {
 
-                        Logger.GetInstance().Error($"Application bundle's files' path ({bundlePath}) doesn't exists");
-                        this.End(1);
+                        throw new ApplicationException($"Application bundle's files' path ({bundlePath}) doesn't exists");
 
                     }
 
                 } else {
 
-                    Logger.GetInstance().Error($"Failed to get the path of application's executable file");
-                    this.End(1);
+                    throw new ApplicationException($"Failed to get the path of application's executable file");
 
                 }
                 
@@ -134,8 +177,7 @@ namespace Dodoco.Application {
 
             } catch (System.Exception e) {
 
-                Logger.GetInstance().Error($"Failed to start HTTP server at TCP port {this.port}", e);
-                this.End(1);
+                throw new ApplicationException($"Failed to start HTTP server at TCP port {this.port}", e);
 
             }
 

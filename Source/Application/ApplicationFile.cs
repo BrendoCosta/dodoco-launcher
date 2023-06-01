@@ -1,5 +1,5 @@
+using Dodoco.Serialization;
 using Dodoco.Util.Log;
-using Dodoco.Util;
 
 namespace Dodoco.Application {
 
@@ -8,12 +8,16 @@ namespace Dodoco.Application {
         protected string internalName;
         protected string directory;
         protected string fileName;
+        protected IFormatSerializer serializer;
+        public T Content { get; set; }
 
-        public ApplicationFile(string internalName, string directory, string fileName) {
+        public ApplicationFile(string internalName, string directory, string fileName, IFormatSerializer serializer) {
 
             this.internalName = internalName;
             this.directory = directory;
             this.fileName = fileName;
+            this.serializer = serializer;
+            this.Content = Activator.CreateInstance<T>();
 
         }
 
@@ -48,7 +52,7 @@ namespace Dodoco.Application {
 
         }
 
-        public virtual T LoadFile() {
+        public virtual void LoadFile() {
 
             Logger.GetInstance().Log($"Loading {internalName} file...");
 
@@ -70,15 +74,10 @@ namespace Dodoco.Application {
             }
 
             Logger.GetInstance().Log($"Parsing {internalName} file...");
-            T file = Activator.CreateInstance<T>();
 
             try {
 
-                YamlDotNet.Serialization.IDeserializer des = new YamlDotNet.Serialization.DeserializerBuilder()
-                    .IgnoreUnmatchedProperties()
-                    .WithTypeConverter(new CultureInfoYamlConverter())
-                    .Build();
-                file = des.Deserialize<T>(fileContents);
+                this.Content = serializer.Deserialize<T>(fileContents);
                 Logger.GetInstance().Log($"Successfully parsed {internalName} file");
 
             } catch (Exception e) {
@@ -88,8 +87,6 @@ namespace Dodoco.Application {
             }
 
             Logger.GetInstance().Log($"Successfully loaded {internalName} file");
-
-            return file;
 
         }
 
@@ -146,11 +143,9 @@ namespace Dodoco.Application {
 
             try {
 
-                Logger.GetInstance().Log($"Serializing {internalName} file...");
-                YamlDotNet.Serialization.ISerializer ser = new YamlDotNet.Serialization.SerializerBuilder()
-                    .WithTypeConverter(new CultureInfoYamlConverter())
-                    .Build();
-                fileContents = ser.Serialize(this);
+                if (this.Content != null)
+                    fileContents = serializer.Serialize(this.Content);
+                    
                 Logger.GetInstance().Log($"Successfully serialized {internalName} file");
 
             } catch (Exception e) {

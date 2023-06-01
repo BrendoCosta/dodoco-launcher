@@ -1,24 +1,25 @@
+using Dodoco.Serialization.Json;
 using Dodoco.Util.Log;
 
-using System.Collections;
 using System.Text;
 
 namespace Dodoco.Application {
 
-    public record ApplicationLog: ApplicationFile<ApplicationLog> {
+    public record ApplicationLog: ApplicationFile<object> {
 
         private Queue<LogEntry> linesQueue = new Queue<LogEntry>();
 
         public ApplicationLog(): base(
             "log",
             ApplicationConstants.APPLICATION_LOG_DIRECTORY,
-            ApplicationConstants.APPLICATION_LOG_FILENAME
+            ApplicationConstants.APPLICATION_LOG_FILENAME,
+            new JsonSerializer()
         ) {
 
             /*
              * This enqueue all entries created
              * since application start.
-            */
+            
 
             foreach (LogEntry entry in Logger.Entries) {
 
@@ -26,9 +27,11 @@ namespace Dodoco.Application {
 
             }
 
+            */
+
         }
 
-        public override ApplicationLog LoadFile() { return this; }
+        public override void LoadFile() {}
         
         public override void WriteFile() {
 
@@ -41,7 +44,11 @@ namespace Dodoco.Application {
 
             try {
 
-                File.AppendAllText(fullFilePath, this.linesQueue.Dequeue().GetAsText() + "\n", Encoding.UTF8);
+                if (this.linesQueue.Count > 0) {
+
+                    File.AppendAllText(fullFilePath, this.linesQueue.Dequeue().GetAsText() + "\n", Encoding.UTF8);
+
+                }
 
             } catch (Exception e) {
 

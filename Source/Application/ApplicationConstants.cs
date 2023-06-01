@@ -8,7 +8,7 @@ namespace Dodoco.Application {
         
         // Directories
         
-        public static string APPLICATION_HOME_DIRECTORY { get; private set; } = Path.Join(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), $"/.local/share/{DEFAULT_APPLICATION_IDENTIFIER}/");
+        public static string APPLICATION_HOME_DIRECTORY { get; private set; } = Path.Join(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), $"/.local/share/{DEFAULT_APPLICATION_IDENTIFIER}");
         public static string APPLICATION_LOG_DIRECTORY { get; private set; } = Path.Join(APPLICATION_HOME_DIRECTORY, $"log");
 
         // Filenames
