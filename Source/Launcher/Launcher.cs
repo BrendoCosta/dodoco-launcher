@@ -1,40 +1,61 @@
-using Dodoco.Network.Api.Company;
-using Dodoco.Network.Api.Company.Launcher;
 using Dodoco.Application;
-using Dodoco.Network;
-using Dodoco.Network.Controller;
 using Dodoco.Game;
+using Dodoco.Launcher.Cache;
+using Dodoco.Launcher.Settings;
+using Dodoco.Network;
+using Dodoco.Network.Api.Company;
+using Dodoco.Network.Api.Company.Launcher.Content;
+using Dodoco.Network.Api.Company.Launcher.Resource;
+using Dodoco.Network.Api.Dodoco;
+using Dodoco.Network.Controller;
 using Dodoco.Util;
 using Dodoco.Util.Log;
 
+using System.ComponentModel;
+using System.Drawing;
+using System.Runtime.CompilerServices;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 
 namespace Dodoco.Launcher {
 
-    public class Launcher {
+    public class Launcher: ILauncher {
 
         private static Launcher? instance = null;
-
-        // https://github.com/Raxdiam/photino.API
-
         private IApplicationWindow window;
-        private Thread? windowThread;
-        public static LauncherExecutionState executionState { get; private set; } = LauncherExecutionState.UNINITIALIZED;
-        public static LauncherActivityState activityState { get; private set; } = LauncherActivityState.UNREADY;
         
         /*
-         * Launcher's files managed by Main() method
+         * Files
         */
 
-        public LauncherSettings settings = new LauncherSettings();
-        public LauncherCache cache = new LauncherCache();
+        private LauncherCacheFile cacheFile = new LauncherCacheFile();
+        private LauncherSettingsFile settingsFile = new LauncherSettingsFile();
+        private ResourceCacheFile resourceCacheFile = new ResourceCacheFile();
         
-        public Content? content { get; private set; }
-        public Resource? resource { get; private set; }
-        public static JsonSerializerOptions jsonOptions = new JsonSerializerOptions() {
-            NumberHandling = JsonNumberHandling.AllowReadingFromString
-        };
+        public LauncherActivityState ActivityState { get; private set; } = LauncherActivityState.UNREADY;
+        public LauncherCache Cache { get; private set; } = new LauncherCache();
+        public Content Content { get; private set; } = new Content();
+        public LauncherExecutionState ExecutionState { get; private set; } = LauncherExecutionState.UNINITIALIZED;
+        public IGame? Game { get; private set; }
+        public Resource Resource { get; private set; } = new Resource();
+        public LauncherSettings Settings { get; private set; } = new LauncherSettings();
+
+        public LauncherActivityState GetLauncherActivityState() => this.ActivityState;
+        public LauncherCache GetLauncherCache() => this.Cache;
+        public Content GetContent() => this.Content;
+        public LauncherExecutionState GetLauncherExecutionState() => this.ExecutionState;
+        public Resource GetResource() => this.Resource;
+        public LauncherSettings GetLauncherSettings() => this.Settings;
+        public IGame GetGame() => this.Game != null ? this.Game : throw new LauncherException("Game class not initialized yet");
+
+        public void SetLauncherCache(LauncherCache Cache) => this.Cache = Cache;
+        public void SetLauncherSettings(LauncherSettings Settings) => this.Settings = Settings;
+
+        /*
+         * Events
+        */
+
+        public event EventHandler<int> OnOperationProgressChanged = delegate {};
 
         public static Launcher GetInstance() {
 
@@ -58,20 +79,20 @@ namespace Dodoco.Launcher {
 
         }
 
-        public void Run() {
+        public void Start() {
 
             if (!this.IsRunning()) {
 
                 this.window.SetTitle(Dodoco.Application.Application.GetInstance().title);
-                this.window.SetSize(new System.Drawing.Size(300, 400));
+                this.window.SetSize(new Size(300, 400));
                 this.window.SetResizable(false);
                 this.window.SetFrameless(false);
-                this.window.SetUri(new Uri($"http://localhost:5173/?id={(new Random().Next())}"));
+                //this.window.SetUri(new Uri($"http://localhost:5173/?id={(new Random().Next())}"));
                 // -----------------------
-                //this.window.SetUri(new Uri($"http://localhost:{Dodoco.Application.Application.GetInstance().port}/?id={(new Random().Next())}"));
+                this.window.SetUri(new Uri($"http://localhost:{Dodoco.Application.Application.GetInstance().port}"));
                 
                 this.window.OnOpen += new EventHandler(async (object? sender, EventArgs e) => this.Main());
-                this.window.OnClose += new EventHandler((object? sender, EventArgs e) => this.Finish());
+                this.window.OnClose += new EventHandler((object? sender, EventArgs e) => this.Stop());
                 
                 this.window.Open();
 
@@ -90,34 +111,38 @@ namespace Dodoco.Launcher {
             try {
 
                 /*
-                 * Manages launcher's settings file
+                 * Manages launcher's Settings file
                 */
 
                 this.UpdateActivityState(LauncherActivityState.FETCHING_LAUNCHER_SETTINGS);
                 
-                if (!this.settings.Exists()) {
+                if (!this.settingsFile.Exists()) {
 
-                    this.settings.CreateFile();
-                    this.settings.WriteFile();
+                    this.settingsFile.CreateFile();
+                    this.settingsFile.Content = this.Settings;
+                    this.settingsFile.WriteFile();
 
                 }
 
-                this.settings = this.settings.LoadFile();
+                this.settingsFile.LoadFile();
+                this.Settings = this.settingsFile.Content;
 
                 /*
-                 * Manages launcher's cache file
+                 * Manages launcher's Cache file
                 */
 
                 this.UpdateActivityState(LauncherActivityState.FETCHING_LAUNCHER_CACHE);
                 
-                if (!cache.Exists()) {
+                if (!this.cacheFile.Exists()) {
 
-                    cache.CreateFile();
-                    cache.WriteFile();
+                    this.cacheFile.CreateFile();
+                    this.cacheFile.Content = this.Cache;
+                    this.cacheFile.WriteFile();
 
                 }
 
-                cache = cache.LoadFile();
+                this.cacheFile.LoadFile();
+                this.Cache = this.cacheFile.Content;
 
                 /*
                  * Manages APIs
@@ -127,20 +152,20 @@ namespace Dodoco.Launcher {
                 this.UpdateActivityState(LauncherActivityState.FETCHING_WEB_DATA);
 
                 CompanyApiFactory factory = new CompanyApiFactory(
-                    this.settings.api.company[this.settings.game.server].url,
-                    this.settings.api.company[this.settings.game.server].key,
-                    this.settings.api.company[this.settings.game.server].launcher_id,
-                    this.settings.game.language
+                    this.Settings.api.company[this.Settings.game.server].url,
+                    this.Settings.api.company[this.Settings.game.server].key,
+                    this.Settings.api.company[this.Settings.game.server].launcher_id,
+                    this.Settings.game.language
                 );
 
                 /*
-                 * Manages content API
+                 * Manages Content API
                 */
 
-                try { content = await factory.FetchLauncherContent(); }
+                try { this.Content = await factory.FetchLauncherContent(); }
                 catch (NetworkException e) {
 
-                    /* Since content API it is not strictly
+                    /* Since Content API it is not strictly
                      * necessary for launcher's work, the exception
                      * will be simply reported to the log.
                     */
@@ -149,65 +174,103 @@ namespace Dodoco.Launcher {
 
                 }
 
-                if (content != null) {
+                if (this.Content != null) {
 
-                    if (content.IsSuccessfull())
-                        await cache.UpdateFromContent(content);
+                    if (this.Content.IsSuccessfull())
+                        await this.Cache.UpdateFromContent(this.Content);
                     else
-                        Logger.GetInstance().Error($"Failed to fetch content API from remote servers (return code: {content.retcode}, message: \"{content.message}\")");
+                        Logger.GetInstance().Error($"Failed to fetch Content API from remote servers (return code: {this.Content.retcode}, message: \"{this.Content.message}\")");
 
                 }
 
                 /*
-                 * Manages resource API
+                 * Manages Resource API and Resource cache file
                 */
                 
-                resource = await factory.FetchLauncherResource();
-                if (resource.IsSuccessfull())
-                    Game.Stable.Game.GetInstance().SetVersion(Version.Parse(resource.data.game.latest.version));
-                else
-                    new LauncherException($"Failed to fetch resource API from remote servers (return code: {resource.retcode}, message: \"{resource.message}\")");
+                this.Resource = await factory.FetchLauncherResource();
+                if (!this.Resource.IsSuccessfull())
+                    new LauncherException($"Failed to fetch Resource API from remote servers (return code: {this.Resource.retcode}, message: \"{this.Resource.message}\")");
+                Version remoteGameVersion = Version.Parse(this.Resource.data.game.latest.version);
+                
+                if (this.resourceCacheFile.Exists()) {
 
+                    this.resourceCacheFile.LoadFile();
+                    this.Resource = this.resourceCacheFile.Content;
+
+                } else {
+
+                    this.resourceCacheFile.CreateFile();
+                    this.resourceCacheFile.Content = this.Resource;
+                    this.resourceCacheFile.WriteFile();
+
+                }
+                
                 Logger.GetInstance().Log($"Finished fetching APIs");
 
                 /*
                  * Manages game
                 */
 
-                if (!GameManager.CheckGameInstallation(this.settings.game.installation_path, this.settings.game.server)) {
+                if (!GameManager.CheckGameInstallation(this.Settings.game.installation_path, this.Settings.game.server)) {
 
                     // TODO: download game
-                    this.UpdateActivityState(LauncherActivityState.NEEDS_GAME_DOWNLOAD);
+                    this.Game = GameManager.CreateGame(remoteGameVersion, this.Settings.game.server, this.Resource, this.Settings.game.installation_path, GameState.WAITING_FOR_DOWNLOAD);
+                    //await this.Game.Download(this.Resource, new DirectoryInfo("/home/neofox/.local/share/dodoco-launcher/"), CancellationToken.None);
 
                 } else {
 
-                    Version installedGameVersion = GameManager.SearchForGameVersion(this.settings.game.installation_path, this.settings.game.server);
-                    Version remoteGameVersion = Version.Parse(resource.data.game.latest.version);
+                    Version installedGameVersion = GameManager.SearchForGameVersion(this.Settings.game.installation_path, this.Settings.game.server);
 
                     if (remoteGameVersion > installedGameVersion) {
 
                         // TODO: update game
-                        this.UpdateActivityState(LauncherActivityState.NEEDS_GAME_UPDATE);
+
+                        Logger.GetInstance().Warning($"Current installed game version ({installedGameVersion}) is outdated, the newest game version is {remoteGameVersion}");
+
+                        Resource oldVersionResource;
+
+                        if (Version.Parse(resourceCacheFile.Content.data.game.latest.version) == installedGameVersion) {
+
+                            oldVersionResource = resourceCacheFile.Content;
+
+                        } else {
+
+                            DodocoApiFactory dodocoApiFactory = new DodocoApiFactory(this.Settings.api.dodoco.url);
+                            oldVersionResource = await dodocoApiFactory.FetchCachedLauncherResource(installedGameVersion, this.Settings.game.server);
+                            this.resourceCacheFile.Content = oldVersionResource;
+                            this.resourceCacheFile.WriteFile();
+
+                        }
+
+                        this.Game = GameManager.CreateGame(installedGameVersion, this.Settings.game.server, oldVersionResource, this.Settings.game.installation_path, GameState.WAITING_FOR_UPDATE);
 
                     } else {
 
-                        this.UpdateActivityState(LauncherActivityState.READY_TO_PLAY);
+                        this.Game = GameManager.CreateGame(installedGameVersion, this.Settings.game.server, this.Resource, this.Settings.game.installation_path, GameState.READY);
 
                     }
 
-                    Game.IGame game = GameManager.CreateFromVersion(installedGameVersion);
-
                 }
+
+                this.window.SetSize(new Size(1270, 766));
+                this.window.SetResizable(true);
 
             } catch (Exception e) {
 
-                Logger.GetInstance().Error($"A fatal error occurred", e);
+                this.FatalStop(e);
 
             }
 
         }
 
-        public void Finish() {
+        public void FatalStop(Exception e) {
+
+            Logger.GetInstance().Error($"A fatal error occurred", e);
+            this.Stop();
+
+        }
+
+        public void Stop() {
 
             if (this.IsRunning()) {
 
@@ -227,29 +290,27 @@ namespace Dodoco.Launcher {
 
         public bool IsRunning() {
 
-            return executionState == LauncherExecutionState.RUNNING;
+            return this.ExecutionState == LauncherExecutionState.RUNNING;
 
         }
 
         private void UpdateExecutionState(LauncherExecutionState newState) {
 
-            Logger.GetInstance().Debug($"Updating launcher's execution state from {executionState.ToString()} to {newState.ToString()}");
-            executionState = newState;
-            ServerSentEvents.PushEvent(new Dodoco.Network.HTTP.SSE.Event() {
-                eventName = Reflection.GetCurrentMethod(),
-                data = newState.ToString()
-            });
+            Logger.GetInstance().Debug($"Updating launcher's execution state from {this.ExecutionState.ToString()} to {newState.ToString()}");
+            this.ExecutionState = newState;
 
         }
 
         private void UpdateActivityState(LauncherActivityState newState) {
 
-            Logger.GetInstance().Debug($"Updating launcher's activity state from {activityState.ToString()} to {newState.ToString()}");
-            activityState = newState;
-            ServerSentEvents.PushEvent(new Dodoco.Network.HTTP.SSE.Event() {
-                eventName = Reflection.GetCurrentMethod(),
-                data = newState.ToString()
-            });
+            Logger.GetInstance().Debug($"Updating launcher's activity state from {this.ActivityState.ToString()} to {newState.ToString()}");
+            this.ActivityState = newState;
+
+        }
+
+        public async Task RepairGameFiles() {
+
+            this.Game.CheckIntegrity();
 
         }
 
