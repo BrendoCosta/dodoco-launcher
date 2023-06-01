@@ -5,7 +5,7 @@ let DodocoConfig = {
         build: "Build",
         source: "Source",
         static: "Static",
-        locale: "Static/Locale"
+        locale: "Static/Language"
 
     }
 

@@ -9,7 +9,7 @@ let projectRootPath = "./";
 export default defineConfig({
 	plugins: [
 		svelte({
-			preprocess: sveltePreprocess()
+			preprocess: sveltePreprocess({ postcss: true })
 		})
 	],
 	root: projectRootPath,
