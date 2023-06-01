@@ -1,0 +1,124 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+.launcher-yellow { color: #ffcf0d; }
+.launcher-bg-yellow { background-color: #ffcf0d; }
+.launcher-brown { color:#714b1d; }
+.launcher-bg-brown { background-color: #714b1d; }
+
+@font-face { font-family: HYImpact; src: url("/Font/HYImpact-Regular.ttf"); } 
+
+html, body {
+
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    margin: 0;
+    padding: 0;
+
+}
+
+*:not(input[type="text"]) {
+
+    caret-color: transparent;
+
+}
+
+#app-wrapper {
+
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+
+}
+
+#app-wrapper img.splash-image {
+
+    width: 15rem;
+
+}
+
+#app-wrapper h3.splash-title {
+
+    margin-block-start: 0;
+    color: #f55240;
+    font-family: HYImpact, sans-serif;
+
+}
+
+#app-wrapper small.splash-text {
+
+    color: #b6c1c9;
+    font-size: 0.7rem;
+    text-align: center;
+    padding-top: 0.5rem;
+    padding-left: 1rem;
+    padding-right: 1rem;
+    font-family: HYImpact, sans-serif;
+
+}
+
+#app-wrapper small.splash-text.warning {
+
+    color: #f5b340;
+
+}
+
+#launcher-wrapper {
+
+    width: 100%;
+    height: 100%;
+    /*background-image: url("/.cache/background.png");*/
+    background-image: url("http://localhost:4000/.cache/background.png");
+    background-repeat: no-repeat;
+    background-size: cover;
+    background-position: center;
+
+}
+
+.my-custom-class {
+    @apply bg-transparent text-white/50 font-normal border-white/50 p-4 flex flex-row items-center
+}
+
+.my-custom-class:not(:focus):hover {
+    @apply bg-transparent border-yellow-300 text-yellow-300 ring-0 outline-0 shadow-[inset_0_0_0_0.2rem_black] shadow-yellow-300 !important
+}
+
+.my-custom-class.active,
+.my-custom-class:focus {
+    @apply bg-yellow-300 text-yellow-700 ring-0 outline-0 !important
+}
+
+::-webkit-scrollbar {
+
+    @apply w-2
+
+}
+
+::-webkit-scrollbar-track {
+
+    @apply bg-black/5 rounded-full
+
+}
+
+::-webkit-scrollbar-thumb {
+
+    @apply bg-black/10 rounded-full
+
+}
+
+::-webkit-scrollbar-thumb:hover {
+
+    @apply bg-black/20
+
+}
+
+.input {
+
+    @apply rounded-lg border-[1px] border-gray-300 text-gray-800 hover:bg-gray-200/80 cursor-pointer
+
+}
