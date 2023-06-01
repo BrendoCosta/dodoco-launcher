@@ -1,4 +1,4 @@
-namespace Dodoco.Network.Api.Company.Launcher {
+namespace Dodoco.Network.Api.Company.Launcher.Content {
 
     public class Content: CompanyApi {
 
@@ -8,9 +8,9 @@ namespace Dodoco.Network.Api.Company.Launcher {
 
         public struct Adv {
 
-            public string background { get; set; }
-            public string icon { get; set; }
-            public string url { get; set; }
+            public Uri background { get; set; }
+            public Uri icon { get; set; }
+            public Uri url { get; set; }
             public string version { get; set; }
             public string bg_checksum { get; set; }
 

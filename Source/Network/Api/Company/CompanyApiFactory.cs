@@ -1,4 +1,5 @@
-using Dodoco.Network.Api.Company.Launcher;
+using Dodoco.Network.Api.Company.Launcher.Content;
+using Dodoco.Network.Api.Company.Launcher.Resource;
 using Dodoco.Util.Log;
 
 using System.Globalization;
@@ -9,7 +10,6 @@ namespace Dodoco.Network.Api.Company {
 
     public class CompanyApiFactory {
 
-        private static CompanyApiFactory? instance = null;
         private string apiBaseUrl;
         private string key;
         private int launcherId;
@@ -48,8 +48,8 @@ namespace Dodoco.Network.Api.Company {
 
             T? data = Activator.CreateInstance<T>();
             string urlToFetch = this.apiBaseUrl + apiUri;
-            HttpResponseMessage response = await Application.Application.GetInstance().client.FetchAsync(urlToFetch);
-        
+            HttpResponseMessage response = await Application.Application.GetInstance().client.FetchAsync(new Uri(urlToFetch));
+
             if (response.IsSuccessStatusCode) {
 
                 Logger.GetInstance().Log("Successfully fetch latest data from remote servers");
@@ -58,7 +58,7 @@ namespace Dodoco.Network.Api.Company {
                 try { data = JsonSerializer.Deserialize<T>(await response.Content.ReadAsStringAsync(), new JsonSerializerOptions() {
                     NumberHandling = JsonNumberHandling.AllowReadingFromString
                 }); }
-                catch (JsonException e) { throw new NetworkException("Failed to parse the received. Maybe the API has been changed?", e); }
+                catch (JsonException e) { throw new NetworkException("Failed to parse the received data. Maybe the API has been changed?", e); }
                 Logger.GetInstance().Log("Successfully parsed the received data");
 
             } else {
