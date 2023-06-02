@@ -7,15 +7,13 @@ namespace Dodoco.Game {
     public interface IGame {
 
         GameState State { get; }
-
-        ApplicationProgressReport CheckIntegrityProgressReport { get; }
-        DownloadProgressReport DownloadProgressReport { get; }
+        
+        event EventHandler<ApplicationProgressReport> OnCheckIntegrityProgress;
+        event EventHandler<DownloadProgressReport> OnDownloadProgress;
 
         Task<List<GameIntegrityReport>> CheckIntegrity(CancellationToken token = default);
-        Task<List<GameIntegrityReport>> CheckIntegrity(ApplicationProgress<ApplicationProgressReport> progress, CancellationToken token = default);
         Task Download(CancellationToken token = default);
-        Task Download(ApplicationProgress<DownloadProgressReport> progress, CancellationToken token = default);
-
+        
         void SetInstallationDirectory(string directory);
         void SetVersion(Version version);
 

@@ -3,12 +3,8 @@
 //     the code is regenerated.
 
 import { GameState } from './GameState';
-import { ApplicationProgressReport } from '../Application/ApplicationProgressReport';
-import { DownloadProgressReport } from '../Network/HTTP/DownloadProgressReport';
 
 export interface IGame
 {
 	State: GameState;
-	CheckIntegrityProgressReport: ApplicationProgressReport;
-	DownloadProgressReport: DownloadProgressReport;
 }

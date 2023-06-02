@@ -18,9 +18,9 @@ namespace Dodoco.Game {
         public GameState State { get; private set; }
         public Version Version { get; private set; }
         public Resource Resource { get; private set; }
-        public ApplicationProgressReport CheckIntegrityProgressReport { get; private set; } = new ApplicationProgressReport();
-        public DownloadProgressReport DownloadProgressReport { get; private set; } = new DownloadProgressReport();
-        
+        public event EventHandler<ApplicationProgressReport> OnCheckIntegrityProgress = delegate {};
+        public event EventHandler<DownloadProgressReport> OnDownloadProgress = delegate {};
+
         public Game(Version version, GameServer server, Resource resource, string InstallationDirectory, GameState state) {
 
             this.InstallationDirectory = InstallationDirectory;
@@ -36,8 +36,7 @@ namespace Dodoco.Game {
 
         public virtual Version GetVersion() => this.Version;
 
-        public virtual async Task Download(CancellationToken token = default) => await this.Download(new ApplicationProgress<DownloadProgressReport>(), token);
-        public virtual async Task Download(ApplicationProgress<DownloadProgressReport> progress, CancellationToken token = default) {
+        public virtual async Task Download(CancellationToken token = default) {
 
             if (this.State != GameState.WAITING_FOR_DOWNLOAD)
                 throw new ForbiddenGameStateException(this.State);
@@ -80,8 +79,7 @@ namespace Dodoco.Game {
 
         }
 
-        public virtual async Task<List<GameIntegrityReport>> CheckIntegrity(CancellationToken token = default) => await this.CheckIntegrity(new ApplicationProgress<ApplicationProgressReport>(), token);
-        public virtual async Task<List<GameIntegrityReport>> CheckIntegrity(ApplicationProgress<ApplicationProgressReport> progress, CancellationToken token = default) {
+        public virtual async Task<List<GameIntegrityReport>> CheckIntegrity(CancellationToken token = default) {
 
             if ((this.State != GameState.READY) && (this.State != GameState.WAITING_FOR_UPDATE))
                 throw new ForbiddenGameStateException(this.State);
@@ -178,8 +176,7 @@ namespace Dodoco.Game {
 
                     };
 
-                    this.CheckIntegrityProgressReport = report;
-                    progress.Report(report);
+                    this.OnCheckIntegrityProgress.Invoke(this, report);
 
                     if (estimatedRemainingTime.Count > 9) estimatedRemainingTime.Clear();
 
