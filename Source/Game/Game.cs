@@ -40,7 +40,7 @@ namespace Dodoco.Game {
         public virtual async Task Download(ApplicationProgress<DownloadProgressReport> progress, CancellationToken token = default) {
 
             if (this.State != GameState.WAITING_FOR_DOWNLOAD)
-                throw new GameException("Forbidden GameState");
+                throw new ForbiddenGameStateException(this.State);
             
             Logger.GetInstance().Log($"Starting game download...");
             
@@ -84,7 +84,7 @@ namespace Dodoco.Game {
         public virtual async Task<List<GameIntegrityReport>> CheckIntegrity(ApplicationProgress<ApplicationProgressReport> progress, CancellationToken token = default) {
 
             if ((this.State != GameState.READY) && (this.State != GameState.WAITING_FOR_UPDATE))
-                throw new GameException($"Forbidden GameState ({this.State.ToString()})");
+                throw new ForbiddenGameStateException(this.State);
 
             GameState savedState = this.State;
             this.UpdateState(GameState.CHECKING_INTEGRITY);
