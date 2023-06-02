@@ -7,7 +7,6 @@ namespace Dodoco.Application {
 
         private PhotinoWindow? windowObject = null;
         private List<PhotinoWindow?> childs = new List<PhotinoWindow?>();
-        private int current = 0;
         private Thread windowThread;
 
         private bool frameless;
