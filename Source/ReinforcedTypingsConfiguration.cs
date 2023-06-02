@@ -51,6 +51,7 @@ namespace Dodoco {
                 conf => conf
                     .WithPublicProperties()
                     .AutoI(false)
+                    .WithPublicMethods()
             );
 
         }
