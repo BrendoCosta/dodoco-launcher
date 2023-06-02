@@ -49,7 +49,7 @@
 
     setInterval(async () => {
 
-        let result: Nullable<IGame> = await RpcClient.GetInstance().Call("Dodoco.Network.Controller.RpcGlobalInstancesController.GetGameInstance");
+        let result: Nullable<IGame> = await RpcClient.GetInstance().Call("Dodoco.Network.Controller.GlobalInstancesController.GetGameInstance");
 
         if (result != null) {
 

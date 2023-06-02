@@ -10,22 +10,6 @@ using System.Net.WebSockets;
 
 namespace Dodoco.Network.Controller {
 
-    public sealed class RpcGlobalInstancesController {
-
-        public ILauncher GetLauncherInstance() {
-
-            return (ILauncher) Launcher.Launcher.GetInstance();
-
-        }
-
-        public IGame GetGameInstance() {
-
-            return Launcher.Launcher.GetInstance().GetGame();
-
-        }
-
-    }
-
     [Grapevine.RestResource(BasePath = "/Dodoco/Network/Controller/RpcController")]
     public sealed class RpcController {
 
@@ -53,8 +37,8 @@ namespace Dodoco.Network.Controller {
                     MethodNameTransform = (string methodName) => $"Dodoco.Util.Log.Logger.{methodName}"
                 });
 
-                jsonRpc.AddLocalRpcTarget(new RpcGlobalInstancesController(), new StreamJsonRpc.JsonRpcTargetOptions() {
-                    MethodNameTransform = (string methodName) => $"Dodoco.Network.Controller.RpcGlobalInstancesController.{methodName}"
+                jsonRpc.AddLocalRpcTarget(new GlobalInstancesController(), new StreamJsonRpc.JsonRpcTargetOptions() {
+                    MethodNameTransform = (string methodName) => $"Dodoco.Network.Controller.GlobalInstancesController.{methodName}"
                 });
 
                 jsonRpc.StartListening();

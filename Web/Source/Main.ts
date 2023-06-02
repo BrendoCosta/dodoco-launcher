@@ -59,7 +59,7 @@ import { LanguageConstants } from "./Language";
 
 setInterval(async () => {
 
-    let result: Nullable<ILauncher> = await RpcClient.GetInstance().Call("Dodoco.Network.Controller.RpcGlobalInstancesController.GetLauncherInstance");
+    let result: Nullable<ILauncher> = await RpcClient.GetInstance().Call("Dodoco.Network.Controller.GlobalInstancesController.GetLauncherInstance");
     
     if (result != null) {
 
