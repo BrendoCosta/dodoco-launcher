@@ -91,12 +91,7 @@ namespace Dodoco.Game {
             
             Logger.GetInstance().Log($"Starting game integrity check...");
             
-            Uri decompressedPathUrl =
-                this.Resource.data.game.latest.decompressed_path.ToString().EndsWith("/")
-                ? this.Resource.data.game.latest.decompressed_path
-                : new Uri(this.Resource.data.game.latest.decompressed_path.ToString() + "/");
-
-            Uri pkgVersionRemoteUrl = new Uri(decompressedPathUrl, "pkg_version");
+            Uri pkgVersionRemoteUrl = new Uri(UrlCombine.Combine(this.Resource.data.game.latest.decompressed_path.ToString(), "pkg_version"));
             HttpResponseMessage response = await Application.Application.GetInstance().client.FetchAsync(pkgVersionRemoteUrl);
             List<GamePkgVersionEntry> entries = new List<GamePkgVersionEntry>();
             List<GameFileIntegrityReport> mismatches = new List<GameFileIntegrityReport>();
