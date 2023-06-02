@@ -91,7 +91,7 @@ namespace Dodoco.Launcher {
                 // -----------------------
                 this.window.SetUri(new Uri($"http://localhost:{Dodoco.Application.Application.GetInstance().port}"));
                 
-                this.window.OnOpen += new EventHandler(async (object? sender, EventArgs e) => this.Main());
+                this.window.OnOpen += new EventHandler((object? sender, EventArgs e) => this.Main().ConfigureAwait(false));
                 this.window.OnClose += new EventHandler((object? sender, EventArgs e) => this.Stop());
                 
                 this.window.Open();
