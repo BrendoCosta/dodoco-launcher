@@ -1,6 +1,6 @@
 namespace Dodoco.Network {
 
-    public class NetworkException: Exception {
+    public class NetworkException: Dodoco.Application.ApplicationException {
 
         public NetworkException(): base() {}
         public NetworkException(string? message): base(message) {}

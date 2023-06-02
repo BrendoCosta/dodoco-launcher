@@ -1,6 +1,6 @@
 namespace Dodoco.Game {
 
-    public class GameException: Exception {
+    public class GameException: Dodoco.Application.ApplicationException {
 
         public GameException(): base() {}
         public GameException(string? message): base(message) {}
