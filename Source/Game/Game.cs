@@ -1,10 +1,12 @@
 using Dodoco.Application;
+using Dodoco.Network;
 using Dodoco.Network.Api.Company.Launcher.Resource;
 using Dodoco.Network.HTTP;
 using Dodoco.Util.Log;
 using Dodoco.Util.Hash;
 using Dodoco.Util.Unit;
 
+using UrlCombineLib;
 using System.Diagnostics;
 using System.Text.Json;
 using System.Text.Json.Serialization;
@@ -79,7 +81,7 @@ namespace Dodoco.Game {
 
         }
 
-        public virtual async Task<List<GameFileIntegrityReport>> CheckIntegrity(CancellationToken token = default) {
+        public virtual async Task<List<GameFileIntegrityReport>> CheckFilesIntegrity(CancellationToken token = default) {
 
             if ((this.State != GameState.READY) && (this.State != GameState.WAITING_FOR_UPDATE))
                 throw new ForbiddenGameStateException(this.State);
@@ -192,25 +194,57 @@ namespace Dodoco.Game {
 
             Logger.GetInstance().Log($"Successfully finished game integrity check ({DataUnitFormatter.Format(totalBytesRead)} read with {mismatches.Count} mismatches found)");
 
-            foreach (var report in mismatches) {
+            this.UpdateState(savedState);
+            return mismatches;
 
-                switch (report.localFileIntegrityState) {
+        }
 
-                    case GameFileIntegrityState.CORRUPTED:
-                        Logger.GetInstance().Log($"Mismatch: the local file \"{report.localFilePath}\" MD5 hash ({report.localFileHash}) doesn't match the expected remote hash ({report.remoteFileHash})");
-                        break;
-                    
-                    case GameFileIntegrityState.MISSING:
-                        Logger.GetInstance().Log($"Mismatch: the local file \"{report.localFilePath}\" is missing");
-                        break;
+        public async Task RepairFile(GameFileIntegrityReport report, CancellationToken token = default) {
+
+            GameState savedState = this.State;
+            this.UpdateState(GameState.REPAIRING_FILES);
+
+            Logger.GetInstance().Log($"Trying to repair the game file \"{report.localFilePath}\"...");
+
+            FileInfo localFile = new FileInfo(Path.Join(this.InstallationDirectory, report.remoteFilePath));
+            FileInfo tempFile = new FileInfo(Path.Join(this.InstallationDirectory, Path.GetDirectoryName(report.remoteFilePath), Path.GetFileName(report.localFilePath) + ".temp"));
+            Uri fileRemoteUrl = new Uri(UrlCombine.Combine(this.Resource.data.game.latest.decompressed_path.ToString(), report.remoteFilePath));
+
+            try {
+
+                Logger.GetInstance().Log($"Downloading a copy of the remote file to \"{tempFile.FullName}\"");
+                
+                await Application.Application.GetInstance().client.DownloadFileAsync(fileRemoteUrl, tempFile.FullName);
+                
+                Logger.GetInstance().Log($"Computing the hash of the downloaded file...");
+
+                string tempFileHash = MD5.ComputeHash(tempFile).ToUpper();
+                string remoteFileHash = report.remoteFileHash.ToUpper();
+                
+                if (tempFileHash == remoteFileHash) {
+
+                    Logger.GetInstance().Log($"The downloaded file's hash match the expected remote hash");
+
+                    localFile.Delete();
+                    tempFile.MoveTo(localFile.FullName);
+
+                    Logger.GetInstance().Log($"Successfully repaired the game file \"{report.localFilePath}\"");
+
+                } else {
+
+                    Logger.GetInstance().Error($"The downloaded file's hash {tempFileHash} doesn't match the expected remote hash {remoteFileHash}");
+                    Logger.GetInstance().Error($"Failed to repair the game file \"{report.localFilePath}\"");
 
                 }
+
+            } catch (NetworkException e) {
+
+                throw new GameException($"Failed to repair the game file \"{report.localFilePath}\" due to a network error", e);
 
             }
 
             this.UpdateState(savedState);
-
-            return mismatches;
+            return;
 
         }
 

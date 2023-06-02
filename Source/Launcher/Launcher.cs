@@ -310,7 +310,39 @@ namespace Dodoco.Launcher {
 
         public async Task RepairGameFiles() {
 
-            this.Game.CheckIntegrity();
+            if (this.Game == null) return;
+
+            try {
+
+                List<GameFileIntegrityReport> mismatches = await this.Game.CheckFilesIntegrity();
+
+                foreach (var report in mismatches) {
+
+                    switch (report.localFileIntegrityState) {
+
+                        case GameFileIntegrityState.CORRUPTED:
+                            Logger.GetInstance().Log($"Mismatch: the local file \"{report.localFilePath}\" MD5 hash ({report.localFileHash}) doesn't match the expected remote hash ({report.remoteFileHash})");
+                            break;
+                        
+                        case GameFileIntegrityState.MISSING:
+                            Logger.GetInstance().Log($"Mismatch: the local file \"{report.localFilePath}\" is missing");
+                            break;
+
+                    }
+
+                }
+
+                foreach (var report in mismatches) {
+
+                    await this.Game.RepairFile(report);
+
+                }
+
+            } catch (GameException e) {
+
+                throw new LauncherException($"Failed to repair game's files", e);
+                
+            }
 
         }
 

@@ -9,7 +9,8 @@ namespace Dodoco.Game {
         UPDATING,
         READY,
         RUNNING,
-        CHECKING_INTEGRITY
+        CHECKING_INTEGRITY,
+        REPAIRING_FILES
 
     }
 
