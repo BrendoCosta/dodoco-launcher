@@ -9,11 +9,11 @@ namespace Dodoco.Util.Log {
     public sealed class Logger {
 
         public static List<LogEntry> Entries = new List<LogEntry>();
-        public event EventHandler<LogEntry> OnWrite;
-        public event EventHandler<LogEntry> OnLog;
-        public event EventHandler<LogEntry> OnDebug;
-        public event EventHandler<LogEntry> OnError;
-        public event EventHandler<LogEntry> OnWarning;
+        public event EventHandler<LogEntry> OnWrite = delegate {};
+        public event EventHandler<LogEntry> OnLog = delegate {};
+        public event EventHandler<LogEntry> OnDebug = delegate {};
+        public event EventHandler<LogEntry> OnError = delegate {};
+        public event EventHandler<LogEntry> OnWarning = delegate {};
         private static Logger? instance = null;
 
         public static Logger GetInstance() {
@@ -95,21 +95,21 @@ namespace Dodoco.Util.Log {
             switch (type) {
 
                 case LogType.LOG:
-                    this.OnLog?.Invoke(this, newEntry);
+                    this.OnLog.Invoke(this, newEntry);
                     break;
                 case LogType.ERROR:
-                    this.OnError?.Invoke(this, newEntry);
+                    this.OnError.Invoke(this, newEntry);
                     break;
                 case LogType.WARNING:
-                    this.OnWarning?.Invoke(this, newEntry);
+                    this.OnWarning.Invoke(this, newEntry);
                     break;
                 case LogType.DEBUG:
-                    this.OnDebug?.Invoke(this, newEntry);
+                    this.OnDebug.Invoke(this, newEntry);
                     break;
 
             }
 
-            this.OnWrite?.Invoke(this, newEntry);
+            this.OnWrite.Invoke(this, newEntry);
 
             // Write the entry to the STDOUT
             // TODO: turn this a optional feature through LauncherSettings
