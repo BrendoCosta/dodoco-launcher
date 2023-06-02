@@ -252,6 +252,9 @@ namespace Dodoco.Launcher {
 
                 }
 
+                if (this.Game == null)
+                    throw new LauncherException("Failed to create the game instance");
+
                 this.window.SetSize(new Size(1270, 766));
                 this.window.SetResizable(true);
 
