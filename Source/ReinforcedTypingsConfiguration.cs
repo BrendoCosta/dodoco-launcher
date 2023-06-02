@@ -12,7 +12,6 @@ namespace Dodoco {
                 conf.UseModules(true)
                 .AutoOptionalProperties(true)
                 .ExportPureTypings(false)
-                .CamelCaseForMethods(true)
             );
 
             // Export enums
