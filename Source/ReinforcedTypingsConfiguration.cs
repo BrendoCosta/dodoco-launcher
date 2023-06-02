@@ -34,7 +34,7 @@ namespace Dodoco {
             builder.ExportAsInterfaces(
                 new Type[] {
                     typeof(Dodoco.Application.ApplicationProgressReport),
-                    typeof(Dodoco.Game.GameIntegrityReport),
+                    typeof(Dodoco.Game.GameFileIntegrityReport),
                     typeof(Dodoco.Game.IGame),
                     typeof(Dodoco.Launcher.ILauncher),
                     typeof(Dodoco.Launcher.Cache.LauncherCache),

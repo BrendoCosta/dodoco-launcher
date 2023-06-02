@@ -11,7 +11,7 @@ namespace Dodoco.Game {
         event EventHandler<ApplicationProgressReport> OnCheckIntegrityProgress;
         event EventHandler<DownloadProgressReport> OnDownloadProgress;
 
-        Task<List<GameIntegrityReport>> CheckIntegrity(CancellationToken token = default);
+        Task<List<GameFileIntegrityReport>> CheckIntegrity(CancellationToken token = default);
         Task Download(CancellationToken token = default);
         
         void SetInstallationDirectory(string directory);

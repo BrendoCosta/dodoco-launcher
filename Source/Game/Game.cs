@@ -79,7 +79,7 @@ namespace Dodoco.Game {
 
         }
 
-        public virtual async Task<List<GameIntegrityReport>> CheckIntegrity(CancellationToken token = default) {
+        public virtual async Task<List<GameFileIntegrityReport>> CheckIntegrity(CancellationToken token = default) {
 
             if ((this.State != GameState.READY) && (this.State != GameState.WAITING_FOR_UPDATE))
                 throw new ForbiddenGameStateException(this.State);
@@ -97,7 +97,7 @@ namespace Dodoco.Game {
             Uri pkgVersionRemoteUrl = new Uri(decompressedPathUrl, "pkg_version");
             HttpResponseMessage response = await Application.Application.GetInstance().client.FetchAsync(pkgVersionRemoteUrl);
             List<GamePkgVersionEntry> entries = new List<GamePkgVersionEntry>();
-            List<GameIntegrityReport> mismatches = new List<GameIntegrityReport>();
+            List<GameFileIntegrityReport> mismatches = new List<GameFileIntegrityReport>();
             double pkgVersionTotalPackageSize = 0;
             double totalBytesRead = 0;
             List<double> estimatedRemainingTime = new List<double>();
@@ -136,7 +136,7 @@ namespace Dodoco.Game {
 
                         if (localHash != currentEntry.md5.ToUpper()) {
 
-                            mismatches.Add(new GameIntegrityReport {
+                            mismatches.Add(new GameFileIntegrityReport {
 
                                 localFileIntegrityState = GameFileIntegrityState.CORRUPTED,
                                 localFilePath = file.FullName,
@@ -155,7 +155,7 @@ namespace Dodoco.Game {
 
                     } else {
 
-                        mismatches.Add(new GameIntegrityReport {
+                        mismatches.Add(new GameFileIntegrityReport {
 
                             localFileIntegrityState = GameFileIntegrityState.MISSING,
                             localFilePath = file.FullName,
