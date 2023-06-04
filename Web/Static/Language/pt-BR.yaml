@@ -19,4 +19,6 @@ settings:
       integrity:
         title: Integridade
         description: Verificar e corrigir arquivos do jogo em falta ou corrompidos
-        button_text: Iniciar verificação
+        button_text: Iniciar reparo
+      installation_directory:
+        title: 'Diretório de instalação'

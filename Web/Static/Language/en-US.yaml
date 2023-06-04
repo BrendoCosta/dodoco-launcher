@@ -19,4 +19,6 @@ settings:
       integrity:
         title: Integrity
         description: Verify and fix missing or corrupted game's files
-        button_text: Start verify
+        button_text: Start repair
+      installation_directory:
+        title: 'Installation directory'
