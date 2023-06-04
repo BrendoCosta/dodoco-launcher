@@ -7,7 +7,7 @@
 
 </script>
 {#if show}
-    <div on:click={() => (checked = !checked)} class="input w-6 h-6 flex flex-row justify-center items-center">
+    <div on:click={() => (checked = !checked)} class="input checkbox">
         {#if checked}
             <Icon icon="mingcute:check-fill" />
         {/if}

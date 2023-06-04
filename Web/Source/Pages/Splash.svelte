@@ -15,7 +15,7 @@
 
         setInterval(async () => {
 
-            let fetchLogMessage: Nullable<LogEntry> = await RpcClient.GetInstance().Call("Dodoco.Util.Log.Logger.GetLastLogEntry");
+            let fetchLogMessage: Nullable<LogEntry> = await RpcClient.GetInstance().CallAsync("Dodoco.Util.Log.Logger.GetLastLogEntry");
 
             if (fetchLogMessage != null && fetchLogMessage.type != LogType.DEBUG) {
 
