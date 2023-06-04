@@ -9,4 +9,5 @@ export interface LogEntry
 	type: LogType;
 	prependMessage: string;
 	message: string;
+	GetAsText() : Promise<string>;
 }

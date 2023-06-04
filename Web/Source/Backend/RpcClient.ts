@@ -31,19 +31,9 @@ export class RpcClient {
 
     }
 
-    public async Call<T>(method: string, params?: any[]): Promise<Nullable<T>> {
+    public async CallAsync<T>(method: string, params?: any[]): Promise<T> {
 
-        if (!this.connected) return null;
-
-        let result: Nullable<T> = null;
-
-        try {
-
-            result = await this.client.request({ method: method, params: params }) as T;
-
-        } catch (e: any) {}
-
-        return result;
+        return (await this.client.request({ method: method, params: params })) as T;
 
     }
 

@@ -1,6 +1,6 @@
 using Reinforced.Typings.Fluent;
 
-namespace Dodoco {
+namespace Dodoco.ReinforcedTypings {
 
     public static class ReinforcedTypingsConfiguration {
 
@@ -51,6 +51,18 @@ namespace Dodoco {
                     .WithPublicProperties()
                     .AutoI(false)
                     .WithPublicMethods()
+                    .WithPublicMethods(method => method.WithCodeGenerator<ControllerMethodsGenerator>())
+            );
+
+            builder.ExportAsClasses(
+                new Type[] {
+                    typeof(Dodoco.Network.Controller.LauncherController)
+                },
+                conf => conf
+                    .AddImport("{ Nullable }", "@Dodoco/index")
+                    .AddImport("{ RpcClient }", "@Dodoco/Backend")
+                    .WithCodeGenerator<ControllerClassGenerator>()
+                    .WithPublicMethods(method => method.WithCodeGenerator<ControllerMethodsGenerator>())
             );
 
         }

@@ -10,11 +10,15 @@ import { LauncherSettings } from './Settings/LauncherSettings';
 
 export interface ILauncher
 {
-	ActivityState: LauncherActivityState;
-	Cache: LauncherCache;
-	Content: any;
-	ExecutionState: LauncherExecutionState;
-	Game?: IGame;
-	Resource: any;
-	Settings: LauncherSettings;
+	IsRunning() : Promise<boolean>;
+	GetLauncherActivityState() : Promise<LauncherActivityState>;
+	GetLauncherCache() : Promise<LauncherCache>;
+	GetContent() : Promise<any>;
+	GetLauncherExecutionState() : Promise<LauncherExecutionState>;
+	GetGame() : Promise<IGame>;
+	GetResource() : Promise<any>;
+	GetLauncherSettings() : Promise<LauncherSettings>;
+	RepairGameFiles() : Promise<void>;
+	SetLauncherCache(cache: LauncherCache) : Promise<void>;
+	SetLauncherSettings(settings: LauncherSettings) : Promise<void>;
 }

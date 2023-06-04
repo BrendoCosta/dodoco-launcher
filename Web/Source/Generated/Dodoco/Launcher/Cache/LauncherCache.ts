@@ -7,4 +7,5 @@ import { BackgroundImage } from './BackgroundImage';
 export interface LauncherCache
 {
 	background_image: BackgroundImage;
+	UpdateFromContent(content: any) : Promise<void>;
 }

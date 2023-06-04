@@ -3,8 +3,15 @@
 //     the code is regenerated.
 
 import { GameState } from './GameState';
+import { GameFileIntegrityReport } from './GameFileIntegrityReport';
 
 export interface IGame
 {
+	InstallationDirectory: string;
 	State: GameState;
+	Version: any;
+	GetInstallationDirectory() : Promise<string>;
+	GetGameState() : Promise<GameState>;
+	GetVersion() : Promise<any>;
+	CheckFilesIntegrity(token?: any) : Promise<GameFileIntegrityReport[]>;
 }

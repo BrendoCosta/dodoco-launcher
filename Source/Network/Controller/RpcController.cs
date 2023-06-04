@@ -29,16 +29,12 @@ namespace Dodoco.Network.Controller {
                 JsonRpc jsonRpc = new StreamJsonRpc.JsonRpc(new StreamJsonRpc.WebSocketMessageHandler(webSocketContext.WebSocket, jsonFormatter));
                 jsonRpc.CancelLocallyInvokedMethodsWhenConnectionIsClosed = true;
                 
-                jsonRpc.AddLocalRpcTarget((ILauncher) Launcher.Launcher.GetInstance(), new StreamJsonRpc.JsonRpcTargetOptions() {
-                    MethodNameTransform = (string methodName) => $"Dodoco.Launcher.ILauncher.{methodName}"
+                jsonRpc.AddLocalRpcTarget(new LauncherController(), new StreamJsonRpc.JsonRpcTargetOptions() {
+                    MethodNameTransform = (string methodName) => $"{typeof(LauncherController).FullName}.{methodName}"
                 });
 
                 jsonRpc.AddLocalRpcTarget(Logger.GetInstance(), new StreamJsonRpc.JsonRpcTargetOptions() {
                     MethodNameTransform = (string methodName) => $"Dodoco.Util.Log.Logger.{methodName}"
-                });
-
-                jsonRpc.AddLocalRpcTarget(new GlobalInstancesController(), new StreamJsonRpc.JsonRpcTargetOptions() {
-                    MethodNameTransform = (string methodName) => $"Dodoco.Network.Controller.GlobalInstancesController.{methodName}"
                 });
 
                 jsonRpc.StartListening();

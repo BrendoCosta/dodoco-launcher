@@ -10,7 +10,7 @@ import "@Dodoco/Stylesheet/Style.css";
 
 // Generated types
 
-import { ILauncher } from "./Generated/Dodoco/Launcher/ILauncher";
+import { LauncherController } from "./Generated/Dodoco/Network/Controller/LauncherController";
 
 // Pages
 
@@ -59,19 +59,9 @@ import { LanguageConstants } from "./Language";
 
 setInterval(async () => {
 
-    let result: Nullable<ILauncher> = await RpcClient.GetInstance().Call("Dodoco.Network.Controller.GlobalInstancesController.GetLauncherInstance");
-    
-    if (result != null) {
-
-        GlobalInstances.LauncherInstance.set(result);
-
-        if (result.Game != null) {
-
-            GlobalInstances.GameInstance.set(result.Game);
-
-        }
-
-    }  
+    GlobalInstances.LauncherInstance.set(await LauncherController.GetInstance().GetEntityInstance());
+    GlobalInstances.GameInstance.set(await LauncherController.GetInstance().GetGame());
+    GlobalInstances.i18nInstance.set(i18next)
 
 }, 500);
 
