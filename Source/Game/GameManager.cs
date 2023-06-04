@@ -101,15 +101,15 @@ namespace Dodoco.Game {
 
         }
 
-        public static IGame CreateGame(Version version, GameServer server, Resource resource, string directory, GameState state) {
+        public static IMutableGame CreateGame(Version version, GameServer server, Resource resource, string directory, GameState state) {
 
             Logger.GetInstance().Log($"Creating game instance...");
             
-            IGame stable = new GameStable(version, server, resource, directory, state);
+            IMutableGame stable = new GameStable(version, server, resource, directory, state);
 
             try {
 
-                return new Dictionary<Version, IGame> {
+                return new Dictionary<Version, IMutableGame> {
 
                     //{ Version.Parse("3.7.0"), stable },
                     //{ Version.Parse("3.6.0"), stable }

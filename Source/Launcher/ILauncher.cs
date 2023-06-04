@@ -24,16 +24,6 @@ namespace Dodoco.Launcher {
         //Task<int> DownloadGameOperationStatus();
         //Task<int> UpdateGameOperationStatus();
 
-        event EventHandler<int> OnOperationProgressChanged;
-
-        LauncherActivityState ActivityState { get; }
-        LauncherCache Cache { get; }
-        Content Content { get; }
-        LauncherExecutionState ExecutionState { get; }
-        IGame? Game { get; }
-        Resource Resource { get; }
-        LauncherSettings Settings { get; }
-
         LauncherActivityState GetLauncherActivityState();
         LauncherCache GetLauncherCache();
         Content GetContent();

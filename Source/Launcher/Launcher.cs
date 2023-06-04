@@ -36,7 +36,7 @@ namespace Dodoco.Launcher {
         public LauncherCache Cache { get; private set; } = new LauncherCache();
         public Content Content { get; private set; } = new Content();
         public LauncherExecutionState ExecutionState { get; private set; } = LauncherExecutionState.UNINITIALIZED;
-        public IGame? Game { get; private set; }
+        public IMutableGame? Game { get; private set; }
         public Resource Resource { get; private set; } = new Resource();
         public LauncherSettings Settings { get; private set; } = new LauncherSettings();
 

@@ -6,19 +6,18 @@ namespace Dodoco.Game {
 
     public interface IGame {
 
-        GameState State { get; }
-        
         event EventHandler<ApplicationProgressReport> OnCheckIntegrityProgress;
         event EventHandler<DownloadProgressReport> OnDownloadProgress;
 
-        Task<List<GameFileIntegrityReport>> CheckFilesIntegrity(CancellationToken token = default);
-        Task RepairFile(GameFileIntegrityReport report, CancellationToken token = default);
-        Task Download(CancellationToken token = default);
-        
-        void SetInstallationDirectory(string directory);
-        void SetVersion(Version version);
+        string InstallationDirectory { get; }
+        GameState State { get; }
+        Version Version { get; }
 
+        string GetInstallationDirectory();
+        GameState GetGameState();
         Version GetVersion();
+
+        Task<List<GameFileIntegrityReport>> CheckFilesIntegrity(CancellationToken token = default);
 
     }
 

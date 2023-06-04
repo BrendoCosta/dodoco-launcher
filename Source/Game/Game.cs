@@ -13,7 +13,7 @@ using System.Text.Json.Serialization;
 
 namespace Dodoco.Game {
 
-    public abstract class Game: IGame {
+    public abstract class Game: IMutableGame {
 
         public string InstallationDirectory { get; private set; }
         public GameServer GameServer { get; private set; }
@@ -36,6 +36,8 @@ namespace Dodoco.Game {
         public virtual void SetInstallationDirectory(string directory) => this.InstallationDirectory = directory;
         public virtual void SetVersion(Version version) => this.Version = version;
 
+        public virtual string GetInstallationDirectory() => this.InstallationDirectory;
+        public virtual GameState GetGameState() => this.State;
         public virtual Version GetVersion() => this.Version;
 
         public virtual async Task Download(CancellationToken token = default) {
