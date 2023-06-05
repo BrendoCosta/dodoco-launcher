@@ -21,4 +21,4 @@ settings:
         description: Verify and fix missing or corrupted game's files
         button_text: Start repair
       installation_directory:
-        title: 'Installation directory'
+        title: Installation directory

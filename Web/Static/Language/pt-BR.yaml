@@ -21,4 +21,4 @@ settings:
         description: Verificar e corrigir arquivos do jogo em falta ou corrompidos
         button_text: Iniciar reparo
       installation_directory:
-        title: 'Diretório de instalação'
+        title: Diretório de instalação
