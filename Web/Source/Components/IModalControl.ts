@@ -1,6 +1,8 @@
-export interface IModalControl {
+import { IComponentControl } from "./IComponentControl";
+import { TModalProperties } from "./TModalProperties";
 
-    IsOpen: boolean;
+export interface IModalControl extends IComponentControl<TModalProperties> {
+
     Open(): void;
     Close(): void;
 
