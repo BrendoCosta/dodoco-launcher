@@ -52,8 +52,11 @@ import { LanguageConstants } from "./Language";
 
     });
 
-    console.log(i18next.t("test.hello"));
-    console.log(i18next.t("test.world"));
+    i18next.on("languageChanged", () => {
+
+        GlobalInstances.i18nInstance.set(i18next);
+
+    });
 
 })()
 
@@ -61,7 +64,6 @@ setInterval(async () => {
 
     GlobalInstances.LauncherInstance.set(await LauncherController.GetInstance().GetEntityInstance());
     GlobalInstances.GameInstance.set(await LauncherController.GetInstance().GetGame());
-    GlobalInstances.i18nInstance.set(i18next)
 
 }, 500);
 
