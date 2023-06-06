@@ -1,18 +1,26 @@
-test:
-  hello: ''
-  world: ''
+component:
+  confirm:
+    default_title: Confirmar
+    button_true: Sim
+    button_false: Não
 settings:
   title: Configurações
-  settings_menu:
+  menu:
+    general: Gerais
     launcher: Launcher
     game: Jogo
-  settings_content:
+  content:
+    general:
+      default_settings:
+        title: Configurações padrão
+        description: Restaurar as configurações padrão do launcher
+        button_text: Restaurar
     launcher:
       update:
         title: Atualização
         description: A versão instalada do launcher é {{version}}
         button_text: Buscar por atualizações do launcher
-        search_for_updates_on_start: Buscar por atualizações automaticamente ao inicializar
+        auto_search_for_updates: Buscar por atualizações automaticamente ao inicializar
       language:
         title: Idioma
     game:
@@ -22,3 +30,8 @@ settings:
         button_text: Iniciar reparo
       installation_directory:
         title: Diretório de instalação
+  button:
+    load_default_settings: Carregar configurações padrão
+    save_settings: Salvar configurações
+  confirm:
+    save_settings: Aplicar e salvar as configurações selecionadas?

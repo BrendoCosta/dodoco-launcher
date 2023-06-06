@@ -1,18 +1,26 @@
-test:
-  hello: Hello
-  world: World
+component:
+  confirm:
+    default_title: Confirm
+    button_true: Yes
+    button_false: No
 settings:
   title: Settings
-  settings_menu:
+  menu:
+    general: General
     launcher: Launcher
     game: Game
-  settings_content:
+  content:
+    general:
+      default_settings:
+        title: Default settings
+        description: Restore launcher's default settings
+        button_text: Restore
     launcher:
       update:
         title: Update
         description: Installed launcher's version is {{version}}
         button_text: Search for launcher's updates
-        search_for_updates_on_start: Automatically search for updates on start
+        auto_search_for_updates: Automatically search for updates on start
       language:
         title: Language
     game:
@@ -22,3 +30,8 @@ settings:
         button_text: Start repair
       installation_directory:
         title: Installation directory
+  button:
+    load_default_settings: Load default settings
+    save_settings: Save settings
+  confirm:
+    save_settings: Apply and save the selected settings?
