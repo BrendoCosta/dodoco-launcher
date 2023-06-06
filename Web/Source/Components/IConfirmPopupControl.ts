@@ -2,6 +2,6 @@ import { IModalControl } from "./IModalControl";
 
 export interface IConfirmPopupControl extends IModalControl {
 
-    Confirm(choose: boolean): void;
+    Choose(choose: boolean, callback: (result: boolean) => void): void;
 
 }

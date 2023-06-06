@@ -1,5 +1,6 @@
 export interface TModalProperties {
 
-    IsOpen: boolean
+    IsOpen: boolean,
+    Closable: boolean
 
 }
