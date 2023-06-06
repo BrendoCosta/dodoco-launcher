@@ -58,6 +58,8 @@ import { LanguageConstants } from "./Language";
 
     });
 
+    i18next.changeLanguage((await LauncherController.GetInstance().GetLauncherSettings()).launcher.language);
+
 })()
 
 setInterval(async () => {
