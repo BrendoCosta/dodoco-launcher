@@ -23,6 +23,7 @@ namespace Dodoco.Network.Controller {
                 HttpListenerWebSocketContext webSocketContext = await baseContext.AcceptWebSocketAsync(null);
 
                 JsonMessageFormatter jsonFormatter = new JsonMessageFormatter();
+                jsonFormatter.JsonSerializer.ObjectCreationHandling = Newtonsoft.Json.ObjectCreationHandling.Replace;
                 jsonFormatter.JsonSerializer.Converters.Add(new Newtonsoft.Json.Converters.StringEnumConverter());
                 jsonFormatter.JsonSerializer.Converters.Add(new Newtonsoft.Json.Converters.VersionConverter());
 
