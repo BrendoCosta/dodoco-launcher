@@ -1,19 +1,32 @@
+using Dodoco.Application;
 using Dodoco.Game;
 using Dodoco.Launcher;
 using Dodoco.Launcher.Cache;
 using Dodoco.Launcher.Settings;
 using Dodoco.Network.Api.Company.Launcher.Content;
 using Dodoco.Network.Api.Company.Launcher.Resource;
+using Dodoco.Network.HTTP;
 
 namespace Dodoco.Network.Controller {
 
-    public sealed class LauncherController: IEntityInstanceController<ILauncher> {
+    public sealed class LauncherController: ILauncher, IEntityInstanceController<ILauncher> {
 
-        public ILauncher GetEntityInstance() {
+        public ApplicationProgressReport LastGameCheckIntegrityProgressReport { get; private set; } = new ApplicationProgressReport();
+        public DownloadProgressReport LastGameDownloadProgressReport { get; private set; } = new DownloadProgressReport();
 
-            return (ILauncher) Launcher.Launcher.GetInstance();
+        public LauncherController() {
+
+            this.GetEntityInstance().GetGame().OnCheckIntegrityProgress += (object? sender, ApplicationProgressReport e) => this.LastGameCheckIntegrityProgressReport = e;
+            this.GetEntityInstance().GetGame().OnDownloadProgress += (object? sender, DownloadProgressReport e) => this.LastGameDownloadProgressReport = e;
 
         }
+
+        public ILauncher GetEntityInstance() => (ILauncher) Launcher.Launcher.GetInstance();
+        public ApplicationProgressReport GetLastGameCheckIntegrityProgressReport() => this.LastGameCheckIntegrityProgressReport;
+        public DownloadProgressReport GetLastGameDownloadProgressReport() => this.LastGameDownloadProgressReport;
+
+        public void SetLauncherCache(LauncherCache cache) => this.GetEntityInstance().SetLauncherCache(cache);
+        public void SetLauncherSettings(LauncherSettings settings) => this.GetEntityInstance().SetLauncherSettings(settings);
 
         public bool IsRunning() => this.GetEntityInstance().IsRunning();
         public LauncherActivityState GetLauncherActivityState() => this.GetEntityInstance().GetLauncherActivityState();
@@ -23,7 +36,7 @@ namespace Dodoco.Network.Controller {
         public IGame GetGame() => this.GetEntityInstance().GetGame();
         public Resource GetResource() => this.GetEntityInstance().GetResource();
         public LauncherSettings GetLauncherSettings() => this.GetEntityInstance().GetLauncherSettings();
-        public Task RepairGameFiles() => this.RepairGameFiles();
+        public async Task RepairGameFiles() => this.GetEntityInstance().RepairGameFiles();
 
     }
 

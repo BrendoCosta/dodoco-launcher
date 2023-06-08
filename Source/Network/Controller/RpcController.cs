@@ -35,7 +35,8 @@ namespace Dodoco.Network.Controller {
                 });
 
                 jsonRpc.AddLocalRpcTarget(Logger.GetInstance(), new StreamJsonRpc.JsonRpcTargetOptions() {
-                    MethodNameTransform = (string methodName) => $"Dodoco.Util.Log.Logger.{methodName}"
+                    MethodNameTransform = (string methodName) => $"Dodoco.Util.Log.Logger.{methodName}",
+                    NotifyClientOfEvents = false
                 });
 
                 jsonRpc.StartListening();

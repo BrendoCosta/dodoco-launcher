@@ -48,8 +48,23 @@ namespace Dodoco.Launcher {
         public LauncherSettings GetLauncherSettings() => this.Settings;
         public IGame GetGame() => this.Game != null ? this.Game : throw new LauncherException("Game class not initialized yet");
 
-        public void SetLauncherCache(LauncherCache Cache) => this.Cache = Cache;
-        public void SetLauncherSettings(LauncherSettings Settings) => this.Settings = Settings;
+        public void SetLauncherCache(LauncherCache Cache) {
+
+            this.Cache = Cache;
+            // Sync the file
+            this.cacheFile.Content = this.Cache;
+            this.cacheFile.WriteFile();
+
+        }
+        
+        public void SetLauncherSettings(LauncherSettings newSettings) {
+
+            this.Settings = newSettings;
+            // Sync the file
+            this.settingsFile.Content = this.Settings;
+            this.settingsFile.WriteFile();
+
+        }
 
         /*
          * Events
@@ -211,15 +226,15 @@ namespace Dodoco.Launcher {
                  * Manages game
                 */
 
-                if (!GameManager.CheckGameInstallation(this.Settings.game.installation_path, this.Settings.game.server)) {
+                if (!GameManager.CheckGameInstallation(this.Settings.game.installation_directory, this.Settings.game.server)) {
 
                     // TODO: download game
-                    this.Game = GameManager.CreateGame(remoteGameVersion, this.Settings.game.server, this.Resource, this.Settings.game.installation_path, GameState.WAITING_FOR_DOWNLOAD);
+                    this.Game = GameManager.CreateGame(remoteGameVersion, this.Settings.game.server, this.Resource, this.Settings.game.installation_directory, GameState.WAITING_FOR_DOWNLOAD);
                     //await this.Game.Download(this.Resource, new DirectoryInfo("/home/neofox/.local/share/dodoco-launcher/"), CancellationToken.None);
 
                 } else {
 
-                    Version installedGameVersion = GameManager.SearchForGameVersion(this.Settings.game.installation_path, this.Settings.game.server);
+                    Version installedGameVersion = GameManager.SearchForGameVersion(this.Settings.game.installation_directory, this.Settings.game.server);
 
                     if (remoteGameVersion > installedGameVersion) {
 
@@ -242,11 +257,11 @@ namespace Dodoco.Launcher {
 
                         }
 
-                        this.Game = GameManager.CreateGame(installedGameVersion, this.Settings.game.server, oldVersionResource, this.Settings.game.installation_path, GameState.WAITING_FOR_UPDATE);
+                        this.Game = GameManager.CreateGame(installedGameVersion, this.Settings.game.server, oldVersionResource, this.Settings.game.installation_directory, GameState.WAITING_FOR_UPDATE);
 
                     } else {
 
-                        this.Game = GameManager.CreateGame(installedGameVersion, this.Settings.game.server, this.Resource, this.Settings.game.installation_path, GameState.READY);
+                        this.Game = GameManager.CreateGame(installedGameVersion, this.Settings.game.server, this.Resource, this.Settings.game.installation_directory, GameState.READY);
 
                     }
 
@@ -313,11 +328,17 @@ namespace Dodoco.Launcher {
 
         public async Task RepairGameFiles() {
 
+            Logger.GetInstance().Debug($"1");
+
             if (this.Game == null) return;
+
+            Logger.GetInstance().Debug($"2");
 
             try {
 
                 List<GameFileIntegrityReport> mismatches = await this.Game.CheckFilesIntegrity();
+
+                Logger.GetInstance().Debug($"3");
 
                 foreach (var report in mismatches) {
 
@@ -337,11 +358,13 @@ namespace Dodoco.Launcher {
 
                 foreach (var report in mismatches) {
 
-                    await this.Game.RepairFile(report);
+                    //await this.Game.RepairFile(report);
 
                 }
 
-            } catch (GameException e) {
+            } catch (Exception e) {
+
+                Logger.GetInstance().Debug($"4");
 
                 throw new LauncherException($"Failed to repair game's files", e);
                 

@@ -17,8 +17,8 @@ namespace Dodoco.Launcher.Settings {
 
         public record Launcher {
 
+            public bool auto_search_for_updates { get; set; } = true;
             public CultureInfo language { get; set; } = new CultureInfo("en-US");
-            public bool display_splash_screen { get; set; } = true;
 
         }
 
@@ -32,7 +32,7 @@ namespace Dodoco.Launcher.Settings {
 
             public CultureInfo language { get; set; } = new CultureInfo("en-US");
             public GameServer server { get; set; } = GameServer.global;
-            public string installation_path { get; set; } = Path.Join(ApplicationConstants.APPLICATION_HOME_DIRECTORY, "game");
+            public string installation_directory { get; set; } = Path.Join(ApplicationConstants.APPLICATION_HOME_DIRECTORY, "game");
             public List<CultureInfo> voices { get; set; } = new List<CultureInfo>{
                 GameConstants.DEFAULT_VOICE_LANGUAGE
             };
@@ -41,7 +41,11 @@ namespace Dodoco.Launcher.Settings {
 
         public record Api {
 
-            public GithubApi dodoco { get; set; } = new GithubApi { url = new Uri("https://api.github.com/repos/BrendoCosta/dodoco-launcher/") };
+            public GithubApi dodoco { get; set; } = new GithubApi {
+
+                url = "https://api.github.com/repos/BrendoCosta/dodoco-launcher/"
+                
+            };
 
             public Dictionary<GameServer, CompanyApi> company { get; set; } = new Dictionary<GameServer, CompanyApi> {
 
@@ -66,7 +70,7 @@ namespace Dodoco.Launcher.Settings {
 
             public record GithubApi {
 
-                public Uri url { get; set; } = new Uri("https://api.github.com");
+                public string url { get; set; } ="https://api.github.com";
 
             }
             

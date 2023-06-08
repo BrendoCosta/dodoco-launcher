@@ -20,6 +20,7 @@ namespace Dodoco.Game {
         public GameState State { get; private set; }
         public Version Version { get; private set; }
         public Resource Resource { get; private set; }
+        
         public event EventHandler<ApplicationProgressReport> OnCheckIntegrityProgress = delegate {};
         public event EventHandler<DownloadProgressReport> OnDownloadProgress = delegate {};
 

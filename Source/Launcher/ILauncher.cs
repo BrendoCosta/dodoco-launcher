@@ -16,13 +16,15 @@ namespace Dodoco.Launcher {
         
         //Task StartGame();
         //Task CloseGame();
-
-        //Task CheckGameFilesIntegrity();
+        Task RepairGameFiles();
         //Task DownloadGame();
         //Task UpdateGame();
         //Task<List<GameIntegrityReport>> CheckGameIntegrity();
         //Task<int> DownloadGameOperationStatus();
         //Task<int> UpdateGameOperationStatus();
+
+        void SetLauncherCache(LauncherCache cache);
+        void SetLauncherSettings(LauncherSettings settings);
 
         LauncherActivityState GetLauncherActivityState();
         LauncherCache GetLauncherCache();
@@ -31,11 +33,6 @@ namespace Dodoco.Launcher {
         IGame GetGame();
         Resource GetResource();
         LauncherSettings GetLauncherSettings();
-
-        Task RepairGameFiles();
-
-        void SetLauncherCache(LauncherCache cache);
-        void SetLauncherSettings(LauncherSettings settings);
 
     }
 

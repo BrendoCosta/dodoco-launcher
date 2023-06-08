@@ -15,9 +15,9 @@ namespace Dodoco.Network.Api.Dodoco {
             NumberHandling = JsonNumberHandling.AllowReadingFromString
         };
 
-        public DodocoApiFactory(Uri baseUrl) {
+        public DodocoApiFactory(string baseUrl) {
 
-            this.BaseUrl = baseUrl;
+            this.BaseUrl = new Uri(baseUrl);
 
         }
 
