@@ -23,6 +23,8 @@ namespace Dodoco.Launcher {
         //Task<int> DownloadGameOperationStatus();
         //Task<int> UpdateGameOperationStatus();
 
+        event EventHandler<IGame> OnGameCreated;
+
         void SetLauncherCache(LauncherCache cache);
         void SetLauncherSettings(LauncherSettings settings);
 

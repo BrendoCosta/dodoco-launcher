@@ -14,10 +14,17 @@ namespace Dodoco.Network.Controller {
         public ApplicationProgressReport LastGameCheckIntegrityProgressReport { get; private set; } = new ApplicationProgressReport();
         public DownloadProgressReport LastGameDownloadProgressReport { get; private set; } = new DownloadProgressReport();
 
+        public event EventHandler<IGame> OnGameCreated = delegate {};
+
         public LauncherController() {
 
-            this.GetEntityInstance().GetGame().OnCheckIntegrityProgress += (object? sender, ApplicationProgressReport e) => this.LastGameCheckIntegrityProgressReport = e;
-            this.GetEntityInstance().GetGame().OnDownloadProgress += (object? sender, DownloadProgressReport e) => this.LastGameDownloadProgressReport = e;
+            this.GetEntityInstance().OnGameCreated += (object? sender, IGame game) => {
+
+                game.OnCheckIntegrityProgress += (object? sender, ApplicationProgressReport e) => this.LastGameCheckIntegrityProgressReport = e;
+                game.OnDownloadProgress += (object? sender, DownloadProgressReport e) => this.LastGameDownloadProgressReport = e;
+                this.OnGameCreated.Invoke(sender, game);
+
+            };
 
         }
 

@@ -70,6 +70,7 @@ namespace Dodoco.Launcher {
          * Events
         */
 
+        public event EventHandler<IGame> OnGameCreated = delegate {};
         public event EventHandler<int> OnOperationProgressChanged = delegate {};
 
         public static Launcher GetInstance() {
@@ -269,6 +270,8 @@ namespace Dodoco.Launcher {
 
                 if (this.Game == null)
                     throw new LauncherException("Failed to create the game instance");
+
+                this.OnGameCreated.Invoke(this, this.Game);
 
                 this.window.SetSize(new Size(1270, 766));
                 this.window.SetResizable(true);
