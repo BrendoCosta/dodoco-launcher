@@ -1,8 +1,8 @@
 component:
   confirm:
     default_title: Confirm
-    button_true: Yes
-    button_false: No
+    button_false: 'No'
+    button_true: 'Yes'
 settings:
   title: Settings
   menu:
@@ -31,7 +31,6 @@ settings:
       installation_directory:
         title: Installation directory
   button:
-    load_default_settings: Load default settings
     save_settings: Save settings
   confirm:
     save_settings: Apply and save the selected settings?

@@ -1,8 +1,8 @@
 component:
   confirm:
     default_title: Confirmar
-    button_true: Sim
     button_false: Não
+    button_true: Sim
 settings:
   title: Configurações
   menu:
@@ -31,7 +31,6 @@ settings:
       installation_directory:
         title: Diretório de instalação
   button:
-    load_default_settings: Carregar configurações padrão
     save_settings: Salvar configurações
   confirm:
     save_settings: Aplicar e salvar as configurações selecionadas?
