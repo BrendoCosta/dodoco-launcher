@@ -6,16 +6,10 @@ using Dodoco.Network;
 using Dodoco.Network.Api.Company;
 using Dodoco.Network.Api.Company.Launcher.Content;
 using Dodoco.Network.Api.Company.Launcher.Resource;
-using Dodoco.Network.Api.Dodoco;
-using Dodoco.Network.Controller;
-using Dodoco.Util;
+using Dodoco.Network.Api.Github.Repos;
 using Dodoco.Util.Log;
 
-using System.ComponentModel;
 using System.Drawing;
-using System.Runtime.CompilerServices;
-using System.Text.Json;
-using System.Text.Json.Serialization;
 
 namespace Dodoco.Launcher {
 
@@ -251,8 +245,8 @@ namespace Dodoco.Launcher {
 
                         } else {
 
-                            DodocoApiFactory dodocoApiFactory = new DodocoApiFactory(this.Settings.api.dodoco.url);
-                            oldVersionResource = await dodocoApiFactory.FetchCachedLauncherResource(installedGameVersion, this.Settings.game.server);
+                            LauncherRepositoryApi repo = new LauncherRepositoryApi(this.Settings.api.Launcher);
+                            oldVersionResource = await repo.FetchCachedLauncherResource(installedGameVersion, this.Settings.game.server);
                             this.resourceCacheFile.Content = oldVersionResource;
                             this.resourceCacheFile.WriteFile();
 

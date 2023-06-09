@@ -1,6 +1,7 @@
 
 using Dodoco.Application;
 using Dodoco.Game;
+using Dodoco.Network.Api.Github.Repos;
 
 using System.Globalization;
 
@@ -41,9 +42,17 @@ namespace Dodoco.Launcher.Settings {
 
         public record Api {
 
-            public GithubApi dodoco { get; set; } = new GithubApi {
+            public GitHubReposApiConfig Launcher { get; set; } = new GitHubReposApiConfig {
 
-                url = "https://api.github.com/repos/BrendoCosta/dodoco-launcher/"
+                Owner = "BrendoCosta",
+                Repository = "dodoco-launcher"
+
+            };
+
+            public GitHubReposApiConfig Wine { get; set; } = new GitHubReposApiConfig {
+
+                Owner = "GloriousEggroll",
+                Repository = "wine-ge-custom"
                 
             };
 
@@ -65,12 +74,6 @@ namespace Dodoco.Launcher.Settings {
                 public string url { get; set; } = System.Text.Encoding.UTF8.GetString(Convert.FromBase64String("aHR0cHM6Ly9oazRlLWxhdW5jaGVyLXN0YXRpYy5ob3lvdmVyc2UuY29tL2hrNGVfZ2xvYmFsL21kay9sYXVuY2hlci9hcGk="));
                 public string key { get; set; } = System.Text.Encoding.UTF8.GetString(Convert.FromBase64String("Z2NTdGdhcmg="));
                 public int launcher_id { get; set; } = 10;
-
-            }
-
-            public record GithubApi {
-
-                public string url { get; set; } ="https://api.github.com";
 
             }
             

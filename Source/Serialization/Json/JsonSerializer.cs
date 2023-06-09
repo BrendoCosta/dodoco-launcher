@@ -14,6 +14,7 @@ namespace Dodoco.Serialization.Json {
         public JsonSerializer() {
 
             this.options.Converters.Add(new CultureInfoJsonConverter());
+            this.options.Converters.Add(new JsonStringEnumConverter());
 
         }
 
