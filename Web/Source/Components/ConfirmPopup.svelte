@@ -1,7 +1,7 @@
 <svelte:options accessors={true}></svelte:options>
 <script lang="ts">
 
-    import { i18nInstance } from "@Dodoco/GlobalInstances";
+    import { i18nInstance } from "@Dodoco/Global";
     import { ConfirmPopupControl, Modal, ScoopedFrame } from "./";
 
     export let title: string = "Confirm";

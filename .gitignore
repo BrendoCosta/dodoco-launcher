@@ -1,4 +1,5 @@
 /bin/
 /obj/
+/Web/Source/Generated/
 
 *.code-workspace

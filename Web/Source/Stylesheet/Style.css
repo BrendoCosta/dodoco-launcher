@@ -67,6 +67,18 @@ html, body {
 
 }
 
+.input.radio {
+
+    @apply rounded-full w-6 h-6 flex flex-row justify-center items-center p-1
+
+}
+
+.input.radio .check {
+
+    @apply rounded-[50%] bg-gray-800 w-full h-full
+
+}
+
 .input.listbox-button {
 
     @apply w-64 flex flex-row items-center justify-between py-2 px-4 gap-x-3
@@ -87,6 +99,6 @@ html, body {
 
 button.input {
 
-    @apply py-2 px-4
+    @apply py-2 px-4 inline-flex items-center justify-center
 
 }

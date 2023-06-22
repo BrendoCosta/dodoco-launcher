@@ -8,7 +8,7 @@ export class Backend {
 
     public static get RpcUrl(): string {
 
-        return "ws://localhost:4000/Dodoco/Network/Controller/RpcController";
+        return "ws://localhost:4000/rpc";
 
     }
 

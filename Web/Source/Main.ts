@@ -1,8 +1,7 @@
-import { Nullable, GlobalInstances } from "@Dodoco/index";
-import { RpcClient } from "@Dodoco/Backend";
-import { onMount } from "svelte";
+import { Global } from "@Dodoco/index";
 
 // Stylesheets
+
 import { install } from "@twind/core";
 import config from "@Dodoco/../twind.config.js";
 install(config);
@@ -10,25 +9,27 @@ import "@Dodoco/Stylesheet/Style.css";
 
 // Generated types
 
-import { LauncherController } from "./Generated/Dodoco/Network/Controller/LauncherController";
+import { MainController } from "./Generated/Dodoco/Application/Control/MainController";
+import { SplashController } from "./Generated/Dodoco/Application/Control/SplashController";
+import { SettingsController } from "./Generated/Dodoco/Application/Control/SettingsController";
 
 // Pages
 
+import App from "./Pages/App.svelte";
 import Main from "./Pages/Main.svelte";
 import Splash from "./Pages/Splash.svelte";
-import Launcher from "./Pages/Launcher.svelte";
 
 // Setup routes
 
 const routes: any = {
 
-    "/": Main,
-    "/Splash": Splash,
-    "/Launcher": Launcher
+    "/": App,
+    "/Main": Main,
+    "/Splash": Splash
 
 }
 
-// Setup locales
+// Setup languages
 
 import i18next from "i18next";
 import HttpBackend from "i18next-http-backend";
@@ -54,24 +55,31 @@ import { LanguageConstants } from "./Language";
 
     i18next.on("languageChanged", () => {
 
-        GlobalInstances.i18nInstance.set(i18next);
+        Global.i18nInstance.set(i18next);
 
     });
 
-    i18next.changeLanguage((await LauncherController.GetInstance().GetLauncherSettings()).launcher.language);
+    i18next.changeLanguage((await SettingsController.GetControllerInstance().GetLauncherSettings()).Launcher.Language);
 
 })()
 
+// Setup view's data update
+
 setInterval(async () => {
 
-    GlobalInstances.LauncherInstance.set(await LauncherController.GetInstance().GetEntityInstance());
-    GlobalInstances.GameInstance.set(await LauncherController.GetInstance().GetGame());
+    try {
+
+        Global._MainViewData.set(await MainController.GetControllerInstance().GetViewData());
+        Global._SettingsViewData.set(await SettingsController.GetControllerInstance().GetViewData());
+        Global._SplashViewData.set(await SplashController.GetControllerInstance().GetViewData());
+
+    } catch (error: any) {}
 
 }, 500);
 
 // Run
 
-const app: any = new Main({
+const app: any = new App({
 
     target: document.body,
     props: { routes }

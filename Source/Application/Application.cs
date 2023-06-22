@@ -1,91 +1,70 @@
+using Dodoco.Application.Control;
+using Dodoco.Core;
+using Dodoco.Core.Launcher;
+using Dodoco.Core.Util.Log;
+
+using Grapevine;
+using StreamJsonRpc;
+using System.Drawing;
+using System.Net;
+using System.Net.WebSockets;
+using System.Reflection;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using System.Reflection;
-using Dodoco.Network.HTTP;
-using Dodoco.Util.Log;
 
 namespace Dodoco.Application {
 
     public sealed class Application {
 
+        public int Port { get; private set; } = ApplicationConstants.DEFAULT_APPLICATION_TCP_PORT;
+        public string Title { get; private set; }
+        public string Version { get; private set; }
+        public string Company { get; private set; }
+        public string Description { get; private set; }
+
+        private LogFile logFile = new LogFile();
         private Grapevine.IRestServer? server;
-        public DodocoHttpClient client { get; private set; }
-        public int port { get; private set; } = ApplicationConstants.DEFAULT_APPLICATION_TCP_PORT;
-        private static Application? instance = null;
-        
-        public string title { get; private set; }
-        public string version { get; private set; }
-        public string company { get; private set; }
-        public string description { get; private set; }
 
-        public ApplicationLog log = new ApplicationLog();
-
-        public static Application GetInstance() {
-
-            if (instance == null) {
-
-                instance = new Application();
-            }
-
-            return instance;
-            
-        }
-
-        private Application() {
-
-            /*
-             * Manages application's log file
-            */
-
-            if (!this.log.Exists()) {
-
-                this.log.CreateFile();
-
-            }
-
-            this.log.StartWritingToLog();
+        public Application() {
 
             /*
              * Load assembly metadata
             */
 
-            AssemblyProductAttribute? productAttribute         = (AssemblyProductAttribute?) Attribute.GetCustomAttribute(System.Reflection.Assembly.GetExecutingAssembly(), typeof(System.Reflection.AssemblyProductAttribute), false);
-            AssemblyTitleAttribute? titleAttribute             = (AssemblyTitleAttribute?) Attribute.GetCustomAttribute(System.Reflection.Assembly.GetExecutingAssembly(), typeof(System.Reflection.AssemblyTitleAttribute), false);
-            AssemblyFileVersionAttribute? fileVersionAttribute = (AssemblyFileVersionAttribute?) Attribute.GetCustomAttribute(System.Reflection.Assembly.GetExecutingAssembly(), typeof(System.Reflection.AssemblyFileVersionAttribute), false);
-            AssemblyCompanyAttribute? companyAttribute         = (AssemblyCompanyAttribute?) Attribute.GetCustomAttribute(System.Reflection.Assembly.GetExecutingAssembly(), typeof(System.Reflection.AssemblyCompanyAttribute), false);
-            AssemblyDescriptionAttribute? descriptionAttribute = (AssemblyDescriptionAttribute?) Attribute.GetCustomAttribute(System.Reflection.Assembly.GetExecutingAssembly(), typeof(System.Reflection.AssemblyDescriptionAttribute), false);
+            AssemblyProductAttribute? productAttribute         = (AssemblyProductAttribute?) Attribute.GetCustomAttribute(Assembly.GetExecutingAssembly(), typeof(AssemblyProductAttribute), false);
+            AssemblyTitleAttribute? titleAttribute             = (AssemblyTitleAttribute?) Attribute.GetCustomAttribute(Assembly.GetExecutingAssembly(), typeof(AssemblyTitleAttribute), false);
+            AssemblyFileVersionAttribute? fileVersionAttribute = (AssemblyFileVersionAttribute?) Attribute.GetCustomAttribute(Assembly.GetExecutingAssembly(), typeof(AssemblyFileVersionAttribute), false);
+            AssemblyCompanyAttribute? companyAttribute         = (AssemblyCompanyAttribute?) Attribute.GetCustomAttribute(Assembly.GetExecutingAssembly(), typeof(AssemblyCompanyAttribute), false);
+            AssemblyDescriptionAttribute? descriptionAttribute = (AssemblyDescriptionAttribute?) Attribute.GetCustomAttribute(Assembly.GetExecutingAssembly(), typeof(AssemblyDescriptionAttribute), false);
 
-            this.title = productAttribute?.Product ?? "[Assembly product attribute not found]";
-            this.version = fileVersionAttribute?.Version ?? "[Assembly file version attribute not found]";
-            this.company = companyAttribute?.Company ?? "[Assembly company attribute not found]";
-            this.description = descriptionAttribute?.Description ?? "[Assembly description attribute not found]";
-            
-            Logger.GetInstance().Log($"{this.title} - {this.company}");
-            Logger.GetInstance().Log($"Version: {this.version} ({this.description})");
-            Logger.GetInstance().Log($"Identifier: {ApplicationConstants.DEFAULT_APPLICATION_IDENTIFIER}");
+            this.Title = productAttribute?.Product ?? "[Assembly product attribute not found]";
+            this.Version = fileVersionAttribute?.Version ?? "[Assembly file version attribute not found]";
+            this.Company = companyAttribute?.Company ?? "[Assembly company attribute not found]";
+            this.Description = descriptionAttribute?.Description ?? "[Assembly description attribute not found]";
+
+        }
+
+        public async Task Run() {
+
+            if (!this.logFile.Exists())
+                this.logFile.Create();
+
+            this.logFile.StartWritingToLog();
+
+            Logger.GetInstance().Log($"{this.Title} - {this.Company}");
+            Logger.GetInstance().Log($"Version: {this.Version} ({this.Description})");
+            Logger.GetInstance().Log($"Identifier: {Constants.IDENTIFIER}");
             Logger.GetInstance().Log("Starting application...");
 
-            /*
-             * Create the application's home directory if it not exists
-            */
+            ILauncher launcher = await Launcher.Create();
+            IApplicationWindow window = new ApplicationWindow();
 
-            if (Directory.Exists(ApplicationConstants.APPLICATION_HOME_DIRECTORY)) {
-
-                Logger.GetInstance().Log($"Successfully found application's home directory ({ApplicationConstants.APPLICATION_HOME_DIRECTORY})");
-
-            } else {
-
-                Logger.GetInstance().Warning($"The application's home directory ({ApplicationConstants.APPLICATION_HOME_DIRECTORY}) doesn't exists and it will be created.");
-
-                try {
-
-                    Directory.CreateDirectory(ApplicationConstants.APPLICATION_HOME_DIRECTORY);
-                    Logger.GetInstance().Log($"Successfully created application's home directory");
-
-                } catch (Exception e) { throw new ApplicationException($"Failed to create application's home directory", e); }
-
-            }
+            window.SetTitle(this.Title);
+            window.SetSize(new Size(300, 400));
+            window.SetResizable(false);
+            window.SetFrameless(false);
+            window.OnClose += new EventHandler(async (object? sender, EventArgs e) => await launcher.Stop());
 
             /*
              * Manages application's HTTP server
@@ -102,10 +81,64 @@ namespace Dodoco.Application {
 
             };
 
-            this.port = Int32.Parse(Grapevine.PortFinder.FindNextLocalOpenPort(this.port));
+            this.Port = Int32.Parse(Grapevine.PortFinder.FindNextLocalOpenPort(this.Port));
+            string url = $"http://localhost:{this.Port}/";
             
             Action<Grapevine.IRestServer> configServer = (server) => {
 
+                /*
+                 * Manages WebSocket RPC route
+                */
+
+                server.Router.Register(new Route(async (context) => {
+
+                    HttpListenerContext baseContext = ((HttpContext) context).Advanced;
+                    
+                    if (baseContext.Request.IsWebSocketRequest) {
+
+                        HttpListenerWebSocketContext webSocketContext = await baseContext.AcceptWebSocketAsync(null);
+
+                        JsonMessageFormatter jsonFormatter = new JsonMessageFormatter();
+                        jsonFormatter.JsonSerializer.ObjectCreationHandling = Newtonsoft.Json.ObjectCreationHandling.Replace;
+                        jsonFormatter.JsonSerializer.Converters.Add(new Newtonsoft.Json.Converters.StringEnumConverter());
+                        jsonFormatter.JsonSerializer.Converters.Add(new Newtonsoft.Json.Converters.VersionConverter());
+
+                        JsonRpc jsonRpc = new StreamJsonRpc.JsonRpc(new StreamJsonRpc.WebSocketMessageHandler(webSocketContext.WebSocket, jsonFormatter));
+                        jsonRpc.CancelLocallyInvokedMethodsWhenConnectionIsClosed = true;
+
+                        /*
+                         * Manages RPC controllers
+                        */
+                        
+                        jsonRpc.AddLocalRpcTarget(new MainController(launcher), new StreamJsonRpc.JsonRpcTargetOptions() {
+                            MethodNameTransform = (string methodName) => $"{typeof(MainController).FullName}.{methodName}"
+                        });
+
+                        jsonRpc.AddLocalRpcTarget(new SettingsController(launcher), new StreamJsonRpc.JsonRpcTargetOptions() {
+                            MethodNameTransform = (string methodName) => $"{typeof(SettingsController).FullName}.{methodName}"
+                        });
+
+                        jsonRpc.AddLocalRpcTarget(new SplashController(), new StreamJsonRpc.JsonRpcTargetOptions() {
+                            MethodNameTransform = (string methodName) => $"{typeof(SplashController).FullName}.{methodName}"
+                        });
+
+                        jsonRpc.AddLocalRpcTarget(Logger.GetInstance(), new StreamJsonRpc.JsonRpcTargetOptions() {
+                            MethodNameTransform = (string methodName) => $"{typeof(Logger).FullName}.{methodName}",
+                            NotifyClientOfEvents = false
+                        });
+
+                        jsonRpc.StartListening();
+
+                        while (webSocketContext.WebSocket.State != WebSocketState.Closed) {
+
+                            await Task.Delay(50);
+
+                        }
+
+                    }
+
+                }, "GET", "/rpc"));
+                
                 /*
                  * Manages HTTP server's content-types
                 */
@@ -126,12 +159,12 @@ namespace Dodoco.Application {
 
                 if (binaryPath != null) {
 
-                    string bundlePath = Path.Combine(binaryPath, ApplicationConstants.APPLICATION_BUNDLE_FOLDER_NAME);
+                    string bundlePath = Path.Combine(binaryPath, ApplicationConstants.BUNDLE_FOLDER_NAME);
 
                     if (Directory.Exists(bundlePath)) {
 
-                        server.Prefixes.Add($"http://localhost:{this.port}/");
-                        // ---- For debugging ----
+                        server.Prefixes.Add(url);
+                        // ---- For development ----
                         server.GlobalResponseHeaders.Add(new Grapevine.GlobalResponseHeaders("Access-Control-Allow-Origin", "http://localhost:5173"));
                         // -----------------------
 
@@ -142,22 +175,22 @@ namespace Dodoco.Application {
                         */
 
                         server.ContentFolders.Add(new Grapevine.ContentFolder(bundlePath));
-                        server.ContentFolders.Add(new Grapevine.ContentFolder(ApplicationConstants.APPLICATION_HOME_DIRECTORY));
+                        server.ContentFolders.Add(new Grapevine.ContentFolder(Constants.HOME_DIRECTORY));
                         Grapevine.MiddlewareExtensions.UseContentFolders(server);
                         server.Router.Options.SendExceptionMessages = true;
 
                         Logger.GetInstance().Log($"Serving application's bundle's files from {bundlePath}");
-                        Logger.GetInstance().Log($"Serving application's home directory's files from {ApplicationConstants.APPLICATION_HOME_DIRECTORY}");
+                        Logger.GetInstance().Log($"Serving application's home directory's files from {Constants.HOME_DIRECTORY}");
 
                     } else {
 
-                        throw new ApplicationException($"Application bundle's files' path ({bundlePath}) doesn't exists");
+                        throw new CoreException($"Application bundle's files' path ({bundlePath}) doesn't exists");
 
                     }
 
                 } else {
 
-                    throw new ApplicationException($"Failed to get the path of application's executable file");
+                    throw new CoreException($"Failed to get the path of application's executable file");
 
                 }
                 
@@ -175,36 +208,43 @@ namespace Dodoco.Application {
                 this.server.Start();
                 Logger.GetInstance().Log($"Successfully started HTTP server (listening on {this.server.Prefixes.First()})");
 
-            } catch (System.Exception e) {
+            } catch (Exception e) {
 
-                throw new ApplicationException($"Failed to start HTTP server at TCP port {this.port}", e);
+                throw new CoreException($"Failed to start HTTP server at TCP port {this.Port}", e);
 
             }
 
+            // Run
+
             /*
-             * Manages application's HTTP client
+             * Resize the screen after launcher starts
             */
 
-            Logger.GetInstance().Log("Starting HTTP client...");
-            this.client = new DodocoHttpClient();
-            Logger.GetInstance().Log("Successfully started HTTP client");
+            window.SetSize(new Size(1270, 766));
+            window.SetResizable(true);
+           
+            window.SetUri(new Uri(url));
+            window.Open();
 
-            Logger.GetInstance().Log("Successfully started application");
+            while (window.IsOpen()) {
+
+                Thread.Sleep(500);
+
+            }
+
+            this.Exit(0);
 
         }
 
-        public void End(int exitCode) {
+        public void Exit(int exitCode) {
 
             Logger.GetInstance().Log("Closing application...");
-
             this.server?.Stop();
-            this.client?.Dispose();
 
             Logger.GetInstance().Log($"Application finished with exit code {exitCode} {(exitCode == 0 ? "(Success)" : "(Error)" )}");
-
-            this.log.StopWritingToLog();
-            Console.WriteLine(Dodoco.Util.Log.Logger.GetInstance().GetFullLogText());
-            System.Environment.Exit(exitCode);
+            this.logFile.StopWritingToLog();
+            
+            Environment.Exit(exitCode);
 
         }
 
