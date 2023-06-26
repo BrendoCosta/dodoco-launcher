@@ -5,90 +5,48 @@ namespace Dodoco.Core {
 
     public abstract class ManagedFile {
 
-        protected string internalName;
-        protected string directory;
-        protected string fileName;
+        public string InternalName { get; protected set; }
+        public string Directory { get; protected set; }
+        public string FileName { get; protected set; }
+        public string FullPath { get; private set; }
 
         public ManagedFile(string internalName, string directory, string fileName) {
 
-            this.internalName = internalName;
-            this.directory = directory;
-            this.fileName = fileName;
+            this.InternalName = internalName;
+            this.Directory = directory;
+            this.FileName = fileName;
+            this.FullPath = Path.Join(this.Directory, this.FileName);
 
         }
 
-        public bool Exists() {
+        public bool Exist() {
 
-            Logger.GetInstance().Log($"Trying to find {internalName} directory ({this.directory})...");
+            Logger.GetInstance().Log($"Trying to find {InternalName} directory ({this.Directory})...");
             
-            if (Directory.Exists(this.directory)) {
+            if (System.IO.Directory.Exists(this.Directory)) {
 
-                Logger.GetInstance().Log($"Successfully found {internalName} directory");
-                Logger.GetInstance().Log($"Trying to find {internalName} file ({Path.Join(this.directory, this.fileName)})...");
+                Logger.GetInstance().Log($"Successfully found {InternalName} directory");
+                Logger.GetInstance().Log($"Trying to find {InternalName} file ({Path.Join(this.Directory, this.FileName)})...");
 
-                if (File.Exists(Path.Join(this.directory, this.fileName))) {
+                if (File.Exists(Path.Join(this.Directory, this.FileName))) {
 
-                    Logger.GetInstance().Log($"Successfully found {internalName} file");
+                    Logger.GetInstance().Log($"Successfully found {InternalName} file");
 
                 } else {
 
-                    Logger.GetInstance().Warning($"Unable to find {internalName} file.");
+                    Logger.GetInstance().Warning($"Unable to find {InternalName} file.");
                     return false;
 
                 }
 
             } else {
 
-                Logger.GetInstance().Warning($"Unable to find {internalName} directory.");
+                Logger.GetInstance().Warning($"Unable to find {InternalName} directory.");
                 return false;
 
             }
 
             return true;
-
-        }
-
-        public void Create() {
-
-            if (!Directory.Exists(this.directory)) {
-
-                Logger.GetInstance().Log($"Creating {internalName} directory ({this.directory})...");
-
-                try {
-
-                    Directory.CreateDirectory(this.directory);
-                    Logger.GetInstance().Log($"Successfully created {internalName} directory");
-
-                } catch (Exception e) {
-
-                    throw new CoreException($"Failed to create {internalName} directory", e);
-
-                }
-
-            }
-
-            string fullFilePath = Path.Join(this.directory, this.fileName);
-
-            if (!File.Exists(fullFilePath)) {
-
-                Logger.GetInstance().Log($"Creating {internalName} file ({Path.Join(this.directory, this.fileName)})...");
-
-                try {
-
-                    File.Create(fullFilePath).Close();
-                    Logger.GetInstance().Log($"Successfully created {internalName} file");
-
-                } catch (Exception e) {
-
-                    throw new CoreException($"Failed to create {internalName} file", e);
-
-                }
-
-            } else {
-
-                throw new CoreException($"The file {internalName} doesn't exists");
-
-            }
 
         }
 

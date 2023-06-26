@@ -4,6 +4,7 @@ export { default as Checkbox } from "./Checkbox.svelte";
 export { default as ConfirmPopup } from "./ConfirmPopup.svelte";
 export { default as LoadingDots } from "./LoadingDots.svelte";
 export { default as Modal } from "./Modal.svelte";
+export { default as Popup } from "./Popup.svelte";
 export { default as ProgressBar } from "./ProgressBar.svelte";
 export { default as Radio } from "./Radio.svelte";
 export { default as ScoopedFrame } from "./ScoopedFrame.svelte";

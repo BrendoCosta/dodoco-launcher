@@ -1,11 +1,10 @@
-using Dodoco.Core.Network.Api.Github.Repos.Release;
-using Dodoco.Core.Network.HTTP;
+using Dodoco.Core;
 
 namespace Dodoco.Application.Control {
 
     public record SettingsViewData {
 
-        public Dictionary<string, DownloadProgressReport> WineDownloadStatus { get; set; } = new Dictionary<string, DownloadProgressReport>();
+        public Dictionary<string, ProgressReport> WineDownloadStatus { get; set; } = new Dictionary<string, ProgressReport>();
 
     }
 

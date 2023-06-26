@@ -52,7 +52,6 @@ namespace Dodoco.Application.ReinforcedTypings {
                     typeof(Dodoco.Core.Network.Api.Github.Repos.Release.Reactions),
                     typeof(Dodoco.Core.Network.Api.Github.Repos.Release.Release),
                     typeof(Dodoco.Core.Network.Api.Github.Repos.Release.Uploader),
-                    typeof(Dodoco.Core.Network.HTTP.DownloadProgressReport),
                     typeof(Dodoco.Core.Util.Log.LogEntry),
                     typeof(Dodoco.Core.Wine.IWine)
                 },

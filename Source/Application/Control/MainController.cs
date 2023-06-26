@@ -1,4 +1,4 @@
-using Dodoco.Core.Game;
+using Dodoco.Core;
 using Dodoco.Core.Launcher;
 
 namespace Dodoco.Application.Control {
@@ -22,6 +22,15 @@ namespace Dodoco.Application.Control {
 
             return Convert.ToBase64String(((Launcher) this.launcherInstance).BackgroundImageFile.Read());
 
+        }
+
+        public async Task UpdateGame() {
+
+            ProgressReporter<ProgressReport> progress = new ProgressReporter<ProgressReport>();
+            progress.ProgressChanged += (object? sender, ProgressReport e) => this.ViewData.ProgressReport = e;
+
+            await this.launcherInstance.GetGame()?.Update(progress)!;
+            
         }
 
     }

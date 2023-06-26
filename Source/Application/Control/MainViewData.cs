@@ -1,7 +1,6 @@
 using Dodoco.Core;
 using Dodoco.Core.Game;
 using Dodoco.Core.Launcher;
-using Dodoco.Core.Network.HTTP;
 
 namespace Dodoco.Application.Control {
 
@@ -11,8 +10,7 @@ namespace Dodoco.Application.Control {
 
         public ILauncher? Launcher { get; set; }
         public IGame? Game { get; set; }
-        public ProgressReport ApplicationProgressReport { get; set; } = new ProgressReport();
-        public DownloadProgressReport DownloadProgressReport { get; set; } = new DownloadProgressReport();
+        public ProgressReport ProgressReport { get; set; } = new ProgressReport();
 
         private MainViewData() {}
         public static MainViewData GetInstance() {

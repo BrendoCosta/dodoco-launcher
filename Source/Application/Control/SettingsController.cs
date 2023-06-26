@@ -3,7 +3,6 @@ using Dodoco.Core.Game;
 using Dodoco.Core.Launcher;
 using Dodoco.Core.Launcher.Settings;
 using Dodoco.Core.Network.Api.Github.Repos.Release;
-using Dodoco.Core.Network.HTTP;
 using Dodoco.Core.Util.Log;
 using Dodoco.Core.Wine;
 
@@ -44,7 +43,7 @@ namespace Dodoco.Application.Control {
             // Reports the progress to the main view
 
             ProgressReporter<ProgressReport> progress = new ProgressReporter<ProgressReport>();
-            progress.ProgressChanged += (object? sender, ProgressReport report) => MainViewData.GetInstance().ApplicationProgressReport = report;
+            progress.ProgressChanged += (object? sender, ProgressReport report) => MainViewData.GetInstance().ProgressReport = report;
             
             return await game.CheckFilesIntegrity(progress);
 
@@ -84,10 +83,10 @@ namespace Dodoco.Application.Control {
 
             if (packageManager != null) {
 
-                this.ViewData.WineDownloadStatus.Add(release.tag_name, new DownloadProgressReport());
+                this.ViewData.WineDownloadStatus.Add(release.tag_name, new ProgressReport());
 
-                ProgressReporter<DownloadProgressReport> progress = new ProgressReporter<DownloadProgressReport>();
-                progress.ProgressChanged += (object? sender, DownloadProgressReport e) => this.ViewData.WineDownloadStatus[release.tag_name] = e;
+                ProgressReporter<ProgressReport> progress = new ProgressReporter<ProgressReport>();
+                progress.ProgressChanged += (object? sender, ProgressReport e) => this.ViewData.WineDownloadStatus[release.tag_name] = e;
 
                 await packageManager.InstallPackageFromRelease(release, progress);
 

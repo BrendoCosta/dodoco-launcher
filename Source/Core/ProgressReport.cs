@@ -2,8 +2,10 @@ namespace Dodoco.Core {
 
     public record ProgressReport {
 
-        public double completionPercentage { get; set; } = 0.0D;
-        public TimeSpan estimatedRemainingTime { get; set; } = TimeSpan.FromSeconds(0.0D);
+        public double BytesPerSecond { get; set; } = 0.0D;
+        public double CompletionPercentage { get; set; } = 0.0D;
+        public TimeSpan EstimatedRemainingTime { get; set; } = TimeSpan.FromSeconds(0.0D);
+        public string? Message { get; set; } = null;
 
     }
 

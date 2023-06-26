@@ -17,6 +17,9 @@
         <Nullable>enable</Nullable>
     </PropertyGroup>
     <ItemGroup>
+        <EmbeddedResource Include="Source/Core/Embed/Resource/**"/>
+    </ItemGroup>
+    <ItemGroup>
         <Compile Remove="Web\Build\**" />
         <None Include="Web\Build\**">
             <Link>\Bundle\%(RecursiveDir)%(Filename)%(Extension)</Link>
@@ -31,5 +34,8 @@
         <PackageReference Include="StreamJsonRpc" Version="2.15.29" />
         <PackageReference Include="UrlCombine" Version="2.0.0" />
         <PackageReference Include="YamlDotNet" Version="13.1.0" />
+    </ItemGroup>
+    <ItemGroup>
+      <ProjectReference Include="..\Hi3Helper.SharpHDiffPatch\Hi3Helper.SharpHDiffPatch\Hi3Helper.SharpHDiffPatch.csproj" />
     </ItemGroup>
 </Project>

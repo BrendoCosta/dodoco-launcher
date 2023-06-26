@@ -47,7 +47,7 @@ namespace Dodoco.Application {
 
         public async Task Run() {
 
-            if (!this.logFile.Exists())
+            if (!this.logFile.Exist())
                 this.logFile.Create();
 
             this.logFile.StartWritingToLog();

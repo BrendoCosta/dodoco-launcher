@@ -7,7 +7,7 @@ namespace Dodoco.Core.Wine {
 
         string PackagesRootDirectory { get; }
 
-        Task InstallPackageFromRelease(Release release, ProgressReporter<DownloadProgressReport> progress);
+        Task InstallPackageFromRelease(Release release, ProgressReporter<ProgressReport> progress);
         IWine GetWineFromTag(string releaseTagName, string prefixDirectory);
         List<string> GetInstalledTags();
         Task<List<Release>> GetAvaliableReleases();

@@ -5,7 +5,7 @@ using System.Text;
 
 namespace Dodoco.Core {
 
-    public class LogFile: ManagedFile {
+    public class LogFile: WritableManagedFile<LogEntry> {
 
         public LogFile(): base(
             "log",
@@ -16,14 +16,20 @@ namespace Dodoco.Core {
         public void StartWritingToLog() { Logger.GetInstance().OnWrite += this.AppendToFile; }
         public void StopWritingToLog() { Logger.GetInstance().OnWrite -= this.AppendToFile; }
         
-        private void Write(LogEntry entry) {
+        public override LogEntry Read() {
+
+            return new LogEntry(LogType.LOG, "", "");
+
+        }
+        
+        public override void Write(LogEntry entry) {
 
             /*
              * NOTE: Avoid calling Logger-related methods here, since this method
              * will be called every time Logger class write something ( see AppendToFile() )
             */
 
-            string fullFilePath = Path.Join(this.directory, this.fileName);
+            string fullFilePath = Path.Join(this.Directory, this.FileName);
 
             try {
 
@@ -31,7 +37,7 @@ namespace Dodoco.Core {
 
             } catch (Exception e) {
 
-                throw new CoreException($"Failed to write {internalName} file to storage", e);
+                throw new CoreException($"Failed to write {InternalName} file to storage", e);
 
             }
 

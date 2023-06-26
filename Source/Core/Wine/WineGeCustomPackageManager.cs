@@ -31,7 +31,7 @@ namespace Dodoco.Core.Wine {
 
         }
 
-        public async Task InstallPackageFromRelease(Release release, ProgressReporter<DownloadProgressReport> progress) {
+        public async Task InstallPackageFromRelease(Release release, ProgressReporter<ProgressReport> progress) {
 
             Logger.GetInstance().Log($"Installing the release \"{release.tag_name}\"...");
 

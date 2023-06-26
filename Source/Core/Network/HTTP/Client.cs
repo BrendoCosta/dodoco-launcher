@@ -71,7 +71,7 @@ namespace Dodoco.Core.Network.HTTP {
         }
 
         public async Task DownloadFileAsync(Uri url, string destinationPath, CancellationToken token = default) => await this.DownloadFileAsync(url, destinationPath, null, token);
-        public async Task DownloadFileAsync(Uri url, string destinationPath, ProgressReporter<DownloadProgressReport>? progress, CancellationToken token = default) {
+        public async Task DownloadFileAsync(Uri url, string destinationPath, ProgressReporter<ProgressReport>? progress, CancellationToken token = default) {
 
             if (string.IsNullOrWhiteSpace(url.ToString())) throw new NetworkException($"The given URL is empty");
             if (string.IsNullOrWhiteSpace(destinationPath)) throw new NetworkException($"The given destination path is empty");
@@ -121,11 +121,12 @@ namespace Dodoco.Core.Network.HTTP {
                                     calcBytesPerSecond = (calcBytesPerSecond + ((double) bytesRead / stopWatch.Elapsed.TotalSeconds)) / 2.0D;
                                     calcEstimatedRemainingTime = TimeSpan.FromSeconds((calcEstimatedRemainingTime.TotalSeconds + (contentLength / calcBytesPerSecond)) / 2.0D);
 
-                                    DownloadProgressReport report = new DownloadProgressReport {
+                                    ProgressReport report = new ProgressReport {
 
-                                        completionPercentage = calcCompletionPercentage,
-                                        bytesPerSecond = calcBytesPerSecond,
-                                        estimatedRemainingTime = calcEstimatedRemainingTime
+                                        CompletionPercentage = calcCompletionPercentage,
+                                        BytesPerSecond = calcBytesPerSecond,
+                                        EstimatedRemainingTime = calcEstimatedRemainingTime,
+                                        Message = url.ToString()
 
                                     };
 
@@ -136,7 +137,7 @@ namespace Dodoco.Core.Network.HTTP {
                                     // Log the download status for each +10% downloaded
 
                                     if (Convert.ToUInt64(Math.Floor(calcCompletionPercentage)) % 10 == 0)
-                                        Logger.GetInstance().Log($"Downloading the file \"{Path.GetFileName(destinationPath)}\" (Status: {report.completionPercentage}% / Speed: {DataUnitFormatter.Format(report.bytesPerSecond, DataUnitFormatterOption.USE_SYMBOL)}/s / ETA: {report.estimatedRemainingTime.ToString(@"hh\:mm\:ss")})");
+                                        Logger.GetInstance().Log($"Downloading the file \"{Path.GetFileName(destinationPath)}\" (Status: {report.CompletionPercentage}% / Speed: {DataUnitFormatter.Format(report.BytesPerSecond, DataUnitFormatterOption.USE_SYMBOL)}/s / ETA: {report.EstimatedRemainingTime.ToString(@"hh\:mm\:ss")})");
 
                                 }
 
@@ -158,26 +159,26 @@ namespace Dodoco.Core.Network.HTTP {
 
         }
 
-        public async Task DownloadMultipleFilesAsync(List<Tuple<Uri, string>> targets, ProgressReporter<DownloadProgressReport>? progress, CancellationToken token = default) {
+        public async Task DownloadMultipleFilesAsync(List<Tuple<Uri, string>> targets, ProgressReporter<ProgressReport>? progress, CancellationToken token = default) {
 
             List<Task> tasks = new List<Task>();
-            DownloadProgressReport generalReport = new DownloadProgressReport {
+            ProgressReport generalReport = new ProgressReport {
 
-                completionPercentage = 0,
-                bytesPerSecond = 0,
-                estimatedRemainingTime = TimeSpan.FromSeconds(0)
+                CompletionPercentage = 0,
+                BytesPerSecond = 0,
+                EstimatedRemainingTime = TimeSpan.FromSeconds(0)
 
             };
 
             foreach (var target in targets) {
 
-                ProgressReporter<DownloadProgressReport> targetProgress = new ProgressReporter<DownloadProgressReport>();
+                ProgressReporter<ProgressReport> targetProgress = new ProgressReporter<ProgressReport>();
                 
-                targetProgress.ProgressChanged += new EventHandler<DownloadProgressReport>((object? sender, DownloadProgressReport e) => {
+                targetProgress.ProgressChanged += new EventHandler<ProgressReport>((object? sender, ProgressReport e) => {
 
-                    generalReport.completionPercentage = Convert.ToInt32(Math.Floor(((double) generalReport.completionPercentage + (double) e.completionPercentage) / 2.0D));
-                    generalReport.bytesPerSecond = Convert.ToUInt64(Math.Floor(((double) generalReport.bytesPerSecond + (double) e.bytesPerSecond) / 2.0D));
-                    generalReport.estimatedRemainingTime = TimeSpan.FromSeconds((generalReport.estimatedRemainingTime.TotalSeconds + e.estimatedRemainingTime.TotalSeconds) / 2.0D);
+                    generalReport.CompletionPercentage = Convert.ToInt32(Math.Floor(((double) generalReport.CompletionPercentage + (double) e.CompletionPercentage) / 2.0D));
+                    generalReport.BytesPerSecond = Convert.ToUInt64(Math.Floor(((double) generalReport.BytesPerSecond + (double) e.BytesPerSecond) / 2.0D));
+                    generalReport.EstimatedRemainingTime = TimeSpan.FromSeconds((generalReport.EstimatedRemainingTime.TotalSeconds + e.EstimatedRemainingTime.TotalSeconds) / 2.0D);
 
                     progress?.Report(generalReport);
 

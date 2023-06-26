@@ -1,3 +1,4 @@
+using Dodoco.Core.Embed;
 using Dodoco.Core.Game;
 using Dodoco.Core.Launcher.Cache;
 using Dodoco.Core.Launcher.Settings;
@@ -31,7 +32,7 @@ namespace Dodoco.Core.Launcher {
         public Content Content { get; private set; } = new Content();
         public Resource Resource { get; private set; } = new Resource();
         
-        public IMutableGame? Game { get; private set; }
+        public IGame? Game { get; private set; }
         public IWine? Wine { get; private set; }
         public IWinePackageManager? WinePackageManager { get; private set; }
 
@@ -93,7 +94,7 @@ namespace Dodoco.Core.Launcher {
 
                 this.UpdateState(LauncherState.FETCHING_LAUNCHER_SETTINGS);
                 
-                if (!this.settingsFile.Exists()) {
+                if (!this.settingsFile.Exist()) {
 
                     this.settingsFile.Create();
                     this.settingsFile.Write(this.Settings);
@@ -106,7 +107,7 @@ namespace Dodoco.Core.Launcher {
                  * Manages launcher's Cache file
                 */
                 
-                if (!this.cacheFile.Exists()) {
+                if (!this.cacheFile.Exist()) {
 
                     this.cacheFile.Create();
                     this.cacheFile.Write(this.Cache);
@@ -148,7 +149,7 @@ namespace Dodoco.Core.Launcher {
 
                     if (this.Content.IsSuccessfull()) {
 
-                        if (!this.BackgroundImageFile.Exists()) {
+                        if (!this.BackgroundImageFile.Exist()) {
 
                             this.BackgroundImageFile.Create();
 
@@ -171,9 +172,6 @@ namespace Dodoco.Core.Launcher {
                 this.Resource = await factory.FetchLauncherResource();
                 if (!this.Resource.IsSuccessfull())
                     new LauncherException($"Failed to fetch Resource API from remote servers (return code: {this.Resource.retcode}, message: \"{this.Resource.message}\")");
-
-                this.Cache.Resource = this.Resource;
-                this.UpdateLauncherCache(this.Cache);
 
                 Logger.GetInstance().Log($"Finished fetching APIs");
 
@@ -276,7 +274,7 @@ namespace Dodoco.Core.Launcher {
 
             if (!GameManager.CheckGameInstallation(this.Settings.Game.InstallationDirectory, this.Settings.Game.Server)) {
 
-                this.Game = GameManager.CreateGame(remoteGameVersion, this.Settings.Game.Server, this.Resource, this.Wine, this.Settings.Game.InstallationDirectory, GameState.WAITING_FOR_DOWNLOAD);
+                this.Game = GameManager.CreateGame(remoteGameVersion, this.Settings.Game.Server, this.Resource, this.Resource, this.Wine, this.Settings.Game.InstallationDirectory, GameState.WAITING_FOR_DOWNLOAD);
 
             } else {
 
@@ -285,11 +283,40 @@ namespace Dodoco.Core.Launcher {
                 if (remoteGameVersion > installedGameVersion) {
 
                     Logger.GetInstance().Warning($"Current installed game version ({installedGameVersion}) is outdated, the newest game version is {remoteGameVersion}");
-                    this.Game = GameManager.CreateGame(installedGameVersion, this.Settings.Game.Server, this.Resource, this.Wine, this.Settings.Game.InstallationDirectory, GameState.WAITING_FOR_UPDATE);
+
+                    Resource? oldVersionResource = null;
+
+                    Logger.GetInstance().Log($"Searching for the {installedGameVersion.ToString()} version's resource...");
+
+                    if (this.Cache.Resource.data.game.latest.version == installedGameVersion.ToString()) {
+
+                        Logger.GetInstance().Log($"Found the {installedGameVersion.ToString()} version's resource in launcher's cache");
+                        oldVersionResource = this.Cache.Resource;
+
+                    } else {
+
+                        oldVersionResource = EmbeddedResourceManager.GetLauncherResource(this.Settings.Game.Server, installedGameVersion);
+                        Logger.GetInstance().Log($"Found the {installedGameVersion.ToString()} version's resource in launcher's embedded resources...");
+
+                        this.Cache.Resource = oldVersionResource;
+                        this.UpdateLauncherCache(this.Cache);
+
+                    }
+
+                    this.Game = GameManager.CreateGame(installedGameVersion, this.Settings.Game.Server, oldVersionResource, this.Resource, this.Wine, this.Settings.Game.InstallationDirectory, GameState.WAITING_FOR_UPDATE);
 
                 } else {
 
-                    this.Game = GameManager.CreateGame(installedGameVersion, this.Settings.Game.Server, this.Resource, this.Wine, this.Settings.Game.InstallationDirectory, GameState.READY);
+                    Logger.GetInstance().Log($"Current installed game version ({installedGameVersion}) is updated");
+
+                    if (this.Cache.Resource.data.game.latest.version != installedGameVersion.ToString()) {
+
+                        this.Cache.Resource = this.Resource;
+                        this.UpdateLauncherCache(this.Cache);
+
+                    }
+
+                    this.Game = GameManager.CreateGame(installedGameVersion, this.Settings.Game.Server, this.Resource, this.Resource, this.Wine, this.Settings.Game.InstallationDirectory, GameState.READY);
 
                 }
 

@@ -1,4 +1,5 @@
 using Dodoco.Core.Network.Api.Company.Launcher.Resource;
+using Dodoco.Core.Serialization.Json;
 using Dodoco.Core.Util.Log;
 using Dodoco.Core.Wine;
 
@@ -102,18 +103,24 @@ namespace Dodoco.Core.Game {
 
         }
 
-        public static IMutableGame CreateGame(Version version, GameServer server, Resource resource, IWine wine, string directory, GameState state) {
+        public static IGame CreateGame(Version version, GameServer server, Resource resource, Resource latestResource, IWine wine, string directory, GameState state) {
 
             Logger.GetInstance().Log($"Creating game instance...");
             
-            IMutableGame stable = new GameStable(version, server, resource, wine, directory, state);
+            Logger.GetInstance().Debug($"Version: {version.ToString()}");
+            Logger.GetInstance().Debug($"Server: {server.ToString()}");
+            Logger.GetInstance().Debug($"Resource: {new JsonSerializer().Serialize(resource)}");
+            Logger.GetInstance().Debug($"Wine: {new JsonSerializer().Serialize(wine)}");
+            Logger.GetInstance().Debug($"State: {state.ToString()}");
+
+            IGame stable = new GameStable(version, server, resource, latestResource, wine, directory, state);
 
             try {
 
-                return new Dictionary<Version, IMutableGame> {
+                return new Dictionary<Version, IGame> {
 
-                    //{ Version.Parse("3.7.0"), stable },
-                    //{ Version.Parse("3.6.0"), stable }
+                    { Version.Parse("3.7.0"), stable },
+                    { Version.Parse("3.6.0"), stable }
 
                 }[version];
 

@@ -160,7 +160,7 @@
                                                             <p>{ release.tag_name }</p>
                                                             <small class="text-gray-800/50">
                                                                 {#if $_SettingsViewData.WineDownloadStatus[release.tag_name] }
-                                                                    Downloading release<LoadingDots/> {Math.floor($_SettingsViewData.WineDownloadStatus[release.tag_name].completionPercentage)}% (ETA: {$_SettingsViewData.WineDownloadStatus[release.tag_name].estimatedRemainingTime.toString().split(":").map(e => parseInt(e).toString().padStart(2, "0")).join(":")})
+                                                                    Downloading release<LoadingDots/> {Math.floor($_SettingsViewData.WineDownloadStatus[release.tag_name].CompletionPercentage)}% (ETA: {$_SettingsViewData.WineDownloadStatus[release.tag_name].EstimatedRemainingTime.toString().split(":").map(e => parseInt(e).toString().padStart(2, "0")).join(":")})
                                                                 {:else}
                                                                     { release.published_at }
                                                                 {/if}

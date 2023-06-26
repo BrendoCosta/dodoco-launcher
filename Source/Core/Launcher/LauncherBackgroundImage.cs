@@ -9,7 +9,7 @@ using System.Text.RegularExpressions;
 
 namespace Dodoco.Core.Launcher {
 
-    public class LauncherBackgroundImageFile: ManagedFile {
+    public class LauncherBackgroundImageFile: WritableManagedFile<byte[]> {
 
         public string Hash { get; private set; } = string.Empty;
 
@@ -25,25 +25,31 @@ namespace Dodoco.Core.Launcher {
 
         public void UpdateHash() {
 
-            if (this.Exists()) {
+            if (this.Exist()) {
 
-                this.Hash = new Hash(MD5.Create()).ComputeHash(Path.Join(this.directory, this.fileName));
+                this.Hash = new Hash(MD5.Create()).ComputeHash(this.FullPath);
 
             }
 
         }
 
-        public byte[] Read() {
+        public override byte[] Read() {
 
-            if (!this.Exists())
+            if (!this.Exist())
                 throw new LauncherException($"The launcher's background image's file doesn't exist");
 
-            return File.ReadAllBytes(Path.Join(this.directory, this.fileName));
+            return File.ReadAllBytes(this.FullPath);
 
         }
 
+        public override void Write(byte[] content) {
+
+            throw new NotImplementedException();
+            
+        }
+
         public async Task Update(Content content) => await this.Update(content, null);
-        public async Task Update(Content content, ProgressReporter<DownloadProgressReport>? progress) {
+        public async Task Update(Content content, ProgressReporter<ProgressReport>? progress) {
 
             if (!string.IsNullOrWhiteSpace(content.data.adv.background.ToString())) {
 
@@ -64,7 +70,7 @@ namespace Dodoco.Core.Launcher {
 
                         await Client.GetInstance().DownloadFileAsync(
                             content.data.adv.background,
-                            Path.Join(this.directory, this.fileName),
+                            Path.Join(this.Directory, this.FileName),
                             progress
                         );
 

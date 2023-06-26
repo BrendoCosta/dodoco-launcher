@@ -3,6 +3,10 @@ component:
     default_title: Confirmar
     button_false: Não
     button_true: Sim
+  popup:
+    default_title: Aviso
+    button_confirm: OK
+    error_title: Erro
 settings:
   title: Configurações
   menu:
