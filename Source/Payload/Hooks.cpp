@@ -34,7 +34,17 @@ std::wstring GetHookDriverFullPath(std::wstring serviceName) {
 
     }
 
-    return std::wstring(driverToLoadFullPath);
+    std::wstring driverToLoadFullPathWStr(driverToLoadFullPath);
+
+    if (!PathFileExistsW(driverToLoadFullPathWStr.c_str())) {
+
+        Dodoco::Native::Log(L"Can't hooked driver file \"" + driverToLoadFullPathWStr + L"\"");
+        Dodoco::Native::Process::CloseProcess(GetCurrentProcess(), EXIT_FAILURE);
+        return nullptr;
+
+    }
+
+    return driverToLoadFullPathWStr;
 
 }
 
