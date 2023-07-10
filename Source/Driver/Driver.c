@@ -15,7 +15,7 @@ NTSTATUS WriteToDriverLog(LPCWSTR message) {
     IO_STATUS_BLOCK writeIosb;
     RtlZeroMemory(&writeIosb, sizeof(IO_STATUS_BLOCK));
 
-    LONG actualBytes = 0;
+    ULONG actualBytes = 0;
     ULONG poolTag = (ULONG) 202307061315;
     const int utf8StringBufferSize = 8189 + 3;
     PCHAR utf8StringBuffer = (CHAR*) ExAllocatePoolWithTag(NonPagedPool, utf8StringBufferSize, poolTag);
