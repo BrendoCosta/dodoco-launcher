@@ -8,7 +8,7 @@
 #include "Hooks.hpp"
 #include "../Log.hpp"
 #include "../Process.hpp"
-#include "../minhook/include/MinHook.h"
+#include <MinHook.h>
 
 /*
  * Author: Kyle Halladay

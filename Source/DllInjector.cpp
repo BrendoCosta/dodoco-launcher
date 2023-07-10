@@ -5,7 +5,7 @@ bool Dodoco::Native::DllInjector::Inject(HANDLE processHandle, const std::wstrin
 
     std::size_t dllPathByteSize = (dllPath.size() + 1) * sizeof(wchar_t);
     
-    void* dllBaseMemoryAddress = VirtualAllocEx(
+    void* dllPathMemoryAddress = VirtualAllocEx(
 		processHandle,
 		nullptr,            // Let the system decide where to allocate the memory
 		dllPathByteSize,
@@ -13,14 +13,14 @@ bool Dodoco::Native::DllInjector::Inject(HANDLE processHandle, const std::wstrin
 		PAGE_READWRITE      // Access for committed page
     );
 
-    if (!dllBaseMemoryAddress) {
+    if (!dllPathMemoryAddress) {
 
         Dodoco::Native::Log("Failed to write to allocate memory in target process");
         return false;
 
     }
 
-    if (!WriteProcessMemory(processHandle, dllBaseMemoryAddress, (LPCVOID) (dllPath.c_str()), dllPathByteSize, nullptr)) {
+    if (!WriteProcessMemory(processHandle, dllPathMemoryAddress, (LPCVOID) (dllPath.c_str()), dllPathByteSize, nullptr)) {
 
         Dodoco::Native::Log("Failed to write to target process' memory");
         return false;
@@ -41,7 +41,7 @@ bool Dodoco::Native::DllInjector::Inject(HANDLE processHandle, const std::wstrin
 		nullptr,                    // Default security attributes
 		0,                          // Thread's stack size
 		loadLibraryWThreadRoutine,
-		dllBaseMemoryAddress,
+		dllPathMemoryAddress,
 		0,                          // Thread should run immediately after creation
 		nullptr                     // Don't return the thread identifier
     );
@@ -59,7 +59,7 @@ bool Dodoco::Native::DllInjector::Inject(HANDLE processHandle, const std::wstrin
 
     // Free allocated resources
 
-    if (!VirtualFreeEx(processHandle, dllBaseMemoryAddress, 0, MEM_RELEASE)) {
+    if (!VirtualFreeEx(processHandle, dllPathMemoryAddress, 0, MEM_RELEASE)) {
 
         Dodoco::Native::Log("Failed to release the allocated memory from target process");
         return false;

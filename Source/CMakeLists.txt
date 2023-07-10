@@ -1,6 +1,6 @@
-cmake_minimum_required(VERSION 3.3)
+cmake_minimum_required(VERSION 3.18)
 project(dodoco-hooks LANGUAGES C CXX)
-set(CMAKE_CXX_FLAGS "-std=c++17 -static-libgcc -static-libstdc++ -Wall -pedantic")
+set(CMAKE_CXX_FLAGS "-std=c++20 -static-libgcc -static-libstdc++ -Wall -pedantic")
 set(CMAKE_C_FLAGS "-Wall -pedantic")
 
 set(CMAKE_SIZEOF_VOID_P 8)
@@ -15,9 +15,11 @@ set(COMMON_SOURCE_FILES
 )
 add_library(DodocoCommon STATIC ${COMMON_SOURCE_FILES})
 
-add_subdirectory(minhook)
-include_directories(minhook/include)
-link_directories(minhook)
+add_subdirectory(Library/minhook)
+    include_directories(Library/minhook/include)
+    link_directories(Library/minhook)
+add_subdirectory(Library/argparse)
+    include_directories(Library/argparse/include)
 
 add_subdirectory(Payload)
 add_subdirectory(Driver)
