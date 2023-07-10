@@ -19,6 +19,13 @@ jobs:
 
     steps:
     - uses: actions/checkout@v3
+      with:
+        submodules: recursive
+        
+    - name: Setup MinGW
+      uses: egor-tensin/setup-mingw@v2.2.0
+      with:
+        platform: x64
 
     - name: Configure CMake
       # Configure CMake in a 'Build' subdirectory. `CMAKE_BUILD_TYPE` is only required if you are using a single-configuration generator such as make.
