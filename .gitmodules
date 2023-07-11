@@ -1,3 +1,6 @@
 [submodule "Web/Modules/i18next-parser"]
 	path = Web/Modules/i18next-parser
 	url = https://github.com/BrendoCosta/i18next-parser.git
+[submodule "Source/Core/Library/Hi3Helper.SharpHDiffPatch"]
+	path = Source/Core/Library/Hi3Helper.SharpHDiffPatch
+	url = https://github.com/neon-nyan/Hi3Helper.SharpHDiffPatch.git
