@@ -31,12 +31,12 @@ namespace Dodoco.Application.Control {
 
         }
 
-        public async Task<List<GameFileIntegrityReport>?> CheckFilesIntegrity() {
+        public async Task RepairGameFiles() {
 
             if (game == null) {
 
                 Logger.GetInstance().Log("Game's instance not initialized");
-                return null;
+                return;
 
             }
 
@@ -45,7 +45,8 @@ namespace Dodoco.Application.Control {
             ProgressReporter<ProgressReport> progress = new ProgressReporter<ProgressReport>();
             progress.ProgressChanged += (object? sender, ProgressReport report) => MainViewData.GetInstance().ProgressReport = report;
             
-            return await game.CheckFilesIntegrity(progress);
+            await game.RepairGameFiles(progress);
+            return;
 
         }
 
