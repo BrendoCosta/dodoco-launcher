@@ -112,7 +112,7 @@
                                     <p>{ $i18nInstance.t("settings.content.game.integrity.description") }</p>
                                     <button class="input" on:click={() => {
                                         Root.Close();
-                                        SettingsController.GetControllerInstance().CheckFilesIntegrity();
+                                        SettingsController.GetControllerInstance().RepairGameFiles();
                                     }}>
                                         { $i18nInstance.t("settings.content.game.integrity.button_text") }
                                     </button>
