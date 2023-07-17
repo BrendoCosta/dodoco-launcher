@@ -36,6 +36,7 @@
         <PackageReference Include="YamlDotNet" Version="13.1.0" />
     </ItemGroup>
     <ItemGroup>
-      <ProjectReference Include="..\Hi3Helper.SharpHDiffPatch\Hi3Helper.SharpHDiffPatch\Hi3Helper.SharpHDiffPatch.csproj" />
+        <Compile Remove="Source/Core/Library/Hi3Helper.SharpHDiffPatch/**" />
+        <ProjectReference Include="Source/Core/Library/Hi3Helper.SharpHDiffPatch/Hi3Helper.SharpHDiffPatch/Hi3Helper.SharpHDiffPatch.csproj" />
     </ItemGroup>
 </Project>
