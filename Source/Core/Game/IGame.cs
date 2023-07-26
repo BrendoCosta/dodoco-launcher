@@ -3,24 +3,19 @@ using Dodoco.Core.Wine;
 
 namespace Dodoco.Core.Game {
 
-    public interface IGame {
+    public interface IGame: IStatefulEntity<GameState> {
 
-        string InstallationDirectory { get; }
-        GameState State { get; }
+        GameSettings Settings { get; set; }
         Version Version { get; }
-        IWine Wine { get; }
-        bool IsUpdating { get; }
+        bool IsInstalled { get; }
 
-        void SetInstallationDirectory(string directory);
-        void SetVersion(Version version);
+        event EventHandler AfterGameDownload;
+        event EventHandler AfterGameUpdate;
 
-        string GetInstallationDirectory();
-        GameState GetGameState();
-        Version GetVersion();
-
+        Task<bool> IsUpdateAvaliable();
         Task<List<GameFileIntegrityReport>> CheckFilesIntegrity(CancellationToken token = default);
         Task<List<GameFileIntegrityReport>> CheckFilesIntegrity(ProgressReporter<ProgressReport> progress, CancellationToken token = default);
-        Task Download(CancellationToken token = default);
+        Task Download(ProgressReporter<ProgressReport>? progress, CancellationToken token = default);
         Task RepairFile(GameFileIntegrityReport report, CancellationToken token = default);
         Task RepairFile(GameFileIntegrityReport report, ProgressReporter<ProgressReport>? progress, CancellationToken token = default);
         Task RepairGameFiles(ProgressReporter<ProgressReport>? progress, CancellationToken token = default);
