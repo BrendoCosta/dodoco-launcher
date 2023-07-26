@@ -8,7 +8,7 @@ using System.Text.RegularExpressions;
 
 namespace Dodoco.Core.Game {
 
-    public static class GameManager {
+    public static class GameInstallationManager {
 
         public static bool CheckGameInstallation(string gameInstallationDirectory, GameServer gameServer) {
 
@@ -103,22 +103,21 @@ namespace Dodoco.Core.Game {
 
         }
 
-        public static IGame CreateGame(Version version, GameServer server, Resource resource, Resource latestResource, IWine wine, string directory, GameState state) {
+        public static IGame CreateGame(Version version, GameSettings settings, Resource resource) {
 
             Logger.GetInstance().Log($"Creating game instance...");
             
             Logger.GetInstance().Debug($"Version: {version.ToString()}");
-            Logger.GetInstance().Debug($"Server: {server.ToString()}");
+            Logger.GetInstance().Debug($"Server: {settings.Server.ToString()}");
             Logger.GetInstance().Debug($"Resource: {new JsonSerializer().Serialize(resource)}");
-            Logger.GetInstance().Debug($"Wine: {new JsonSerializer().Serialize(wine)}");
-            Logger.GetInstance().Debug($"State: {state.ToString()}");
 
-            IGame stable = new GameStable(version, server, resource, latestResource, wine, directory, state);
+            IGame stable = new Game(settings, resource);
 
             try {
 
                 return new Dictionary<Version, IGame> {
 
+                    { Version.Parse("3.8.0"), stable },
                     { Version.Parse("3.7.0"), stable },
                     { Version.Parse("3.6.0"), stable }
 
