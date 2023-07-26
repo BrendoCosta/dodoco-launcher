@@ -4,3 +4,6 @@
 [submodule "Source/Core/Library/Hi3Helper.SharpHDiffPatch"]
 	path = Source/Core/Library/Hi3Helper.SharpHDiffPatch
 	url = https://github.com/neon-nyan/Hi3Helper.SharpHDiffPatch.git
+[submodule "Source/Core/Library/MultiStream"]
+	path = Source/Core/Library/MultiStream
+	url = https://github.com/jplane/MultiStream.git

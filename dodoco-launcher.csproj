@@ -17,7 +17,7 @@
         <Nullable>enable</Nullable>
     </PropertyGroup>
     <ItemGroup>
-        <EmbeddedResource Include="Source/Core/Embed/Resource/**"/>
+        <EmbeddedResource Include="Source/Core/Embed/Resource/**" />
     </ItemGroup>
     <ItemGroup>
         <Compile Remove="Web\Build\**" />
@@ -38,5 +38,7 @@
     <ItemGroup>
         <Compile Remove="Source/Core/Library/Hi3Helper.SharpHDiffPatch/**" />
         <ProjectReference Include="Source/Core/Library/Hi3Helper.SharpHDiffPatch/Hi3Helper.SharpHDiffPatch/Hi3Helper.SharpHDiffPatch.csproj" />
+        <Compile Remove="Source/Core/Library/MultiStream/**" />
+        <ProjectReference Include="Source/Core/Library/MultiStream/MultiStream.Lib/MultiStream.Lib.csproj" AdditionalProperties="TargetFramework=net7.0" />
     </ItemGroup>
 </Project>
