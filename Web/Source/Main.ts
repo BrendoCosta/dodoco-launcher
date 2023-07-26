@@ -11,7 +11,9 @@ import "@Dodoco/Stylesheet/Style.css";
 
 import { MainController } from "./Generated/Dodoco/Application/Control/MainController";
 import { SplashController } from "./Generated/Dodoco/Application/Control/SplashController";
-import { SettingsController } from "./Generated/Dodoco/Application/Control/SettingsController";
+import { GameController } from "./Generated/Dodoco/Application/Control/GameController";
+import { LauncherController } from "./Generated/Dodoco/Application/Control/LauncherController";
+import { WineController } from "./Generated/Dodoco/Application/Control/WineController";
 
 // Pages
 
@@ -44,6 +46,7 @@ import { LanguageConstants } from "./Language";
         supportedLngs: LanguageConstants.SupportedLanguages,
         lng: LanguageConstants.DefaultLanguage,
         fallbackLng: LanguageConstants.DefaultLanguage,
+        interpolation: { escapeValue: false },
         backend: {
 
             loadPath: LanguageConstants.LanguagesLoadPath,
@@ -59,7 +62,7 @@ import { LanguageConstants } from "./Language";
 
     });
 
-    i18next.changeLanguage((await SettingsController.GetControllerInstance().GetLauncherSettings()).Launcher.Language);
+    i18next.changeLanguage((await LauncherController.GetControllerInstance().GetLauncherSettings()).Launcher.Language);
 
 })()
 
@@ -70,8 +73,12 @@ setInterval(async () => {
     try {
 
         Global._MainViewData.set(await MainController.GetControllerInstance().GetViewData());
-        Global._SettingsViewData.set(await SettingsController.GetControllerInstance().GetViewData());
         Global._SplashViewData.set(await SplashController.GetControllerInstance().GetViewData());
+        Global._WineControllerViewData.set(await WineController.GetControllerInstance().GetViewData());
+        Global._GameState.set(await GameController.GetControllerInstance().GetGameState());
+        Global._LauncherDependency.set(await LauncherController.GetControllerInstance().GetLauncherDependency());
+        Global._LauncherState.set(await LauncherController.GetControllerInstance().GetLauncherState());
+        Global._WinePackageManagerState.set(await WineController.GetControllerInstance().GetWinePackageManagerState());
 
     } catch (error: any) {}
 

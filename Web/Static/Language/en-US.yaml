@@ -7,11 +7,61 @@ component:
     default_title: Notice
     button_confirm: OK
     error_title: Error
+main:
+  message:
+    game_state:
+      downloading: >-
+        Downloading the game ({{percentage}}% / Remaining time:
+        {{remaining_time}} / Download rate: {{download_rate}})
+      recovering_downloaded_segments: >-
+        Trying to recover already downloaded game's segments, it may take a
+        while ({{percentage}}%)
+      extracting_downloaded_segments: >-
+        Extracting downloaded game's segments, it may take a while
+        ({{percentage}}% / Remaining time: {{remaining_time}} / Decompression
+        rate: {{decompression_rate}})
+      downloading_update: >-
+        Downloading game's update ({{percentage}}% / Remaining time:
+        {{remaining_time}} / Download rate: {{download_rate}})
+      extracting_update: Decompressing the game's update
+      patching_files: Patching the game's files ({{percentage}}%)
+      removing_deprecated_files: Removing deprecated files ({{percentage}}%)
+      checking_integrity: >-
+        Checking game's files integrity ({{percentage}}% / Remaining time:
+        {{remaining_time}})
+      repairing_files: >-
+        Downloading and repairing game's files ({{percentage}}% / Remaining
+        time: {{remaining_time}} / Download rate: {{download_rate}})
+    dependency:
+      game_download: >-
+        Please download the game or select a directory with an existing game
+        installation to proceed
+      game_update: Please update the game to proceed
+      wine_configuration: Please configure your Wine's installation to proceed
+      wine_download: Please download Wine to proceed
+      other: Waiting for unsolved depencencies
+    wine_package_manager_state:
+      downloading_package: >-
+        Downloading Wine's package ({{percentage}}% / Remaining time:
+        {{remaining_time}} / Download rate: {{download_rate}})
+      decompressing_package: Decompressing Wine's package
+      checking_package_checksum: Checking Wine's package checksum
+  button:
+    main:
+      download_wine: Download Wine (release {{version}})
+      download_game: Download game
+      update_game: Update game
+      start_game: Start game
+  confirm:
+    game_download:
+      text: >-
+        Download the game to directory "{{directory}}"? You can change the
+        installation directory at "{{menu_path}}". You can also change the
+        installation directory later.
 settings:
   title: Settings
   menu:
     general: General
-    launcher: Launcher
     game: Game
   content:
     general:
@@ -19,14 +69,13 @@ settings:
         title: Default settings
         description: Restore launcher's default settings
         button_text: Restore
-    launcher:
+      language:
+        title: Language
       update:
         title: Update
         description: Installed launcher's version is {{version}}
         button_text: Search for launcher's updates
         auto_search_for_updates: Automatically search for updates on start
-      language:
-        title: Language
     game:
       integrity:
         title: Integrity
@@ -34,6 +83,18 @@ settings:
         button_text: Start repair
       installation_directory:
         title: Installation directory
+    wine:
+      version:
+        title: Version
+        loading_avaliable_releases: Loading avaliable releases, please wait
+        downloading_release: >-
+          Downloading Wine's release ({{percentage}}% / Remaining time:
+          {{remaining_time}} / Download rate: {{download_rate}})
+        date: 'Date: {{date}}'
+        filename: 'Filename: {{filename}}'
+        filesize: 'Filesize: {{filesize}}'
+        downloads_count: 'Downloads count: {{downloads_count}}'
+        download: Download
   button:
     save_settings: Save settings
   confirm:

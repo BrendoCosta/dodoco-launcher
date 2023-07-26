@@ -12,7 +12,7 @@
 
 </script>
 <Modal bind:Root={Root}>
-    <ScoopedFrame width="[30%]" height="auto">
+    <ScoopedFrame width="[35%]" height="auto">
         <div class="w-full h-full flex flex-col items-start m-2 gap-y-2">
             <div class="w-full h-4/5 flex flex-col justify-center gap-y-2">
                 <h1 class="text-2xl font-medium text-gray-800 drop-shadow-md">{ $i18nInstance.t("component.confirm.default_title") }</h1>

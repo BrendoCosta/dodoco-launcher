@@ -1,11 +1,10 @@
 <script lang="ts">
 	
-    import { GameState } from "@Dodoco/Generated/Dodoco/Core/Game/GameState";
-    
-	import { _MainViewData } from "@Dodoco/Global";
+    import { _MainViewData } from "@Dodoco/Global";
 	import { onMount } from "svelte";
 	import Router, { push } from "svelte-spa-router";
 	// Generated types
+	import { LauncherState } from "@Dodoco/Generated/Dodoco/Core/Launcher/LauncherState";
 	
 	export let routes: any;
 
@@ -15,11 +14,7 @@
 
 		_MainViewData.subscribe((data) => {
 
-			if (
-				data.Game?.State == GameState.WAITING_FOR_DOWNLOAD ||
-				data.Game?.State == GameState.WAITING_FOR_UPDATE ||
-				data.Game?.State == GameState.READY
-			) {
+			if ($_MainViewData._LauncherState != LauncherState.READY) {
 				
 				push("/Main");
 

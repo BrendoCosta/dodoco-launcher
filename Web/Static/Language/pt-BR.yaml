@@ -7,11 +7,61 @@ component:
     default_title: Aviso
     button_confirm: OK
     error_title: Erro
+main:
+  message:
+    game_state:
+      downloading: >-
+        Baixando o jogo ({{percentage}}% / Tempo restante: {{remaining_time}} /
+        Taxa de transferência: {{download_rate}})
+      recovering_downloaded_segments: >-
+        Tentando recuperar os segmentos do jogo já baixados, isso pode demorar
+        um pouco ({{percentage}}%)
+      extracting_downloaded_segments: >-
+        Extraindo os segmentos do jogo baixados, isso pode demorar um pouco
+        ({{percentage}}% / Tempo restante: {{remaining_time}} / Taxa de
+        descompressão: {{decompression_rate}})
+      downloading_update: >-
+        Baixando a atualização do jogo ({{percentage}}% / Tempo restante:
+        {{remaining_time}} / Taxa de transferência: {{download_rate}})
+      extracting_update: Extraindo a atualização do jogo
+      patching_files: Atualizando os arquivos do jogo ({{percentage}}%)
+      removing_deprecated_files: Removendo arquivos desatualizados ({{percentage}}%)
+      checking_integrity: >-
+        Verificando a integridade dos arquivos do jogo ({{percentage}}% / Tempo
+        restante: {{remaining_time}})
+      repairing_files: >-
+        Baixando e reparando os arquivos do jogo ({{percentage}}% / Tempo
+        restante: {{remaining_time}} / Taxa de transferência: {{download_rate}})
+    dependency:
+      game_download: >-
+        Por favor, baixe o jogo ou selecione um diretório com uma instalação
+        existente do jogo para prosseguir
+      game_update: Por favor, atualize o jogo para prosseguir
+      wine_configuration: Por favor, configure a sua instalação do Wine para prosseguir
+      wine_download: Por favor, baixe o Wine para prosseguir
+      other: Aguardando por dependências não-resolvidas
+    wine_package_manager_state:
+      downloading_package: >-
+        Baixando o pacote do Wine ({{percentage}}% / Tempo restante:
+        {{remaining_time}} / Taxa de transferência: {{download_rate}})
+      decompressing_package: Extraindo o pacote do Wine
+      checking_package_checksum: Verificando a integridade do pacote do Wine
+  button:
+    main:
+      download_wine: Baixar o Wine (versão {{version}})
+      download_game: Baixar o jogo
+      update_game: Atualizar o jogo
+      start_game: Iniciar o jogo
+  confirm:
+    game_download:
+      text: >-
+        Baixar o jogo para o diretório "{{directory}}"? Você pode alterar o
+        diretório de instalação em "{{menu_path}}". Você também pode alterar o
+        diretório de instalação mais tarde.
 settings:
   title: Configurações
   menu:
     general: Gerais
-    launcher: Launcher
     game: Jogo
   content:
     general:
@@ -19,14 +69,13 @@ settings:
         title: Configurações padrão
         description: Restaurar as configurações padrão do launcher
         button_text: Restaurar
-    launcher:
+      language:
+        title: Idioma
       update:
         title: Atualização
         description: A versão instalada do launcher é {{version}}
         button_text: Buscar por atualizações do launcher
         auto_search_for_updates: Buscar por atualizações automaticamente ao inicializar
-      language:
-        title: Idioma
     game:
       integrity:
         title: Integridade
@@ -34,6 +83,18 @@ settings:
         button_text: Iniciar reparo
       installation_directory:
         title: Diretório de instalação
+    wine:
+      version:
+        title: Versão
+        loading_avaliable_releases: Carregando as versões disponíveis, por favor aguarde
+        downloading_release: >-
+          Baixando a versão do Wine ({{percentage}}% / Tempo restante:
+          {{remaining_time}} / Taxa de transferência: {{download_rate}})
+        date: 'Data: {{date}}'
+        filename: 'Nome do arquivo: {{filename}}'
+        filesize: 'Tamanho do arquivo: {{filesize}}'
+        downloads_count: 'Quantidade de downloads: {{downloads_count}}'
+        download: Baixar
   button:
     save_settings: Salvar configurações
   confirm:

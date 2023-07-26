@@ -102,3 +102,9 @@ button.input {
     @apply py-2 px-4 inline-flex items-center justify-center
 
 }
+
+button.input:disabled {
+
+    @apply opacity-50 cursor-default
+
+}
