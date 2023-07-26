@@ -125,19 +125,14 @@ namespace Dodoco.Core.Network.HTTP {
 
                                         CompletionPercentage = calcCompletionPercentage,
                                         BytesPerSecond = calcBytesPerSecond,
+                                        BytesTransferred = (double) bytesRead,
+                                        TotalBytesTransferred = totalBytesTransferred,
                                         EstimatedRemainingTime = calcEstimatedRemainingTime,
                                         Message = url.ToString()
 
                                     };
 
-                                    // Avoiding duplicated reports due to Math.Floor() precision loss
-                                    
                                     progress?.Report(report);
-
-                                    // Log the download status for each +10% downloaded
-
-                                    if (Convert.ToUInt64(Math.Floor(calcCompletionPercentage)) % 10 == 0)
-                                        Logger.GetInstance().Log($"Downloading the file \"{Path.GetFileName(destinationPath)}\" (Status: {report.CompletionPercentage}% / Speed: {DataUnitFormatter.Format(report.BytesPerSecond, DataUnitFormatterOption.USE_SYMBOL)}/s / ETA: {report.EstimatedRemainingTime.ToString(@"hh\:mm\:ss")})");
 
                                 }
 
