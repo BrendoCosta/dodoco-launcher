@@ -22,12 +22,45 @@ namespace Dodoco.Core.Launcher {
 
         private LauncherCacheFile cacheFile = new LauncherCacheFile();
         private LauncherSettingsFile settingsFile = new LauncherSettingsFile();
-        
         public LauncherBackgroundImageFile BackgroundImageFile { get; private set; } = new LauncherBackgroundImageFile();
-        public LauncherCache Cache { get; private set; } = new LauncherCache();
-        public LauncherExecutionState ExecutionState { get; private set; } = LauncherExecutionState.UNINITIALIZED;
-        public LauncherSettings Settings { get; private set; } = new LauncherSettings();
+        
+        private LauncherCache _Cache = new LauncherCache();
+        public LauncherCache Cache {
+
+            get => this._Cache;
+
+            set {
+
+                this._Cache = value;
+                if (!this.cacheFile.Exist())
+                    this.cacheFile.Create();
+                    this.cacheFile.Write(value);
+
+            }
+
+        }
+        
+        private LauncherSettings _Settings = new LauncherSettings();
+        public LauncherSettings Settings {
+
+            get => this._Settings;
+
+            set {
+
+                this._Settings = value;
+                if (!this.settingsFile.Exist())
+                    this.settingsFile.Create();
+                    this.settingsFile.Write(value);
+
+                if (this.Resource.IsSuccessfull())
+                    this.CheckDependencies();
+
+            }
+
+        }
+
         public LauncherState State { get; private set; } = LauncherState.UNREADY;
+        public LauncherDependency Dependency { get; private set; } = LauncherDependency.NONE;
         
         public Content Content { get; private set; } = new Content();
         public Resource Resource { get; private set; } = new Resource();
@@ -36,14 +69,6 @@ namespace Dodoco.Core.Launcher {
         public IWine? Wine { get; private set; }
         public IWinePackageManager? WinePackageManager { get; private set; }
 
-        public LauncherCache GetLauncherCache() => this.Cache;
-        public Content GetContent() => this.Content;
-        public LauncherExecutionState GetLauncherExecutionState() => this.ExecutionState;
-        public Resource GetResource() => this.Resource;
-        public LauncherSettings GetLauncherSettings() => this.Settings;
-        public IGame GetGame() => this.Game != null ? this.Game : throw new LauncherException("Game's instance not initialized yet");
-        public IWine GetWine() => this.Wine != null ? this.Wine : throw new LauncherException("Wine's instance not initialized yet");
-
         public void UpdateLauncherCache(LauncherCache cache) {
 
             this.Cache = cache;
@@ -51,22 +76,12 @@ namespace Dodoco.Core.Launcher {
 
         }
 
-        public void UpdateLauncherSettings(LauncherSettings settings) {
-
-            this.Settings = settings;
-            this.settingsFile.Write(settings);
-
-        }
-
         /*
          * Events
         */
 
-        public event EventHandler BeforeStart = delegate {};
-        public event EventHandler AfterStart = delegate {};
-        public event EventHandler<IWine> OnWineCreated = delegate {};
-        public event EventHandler<IGame> OnGameCreated = delegate {};
-        public event EventHandler<int> OnOperationProgressChanged = delegate {};
+        public event EventHandler<LauncherState> OnStateUpdate = delegate {};
+        public event EventHandler<LauncherDependency> OnDependenciesUpdated = delegate {};
 
         private Launcher() {
 
@@ -76,7 +91,7 @@ namespace Dodoco.Core.Launcher {
 
         public static async Task<ILauncher> Create() {
 
-            ILauncher instance = new Launcher();
+            Launcher instance = new Launcher();
             await instance.Start();
             return instance;
 
@@ -84,15 +99,11 @@ namespace Dodoco.Core.Launcher {
 
         public async Task Start() {
 
-            this.BeforeStart.Invoke(this, EventArgs.Empty);
-
             try {
 
                 /*
                  * Manages launcher's Settings file
                 */
-
-                this.UpdateState(LauncherState.FETCHING_LAUNCHER_SETTINGS);
                 
                 if (!this.settingsFile.Exist()) {
 
@@ -101,7 +112,7 @@ namespace Dodoco.Core.Launcher {
 
                 }
 
-                this.UpdateLauncherSettings(this.settingsFile.Read());
+                this.Settings = this.settingsFile.Read();
 
                 /*
                  * Manages launcher's Cache file
@@ -113,6 +124,8 @@ namespace Dodoco.Core.Launcher {
                     this.cacheFile.Write(this.Cache);
 
                 }
+
+                this.Cache = this.cacheFile.Read();
 
                 /*
                  * Manages APIs
@@ -129,7 +142,7 @@ namespace Dodoco.Core.Launcher {
                 );
 
                 /*
-                * Manages Content API
+                 * Manages Content API
                 */
 
                 try { this.Content = await factory.FetchLauncherContent(); }
@@ -166,7 +179,7 @@ namespace Dodoco.Core.Launcher {
                 }
 
                 /*
-                * Manages Resource API and Resource cache file
+                 * Manages Resource API and Resource cache file
                 */
                 
                 this.Resource = await factory.FetchLauncherResource();
@@ -177,31 +190,36 @@ namespace Dodoco.Core.Launcher {
 
                 GitHubReposApiFactory wineRepository = new GitHubReposApiFactory(this.Settings.Api.Wine);
                 this.WinePackageManager = new WineGeCustomPackageManager(this.Settings.Wine.ReleasesDirectory, wineRepository);
+                this.WinePackageManager.AfterReleaseDownload += (object? sender, EventArgs e) => this.CheckDependencies();
 
                 /*
-                 * Manages all launcher's resources
+                 * Updates all launcher's resources
                 */
 
-                await this.ManageAllResources();
+                this.OnDependenciesUpdated += (object? sender, LauncherDependency e) => {
 
-                this.AfterStart.Invoke(this, EventArgs.Empty);
+                    if (e == LauncherDependency.NONE
+                    || e == LauncherDependency.GAME_UPDATE
+                    || e == LauncherDependency.GAME_DOWNLOAD)
+                        this.CreateInstances();
+
+                };
+
+                this.CheckDependencies();
+                this.UpdateState(LauncherState.READY);
 
             } catch (Exception e) {
 
-                await this.FatalStop(e);
+                this.Stop(e);
 
             }
 
         }
 
-        public async Task ManageAllResources() {
+        public void CreateInstances() {
 
-            await this.ManageWine();
-            await this.ManageGame();
-
-        }
-
-        public async Task ManageWine() {
+            //this.Dxvk = new Dxvk(Path.Join(this.Settings.Wine.DxvkConfig.ReleasesDirectory, "dxvk-2.2"));
+            //this.Dxvk.InstallToDirectory(this.Settings.Game.InstallationDirectory);
 
             if (this.WinePackageManager == null) {
 
@@ -238,31 +256,10 @@ namespace Dodoco.Core.Launcher {
 
                     Logger.GetInstance().Warning($"The selected Wine's release is not present in the settings file. The default value will be used instead");
                     this.Settings.Wine.SelectedRelease = new LauncherSettings.WineConfig().SelectedRelease;
-                    this.UpdateLauncherSettings(this.Settings);
 
                 }
 
                 this.Wine = this.WinePackageManager.GetWineFromTag(this.Settings.Wine.SelectedRelease, this.Settings.Wine.PrefixDirectory);
-
-            }
-
-            this.OnWineCreated.Invoke(this, this.Wine);
-
-            if (this.Wine.State != WineState.READY) {
-
-                Logger.GetInstance().Warning($"Wine is not ready yet");
-                return;
-
-            }
-
-        }
-
-        public async Task ManageGame() {
-
-            if (this.Wine == null) {
-
-                Logger.GetInstance().Warning($"Wine's instance is not ready yet, thus Game's instance will not be created");
-                return;
 
             }
 
@@ -272,13 +269,13 @@ namespace Dodoco.Core.Launcher {
 
             Version remoteGameVersion = Version.Parse(this.Resource.data.game.latest.version);
 
-            if (!GameManager.CheckGameInstallation(this.Settings.Game.InstallationDirectory, this.Settings.Game.Server)) {
+            if (!GameInstallationManager.CheckGameInstallation(this.Settings.Game.InstallationDirectory, this.Settings.Game.Server)) {
 
-                this.Game = GameManager.CreateGame(remoteGameVersion, this.Settings.Game.Server, this.Resource, this.Resource, this.Wine, this.Settings.Game.InstallationDirectory, GameState.WAITING_FOR_DOWNLOAD);
+                this.Game = GameInstallationManager.CreateGame(remoteGameVersion, this.Settings.Game, this.Resource);
 
             } else {
 
-                Version installedGameVersion = GameManager.SearchForGameVersion(this.Settings.Game.InstallationDirectory, this.Settings.Game.Server);
+                Version installedGameVersion = GameInstallationManager.SearchForGameVersion(this.Settings.Game.InstallationDirectory, this.Settings.Game.Server);
 
                 if (remoteGameVersion > installedGameVersion) {
 
@@ -303,7 +300,7 @@ namespace Dodoco.Core.Launcher {
 
                     }
 
-                    this.Game = GameManager.CreateGame(installedGameVersion, this.Settings.Game.Server, oldVersionResource, this.Resource, this.Wine, this.Settings.Game.InstallationDirectory, GameState.WAITING_FOR_UPDATE);
+                    this.Game = GameInstallationManager.CreateGame(installedGameVersion, this.Settings.Game, oldVersionResource);
 
                 } else {
 
@@ -316,34 +313,23 @@ namespace Dodoco.Core.Launcher {
 
                     }
 
-                    this.Game = GameManager.CreateGame(installedGameVersion, this.Settings.Game.Server, this.Resource, this.Resource, this.Wine, this.Settings.Game.InstallationDirectory, GameState.READY);
+                    this.Game = GameInstallationManager.CreateGame(remoteGameVersion, this.Settings.Game, this.Resource);
 
                 }
 
             }
 
-            if (this.Game == null)
-                throw new LauncherException("Failed to create the Game's instance");
+            this.Game.AfterGameDownload += (object? sender, EventArgs e) => this.CheckDependencies();
+            this.Game.AfterGameUpdate += (object? sender, EventArgs e) => this.CheckDependencies();
 
-            this.OnGameCreated.Invoke(this, this.Game);
-
-            if (this.Game.State != GameState.READY) {
-
-                Logger.GetInstance().Warning($"Game is not ready yet");
-                return;
-
-            }
+            return;
 
         }
 
-        public async Task FatalStop(Exception e) {
+        public void Stop(Exception? e = null) {
 
-            Logger.GetInstance().Error($"A fatal error occurred", e);
-            await this.Stop();
-
-        }
-
-        public async Task Stop() {
+            if (e != null)
+                Logger.GetInstance().Error($"A fatal error occurred", e);
 
             Logger.GetInstance().Log("Finishing launcher...");
             Logger.GetInstance().Log("Successfully finished launcher");
@@ -354,6 +340,89 @@ namespace Dodoco.Core.Launcher {
 
             Logger.GetInstance().Debug($"Updating launcher's state from {this.State.ToString()} to {newState.ToString()}");
             this.State = newState;
+            this.OnStateUpdate.Invoke(this, newState);
+
+        }
+
+        private void UpdateDependency(LauncherDependency newDependency) {
+
+            Logger.GetInstance().Debug($"Updating launcher's dependencies from {this.Dependency.ToString()} to {newDependency.ToString()}");
+            this.Dependency = newDependency;
+            this.OnDependenciesUpdated.Invoke(this, newDependency);
+
+        }
+
+        private void CheckDependencies() {
+
+            Logger.GetInstance().Log($"Checking launcher's dependencies...");
+
+            /*
+             * Wine's dependencies
+            */
+
+            if (this.Settings.Wine.UserDefinedInstallation) {
+
+                /*
+                 * User-defined Wine installation
+                */
+
+                if (string.IsNullOrWhiteSpace(this.Settings.Wine.InstallationDirectory) || !Directory.Exists(this.Settings.Wine.InstallationDirectory)) {
+
+                    this.UpdateDependency(LauncherDependency.WINE_CONFIGURATION);
+                    return;
+
+                }
+
+            } else {
+
+                /*
+                 * Launcher-defined Wine installation
+                */
+
+                if (this.WinePackageManager == null) {
+
+                    this.UpdateDependency(LauncherDependency.WINE_CONFIGURATION);
+                    return;
+
+                } else {
+
+                    if (this.WinePackageManager.GetInstalledTags().Count == 0) {
+
+                        this.UpdateDependency(LauncherDependency.WINE_DOWNLOAD);
+                        return;
+
+                    }
+
+                }
+
+            }
+
+            /*
+             * Game's dependencies
+            */
+
+            Version remoteGameVersion = Version.Parse(this.Resource.data.game.latest.version);
+
+            if (!GameInstallationManager.CheckGameInstallation(this.Settings.Game.InstallationDirectory, this.Settings.Game.Server)) {
+
+                this.UpdateDependency(LauncherDependency.GAME_DOWNLOAD);
+                return;
+
+            } else {
+
+                Version installedGameVersion = GameInstallationManager.SearchForGameVersion(this.Settings.Game.InstallationDirectory, this.Settings.Game.Server);
+
+                if (remoteGameVersion > installedGameVersion) {
+
+                    this.UpdateDependency(LauncherDependency.GAME_UPDATE);
+                    return;
+
+                }
+
+            }
+
+            this.UpdateDependency(LauncherDependency.NONE);
+            return;
 
         }
 
