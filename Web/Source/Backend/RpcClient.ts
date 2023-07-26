@@ -33,7 +33,7 @@ export class RpcClient {
 
     public async CallAsync<T>(method: string, params?: any[]): Promise<T> {
 
-        return (await this.client.request({ method: method, params: params }, 72000000)) as T;
+        return (await this.client.request({ method: method, params: params }, 432000000)) as T;
 
     }
 
