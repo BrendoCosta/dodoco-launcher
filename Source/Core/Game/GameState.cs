@@ -2,10 +2,9 @@ namespace Dodoco.Core.Game {
 
     public enum GameState {
 
-        NOT_INSTALLED,
-        WAITING_FOR_DOWNLOAD,
-        WAITING_FOR_UPDATE,
         DOWNLOADING,
+        RECOVERING_DOWNLOADED_SEGMENTS,
+        EXTRACTING_DOWNLOADED_SEGMENTS,
         // Updating
         DOWNLOADING_UPDATE,
         EXTRACTING_UPDATE,

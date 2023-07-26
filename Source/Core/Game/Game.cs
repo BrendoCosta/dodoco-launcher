@@ -1,4 +1,5 @@
 using Dodoco.Core.Network;
+using Dodoco.Core.Network.Api.Company;
 using Dodoco.Core.Network.Api.Company.Launcher.Resource;
 using Dodoco.Core.Network.HTTP;
 using Dodoco.Core.Util.Log;
@@ -16,100 +17,260 @@ using Hi3Helper.SharpHDiffPatch;
 
 namespace Dodoco.Core.Game {
 
-    public abstract class Game: IGame {
+    public class Game: IGame {
 
-        public string InstallationDirectory { get; private set; }
-        public GameServer GameServer { get; private set; }
-        public GameState State { get; private set; }
-        public Version Version { get; private set; }
-        public IWine Wine { get; private set; }
+        public GameSettings Settings { get; set; }
+        public GameServer GameServer { get; protected set; }
+        public bool IsInstalled { get => GameInstallationManager.CheckGameInstallation(this.Settings.InstallationDirectory, this.Settings.Server); }
+        public GameState State { get; private set; } = GameState.READY;
+        public IWine? Wine;
         public Resource Resource { get; private set; }
-        public Resource LatestResource { get; set; }
-        public bool IsUpdating {
-            get =>
-                this.State == GameState.DOWNLOADING_UPDATE
-                || this.State == GameState.EXTRACTING_UPDATE
-                || this.State == GameState.PATCHING_FILES
-                || this.State == GameState.REMOVING_DEPRECATED_FILES;
-        }
+        public Version Version { get => Version.Parse(this.Resource.data.game.latest.version); }
+
+        public event EventHandler<GameState> OnStateUpdate = delegate {};
+        public event EventHandler AfterGameDownload = delegate {};
+        public event EventHandler AfterGameUpdate = delegate {};
+
+        private CompanyApiFactory apiFactory {
         
-        public event EventHandler<ProgressReport> OnCheckIntegrityProgress = delegate {};
-        public event EventHandler<ProgressReport> OnDownloadProgress = delegate {};
-
-        public Game(Version version, GameServer server, Resource resource, Resource latestResource, IWine wine, string InstallationDirectory, GameState state) {
-
-            this.InstallationDirectory = InstallationDirectory;
-            this.State = state;
-            this.Version = version;
-            if (!resource.IsSuccessfull()) throw new GameException("Got an invalid resource");
-            this.Resource = resource;
-            this.LatestResource = latestResource;
-            this.Wine = wine;
+            get => new CompanyApiFactory(
+                this.Settings.Api[this.Settings.Server].Url,
+                this.Settings.Api[this.Settings.Server].Key,
+                this.Settings.Api[this.Settings.Server].LauncherId,
+                this.Settings.Language
+            );
 
         }
 
-        public virtual void SetInstallationDirectory(string directory) => this.InstallationDirectory = directory;
-        public virtual void SetVersion(Version version) => this.Version = version;
+        public Game(GameSettings settings, Resource resource) {
 
-        public virtual string GetInstallationDirectory() => this.InstallationDirectory;
-        public virtual GameState GetGameState() => this.State;
-        public virtual Version GetVersion() => this.Version;
+            this.Settings = settings;
+            this.Resource = resource;
 
-        public virtual async Task Download(CancellationToken token = default) {
+        }
 
-            if (this.State != GameState.WAITING_FOR_DOWNLOAD)
-                throw new ForbiddenGameStateException(this.State);
+        public virtual async Task<bool> IsUpdateAvaliable() {
+
+            Resource latestResource = await this.apiFactory.FetchLauncherResource();
+            return Version.Parse(latestResource.data.game.latest.version) > GameInstallationManager.SearchForGameVersion(this.Settings.InstallationDirectory, this.Settings.Server);
+
+        }
+
+        public virtual async Task Download(ProgressReporter<ProgressReport>? progress, CancellationToken token = default) {
+
+            GameState savedState = this.State;
+
+            try {
+
+                if (this.IsInstalled)
+                    throw new GameException("Game is already installed");
             
-            Logger.GetInstance().Log($"Starting game download...");
-            
-            ulong uncompressedGameSizeBytes = this.Resource.data.game.latest.size;
-            ulong compressedGameSizeBytes = this.Resource.data.game.latest.package_size;
-            int segmentCount = this.Resource.data.game.latest.segments.Count;
-            ulong averageCompressedGameSegmentSizeBytes = compressedGameSizeBytes / Convert.ToUInt64(segmentCount);
+                Logger.GetInstance().Log($"Starting game download...");
 
-            Logger.GetInstance().Log($"Uncompressed game size is {DataUnitFormatter.Format(uncompressedGameSizeBytes)}");
-            Logger.GetInstance().Log($"Compressed game size is {DataUnitFormatter.Format(compressedGameSizeBytes)}");
-            Logger.GetInstance().Log($"Average compressed game segment size is {DataUnitFormatter.Format(averageCompressedGameSegmentSizeBytes)}");
+                Resource latestResource = await this.apiFactory.FetchLauncherResource();
+                if (!latestResource.IsSuccessfull())
+                    throw new GameException($"Invalid resource");
+                
+                Logger.GetInstance().Log($"Downloading game's segments...");
 
-            Logger.GetInstance().Log($"Trying to find the given installation InstallationDirectory ({this.InstallationDirectory})");
-            if (!Directory.Exists(this.InstallationDirectory)) throw new GameException("The given game installation InstallationDirectory doesn't exists");
-            Logger.GetInstance().Log($"Successfully found installation InstallationDirectory");
+                double totalBytesTransferred = 0.0D;
 
-            Logger.GetInstance().Log($"Checking storage device available space...");
-            ulong storageFreeBytes = Convert.ToUInt64(FileSystem.GetAvaliableStorageSpace(this.InstallationDirectory)); 
-            
-            if (storageFreeBytes <= uncompressedGameSizeBytes) throw new GameException("There is not enough space available in the storage device for game installation");
-            Logger.GetInstance().Log($"There is enough space available in storage device for game installation");
+                for (int i = 0; i < latestResource.data.game.latest.segments.Count; i++) {
 
-            Logger.GetInstance().Log($"Downloading game segments...");
-            
-            for (int i = 0; i < segmentCount; i++) {
+                    Resource.Segment segment = latestResource.data.game.latest.segments[i];
+                    string segmentFileName = segment.path.Split("/").Last();
 
-                Resource.Segment segment = this.Resource.data.game.latest.segments[i];
-                string fileName = segment.path.Split("/").Last();
+                    if (!Directory.Exists(this.Settings.InstallationDirectory))
+                        Directory.CreateDirectory(this.Settings.InstallationDirectory);
 
-                Logger.GetInstance().Log($"Downloading game segments ({i+1} of {segmentCount})...");
-                Logger.GetInstance().Log($"{segment.path.Split("/").Last()}");
+                    if (File.Exists(Path.Join(this.Settings.InstallationDirectory, segmentFileName))) {
+
+                        this.UpdateState(GameState.RECOVERING_DOWNLOADED_SEGMENTS);
+
+                        ProgressReport report = new ProgressReport {
+                            CompletionPercentage = (((double) i + 1) / (double) latestResource.data.game.latest.segments.Count) * 100.0D,
+                            Message = Path.Join(this.Settings.InstallationDirectory, segmentFileName)
+                        };
+
+                        Logger.GetInstance().Log($"Checking the integrity of the game segment \"{segmentFileName}\"...");
+                        string downloadedSegmentChecksum = new Hash(MD5.Create()).ComputeHash(Path.Join(this.Settings.InstallationDirectory, segmentFileName));
+                        
+                        progress?.Report(report);
+
+                        if (segment.md5.ToUpper() == downloadedSegmentChecksum.ToUpper()) {
+
+                            Logger.GetInstance().Log($"The game segment \"{segmentFileName}\" is already downloaded and its MD5 checksum matchs the remote one, thus its download will be skipped");
+                            totalBytesTransferred += (double) segment.package_size;
+                            continue;
+
+                        }
+
+                    }
+
+                    this.UpdateState(GameState.DOWNLOADING);
+
+                    ProgressReporter<ProgressReport> segmentProgress = new ProgressReporter<ProgressReport>();
+                    segmentProgress.ProgressChanged += (object? s, ProgressReport e) => {
+
+                        totalBytesTransferred += e.BytesTransferred;
+
+                        ProgressReport generalProgress = new ProgressReport {
+
+                            CompletionPercentage = (totalBytesTransferred / (double) latestResource.data.game.latest.package_size) * 100.0D,
+                            BytesPerSecond = e.BytesPerSecond,
+                            TotalBytesTransferred = totalBytesTransferred,
+                            EstimatedRemainingTime = TimeSpan.FromSeconds((double) (latestResource.data.game.latest.package_size - (double) totalBytesTransferred) / e.BytesPerSecond),
+                            Message = e.Message
+
+                        };
+
+                        progress?.Report(generalProgress);
+
+                    };
+
+                    Logger.GetInstance().Log($"Downloading the game segment \"{segmentFileName}\" (segment no. {i+1} of {latestResource.data.game.latest.segments.Count})");
+                    
+                    Logger.GetInstance().Log($"Checking storage device available space...");
+                    long storageFreeBytes = FileSystem.GetAvaliableStorageSpace(this.Settings.InstallationDirectory); 
+                    if (segment.package_size > storageFreeBytes)
+                        throw new GameException($"There is no enough storage space available to download the game's segment {i+1}. The download's process requires {DataUnitFormatter.Format(segment.package_size)} of storage space, but there is only {DataUnitFormatter.Format(storageFreeBytes)} avaliable. Try freeing up storage space and restart the download; already downloaded files will not need to be redownloaded");
+
+                    await Client.GetInstance().DownloadFileAsync(new Uri(segment.path), Path.Join(this.Settings.InstallationDirectory, segmentFileName), segmentProgress, token);
+
+                    string downloadedSegmentHash = new Hash(MD5.Create()).ComputeHash(Path.Join(this.Settings.InstallationDirectory, segmentFileName));
+                    if (segment.md5.ToUpper() != downloadedSegmentHash.ToUpper()) {
+
+                        throw new GameException($"Downloaded game segment \"{segmentFileName}\" MD5 checksum ({downloadedSegmentHash.ToUpper()}) doesn't match the expected remote checksum ({segment.md5.ToUpper()})");
+
+                    }
+
+                    Logger.GetInstance().Log($"Successfully downloaded the game segment \"{segmentFileName}\"");
+
+                }
+
+                Logger.GetInstance().Log($"Successfully downloaded all game's segments");
+
+                // Sorts all game's segments and ensures the first one (...zip.001) is a zip archive
+
+                latestResource.data.game.latest.segments.Sort((segmentA, segmentB) => segmentA.path.ToUpper().CompareTo(segmentB.path.ToUpper()));
+                Resource.Segment firstSegment = latestResource.data.game.latest.segments.First();
+
+                using (Stream fileStream = File.OpenRead(Path.Join(this.Settings.InstallationDirectory, firstSegment.path.Split("/").Last()))) {
+
+                    const int ZIPFILE_MAGIC_NUMBER_BYTE_SIZE = 4;
+                    byte[] zipFileMagicNumber = new byte[ZIPFILE_MAGIC_NUMBER_BYTE_SIZE] { 0x50, 0x4B, 0x03, 0x04 };
+                    byte[] buffer = new byte[ZIPFILE_MAGIC_NUMBER_BYTE_SIZE] { 0x00, 0x00, 0x00, 0x00 };
+                    
+                    fileStream.Seek(0, SeekOrigin.Begin);
+                    fileStream.ReadExactly(buffer, 0, ZIPFILE_MAGIC_NUMBER_BYTE_SIZE);
+                    
+                    if (!buffer.SequenceEqual(zipFileMagicNumber))
+                        throw new GameException("The first game's segment is not a zip file");
+
+                }
+
+                this.UpdateState(GameState.EXTRACTING_DOWNLOADED_SEGMENTS);
+                Logger.GetInstance().Log($"Extracting downloaded game's segments...");
+
+                /* Creates a single and memory-contiguous stream composed by the filestreams of
+                 * each segment file. This eliminates the need of joining all segments into
+                 * a single, big zip file before extracting it, thereby saving disk space and
+                 * speeding up the whole process. */
+
+                using (MultiStream.Lib.MultiStream segmentsMultiStream = new MultiStream.Lib.MultiStream(latestResource.data.game.latest.segments.Select(s => File.OpenRead(Path.Join(this.Settings.InstallationDirectory, s.path.Split("/").Last()))))) {
+
+                    ZipArchive zipArchive = new ZipArchive(segmentsMultiStream, ZipArchiveMode.Read);
+                   
+                    long zipArchiveFullLengthBytes = zipArchive.Entries.Select(e => e.Length).Sum();
+                    long totalBytesRead = 0;
+
+                    List<double> remainingTimeGuesses = new List<double>();
+                    Stopwatch watch = new Stopwatch();
+
+                    long storageFreeBytes = FileSystem.GetAvaliableStorageSpace(this.Settings.InstallationDirectory);
+                    if (zipArchiveFullLengthBytes > storageFreeBytes)
+                        throw new GameException($"There is no enough storage space available to extract the game's segments. This process requires {DataUnitFormatter.Format(zipArchiveFullLengthBytes)} of storage space, but there is only {DataUnitFormatter.Format(storageFreeBytes)} avaliable. Try freeing up storage space and restart the download; already downloaded files will not need to be redownloaded");
+                    
+                    for (int i = 0; i < zipArchive.Entries.Count; i++) {
+
+                        ZipArchiveEntry entry = zipArchive.Entries[i];
+
+                        if (entry.FullName.EndsWith("/") && string.IsNullOrWhiteSpace(entry.Name)) {
+
+                            /* The ZipArchiveEntry.ExtractToFile method doesn't creates zip archive's internal
+                             * directories due some unknown reason, so we need to create them otherwise an
+                             * UnauthorizedAccessException will be raised up. */
+
+                            Directory.CreateDirectory(Path.Join(this.Settings.InstallationDirectory, entry.FullName));
+                            continue;
+
+                        }
+
+                        string entryDestinationFullPath = Path.Join(this.Settings.InstallationDirectory, entry.FullName);
+
+                        watch.Restart();
+                        entry.ExtractToFile(entryDestinationFullPath, true);
+                        watch.Stop();
+
+                        totalBytesRead += entry.Length;
+                        double bytesPerSecond = (double) entry.Length / (double) watch.Elapsed.TotalSeconds;
+                        double currentRemainingTimeEstimation = ((double) zipArchiveFullLengthBytes - (double) totalBytesRead) / (double) bytesPerSecond;
+                        remainingTimeGuesses.Add(currentRemainingTimeEstimation);
+
+                        ProgressReport report = new ProgressReport {
+                            BytesTransferred = entry.Length,
+                            BytesPerSecond = bytesPerSecond,
+                            CompletionPercentage = (((double) i + 1) / (double) zipArchive.Entries.Count) * 100.0D,
+                            EstimatedRemainingTime = TimeSpan.FromSeconds(remainingTimeGuesses.Count >= 2 ? remainingTimeGuesses.Average() : currentRemainingTimeEstimation),
+                            Message = entryDestinationFullPath,
+                            TotalBytesTransferred = totalBytesRead
+                        };
+
+                        progress?.Report(report);
+                        if (remainingTimeGuesses.Count > 9)
+                            remainingTimeGuesses.Clear();
+
+                    }
+
+                    watch.Stop();
+
+                }
+
+                Logger.GetInstance().Log($"Sucessfully extracted downloaded game's segments...");
+
+                Logger.GetInstance().Log($"Successfully downloaded the game");
+                this.AfterGameDownload.Invoke(this, EventArgs.Empty);
+
+            } catch (NetworkException e) {
+
+                throw new GameException($"Failed to download the game due to a network error", e);
+
+            } finally {
+
+                this.UpdateState(savedState);
 
             }
-
-            Logger.GetInstance().Log($"Successfully downloaded game segments");
 
         }
 
         public virtual async Task Update(ProgressReporter<ProgressReport>? progress = null) {
 
-            if (this.State != GameState.WAITING_FOR_UPDATE)
-                throw new ForbiddenGameStateException(this.State);
+            if (!this.IsInstalled)
+                throw new GameException("Game is not installed");
 
-            if (this.LatestResource == null)
-                throw new GameException($"Latest resource was not supplied");
+            if (!await this.IsUpdateAvaliable())
+                throw new GameException("Game is already updated");
+                
+            Resource latestResource = await this.apiFactory.FetchLauncherResource();
+
+            if (!latestResource.IsSuccessfull())
+                throw new GameException("Invalid resource");
 
             GameState previousState = this.State;
 
             try {
 
-                Version remoteVersion = Version.Parse(this.LatestResource.data.game.latest.version);
+                Version remoteVersion = Version.Parse(latestResource.data.game.latest.version);
                 if (this.Version >= remoteVersion)
                     throw new GameException($"Game is already updated");
 
@@ -117,10 +278,10 @@ namespace Dodoco.Core.Game {
 
                 string zipFileNamePattern = @$"(game_{this.Version.ToString().Replace(".", @"\.")}_{remoteVersion.ToString().Replace(".", @"\.")}_hdiff_(\w*)\.zip)";
                 
-                if (this.LatestResource.data.game.diffs.Exists(d => Regex.IsMatch(d.name, zipFileNamePattern))) {
+                if (latestResource.data.game.diffs.Exists(d => Regex.IsMatch(d.name, zipFileNamePattern))) {
 
-                    Resource.Diff hdiffInfo = this.LatestResource.data.game.diffs.Find(d => Regex.IsMatch(d.name, zipFileNamePattern));
-                    string zipFilePath = Path.Join(this.InstallationDirectory, hdiffInfo.name);
+                    Resource.Diff hdiffInfo = latestResource.data.game.diffs.Find(d => Regex.IsMatch(d.name, zipFileNamePattern));
+                    string zipFilePath = Path.Join(this.Settings.InstallationDirectory, hdiffInfo.name);
 
                     /*
                      * Downloads the update's zip file or skips
@@ -129,7 +290,7 @@ namespace Dodoco.Core.Game {
 
                     this.UpdateState(GameState.DOWNLOADING_UPDATE);
 
-                    ulong avaliableStorageSpace = Convert.ToUInt64(FileSystem.GetAvaliableStorageSpace(this.InstallationDirectory));
+                    long avaliableStorageSpace = FileSystem.GetAvaliableStorageSpace(this.Settings.InstallationDirectory);
                     if (hdiffInfo.size >= avaliableStorageSpace) {
 
                         throw new GameException($"There is no enough storage space available to download the game update. This update requires {DataUnitFormatter.Format(hdiffInfo.size)} of storage space, but there is only {DataUnitFormatter.Format(avaliableStorageSpace)} avaliable");
@@ -189,7 +350,7 @@ namespace Dodoco.Core.Game {
                     try {
 
                         // overwriteFiles = true
-                        ZipFile.ExtractToDirectory(zipFilePath, this.InstallationDirectory, true);
+                        ZipFile.ExtractToDirectory(zipFilePath, this.Settings.InstallationDirectory, true);
 
                     } catch (Exception e) {
 
@@ -204,7 +365,7 @@ namespace Dodoco.Core.Game {
                     */
 
                     this.UpdateState(GameState.PATCHING_FILES);
-                    GameHdiffFiles hdiffFilesHandler = new GameHdiffFiles(this.InstallationDirectory);
+                    GameHdiffFiles hdiffFilesHandler = new GameHdiffFiles(this.Settings.InstallationDirectory);
                     
                     Logger.GetInstance().Log($"Patching game's files...");
 
@@ -220,9 +381,9 @@ namespace Dodoco.Core.Game {
 
                         foreach (GameHdiffFilesEntry entry in patchesList) {
 
-                            string oldFilePath = Path.Join(this.InstallationDirectory, entry.remoteName);
-                            string oldFileBackupPath = Path.Join(this.InstallationDirectory, entry.remoteName + ".bak");
-                            string patchFilePath = Path.Join(this.InstallationDirectory, entry.remoteName + ".hdiff");
+                            string oldFilePath = Path.Join(this.Settings.InstallationDirectory, entry.remoteName);
+                            string oldFileBackupPath = Path.Join(this.Settings.InstallationDirectory, entry.remoteName + ".bak");
+                            string patchFilePath = Path.Join(this.Settings.InstallationDirectory, entry.remoteName + ".hdiff");
                             
                             try {
 
@@ -266,7 +427,7 @@ namespace Dodoco.Core.Game {
                     */
 
                     this.UpdateState(GameState.REMOVING_DEPRECATED_FILES);
-                    GameDeleteFiles deleteFilesHandler = new GameDeleteFiles(this.InstallationDirectory);
+                    GameDeleteFiles deleteFilesHandler = new GameDeleteFiles(this.Settings.InstallationDirectory);
 
                     if (!deleteFilesHandler.Exist()) {
 
@@ -281,7 +442,7 @@ namespace Dodoco.Core.Game {
 
                         foreach (string filePath in deleteFilesHandler.Read()) {
 
-                            string fullPath = Path.Join(this.InstallationDirectory, filePath);
+                            string fullPath = Path.Join(this.Settings.InstallationDirectory, filePath);
 
                             try {
 
@@ -318,6 +479,7 @@ namespace Dodoco.Core.Game {
                 }
 
                 Logger.GetInstance().Log($"Finished game update");
+                this.AfterGameUpdate.Invoke(this, EventArgs.Empty);
             
             } catch (CoreException e) {
 
@@ -369,7 +531,7 @@ namespace Dodoco.Core.Game {
                 for (int i = 0; i < entries.Count; i++) {
 
                     GamePkgVersionEntry currentEntry = entries[i];
-                    FileInfo file = new FileInfo(Path.Join(this.InstallationDirectory, currentEntry.remoteName));
+                    FileInfo file = new FileInfo(Path.Join(this.Settings.InstallationDirectory, currentEntry.remoteName));
                     Logger.GetInstance().Log($"Checking the file \"{file.FullName}\"...");
                     
                     if (file.Exists) {
@@ -446,17 +608,17 @@ namespace Dodoco.Core.Game {
             GameState savedState = this.State;
             this.UpdateState(GameState.REPAIRING_FILES);
 
-            Logger.GetInstance().Log($"Trying to repair the game file \"{report.localFilePath}\"...");
-
-            FileInfo localFile = new FileInfo(Path.Join(this.InstallationDirectory, report.remoteFilePath));
-            FileInfo tempFile = new FileInfo(Path.Join(this.InstallationDirectory, Path.GetDirectoryName(report.remoteFilePath), Path.GetFileName(report.localFilePath) + ".temp"));
-            Uri fileRemoteUrl = new Uri(UrlCombine.Combine(this.Resource.data.game.latest.decompressed_path.ToString(), report.remoteFilePath));
-
             try {
+
+                Logger.GetInstance().Log($"Trying to repair the game file \"{report.localFilePath}\"...");
+
+                FileInfo localFile = new FileInfo(Path.Join(this.Settings.InstallationDirectory, report.remoteFilePath));
+                FileInfo tempFile = new FileInfo(Path.Join(this.Settings.InstallationDirectory, Path.GetDirectoryName(report.remoteFilePath), Path.GetFileName(report.localFilePath) + ".temp"));
+                Uri fileRemoteUrl = new Uri(UrlCombine.Combine(this.Resource.data.game.latest.decompressed_path.ToString(), report.remoteFilePath));
 
                 Logger.GetInstance().Log($"Downloading a copy of the remote file to \"{tempFile.FullName}\"");
                 
-                await Client.GetInstance().DownloadFileAsync(fileRemoteUrl, tempFile.FullName, progress);
+                await Client.GetInstance().DownloadFileAsync(fileRemoteUrl, tempFile.FullName, progress, token);
                 
                 Logger.GetInstance().Log($"Computing the hash of the downloaded file...");
 
@@ -483,9 +645,12 @@ namespace Dodoco.Core.Game {
 
                 throw new GameException($"Failed to repair the game file \"{report.localFilePath}\" due to a network error", e);
 
+            } finally {
+
+                this.UpdateState(savedState);
+
             }
 
-            this.UpdateState(savedState);
             return;
 
         }
@@ -515,7 +680,7 @@ namespace Dodoco.Core.Game {
 
                 foreach (var report in mismatches) {
 
-                    await this.RepairFile(report);
+                    await this.RepairFile(report, progress, token);
 
                 }
 
@@ -531,6 +696,7 @@ namespace Dodoco.Core.Game {
 
             Logger.GetInstance().Debug($"Updating game state from {this.State.ToString()} to {newState.ToString()}");
             this.State = newState;
+            this.OnStateUpdate.Invoke(this, newState);
 
         }
 
