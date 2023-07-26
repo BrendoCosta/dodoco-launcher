@@ -64,7 +64,7 @@ namespace Dodoco.Application {
             window.SetSize(new Size(300, 400));
             window.SetResizable(false);
             window.SetFrameless(false);
-            window.OnClose += new EventHandler(async (object? sender, EventArgs e) => await launcher.Stop());
+            window.OnClose += new EventHandler((object? sender, EventArgs e) => launcher.Stop());
 
             /*
              * Manages application's HTTP server
@@ -110,22 +110,30 @@ namespace Dodoco.Application {
                          * Manages RPC controllers
                         */
                         
-                        jsonRpc.AddLocalRpcTarget(new MainController(launcher), new StreamJsonRpc.JsonRpcTargetOptions() {
+                        jsonRpc.AddLocalRpcTarget(new LauncherController(launcher), new StreamJsonRpc.JsonRpcTargetOptions() {
+                            MethodNameTransform = (string methodName) => $"{typeof(LauncherController).FullName}.{methodName}"
+                        });
+
+                        jsonRpc.AddLocalRpcTarget(new GameController(launcher), new StreamJsonRpc.JsonRpcTargetOptions() {
+                            MethodNameTransform = (string methodName) => $"{typeof(GameController).FullName}.{methodName}"
+                        });
+
+                        jsonRpc.AddLocalRpcTarget(new MainController(), new StreamJsonRpc.JsonRpcTargetOptions() {
                             MethodNameTransform = (string methodName) => $"{typeof(MainController).FullName}.{methodName}"
                         });
 
-                        jsonRpc.AddLocalRpcTarget(new SettingsController(launcher), new StreamJsonRpc.JsonRpcTargetOptions() {
-                            MethodNameTransform = (string methodName) => $"{typeof(SettingsController).FullName}.{methodName}"
+                        jsonRpc.AddLocalRpcTarget(new WineController(launcher), new StreamJsonRpc.JsonRpcTargetOptions() {
+                            MethodNameTransform = (string methodName) => $"{typeof(WineController).FullName}.{methodName}"
                         });
 
-                        jsonRpc.AddLocalRpcTarget(new SplashController(), new StreamJsonRpc.JsonRpcTargetOptions() {
+                        jsonRpc.AddLocalRpcTarget(new SplashController(launcher), new StreamJsonRpc.JsonRpcTargetOptions() {
                             MethodNameTransform = (string methodName) => $"{typeof(SplashController).FullName}.{methodName}"
                         });
 
-                        jsonRpc.AddLocalRpcTarget(Logger.GetInstance(), new StreamJsonRpc.JsonRpcTargetOptions() {
-                            MethodNameTransform = (string methodName) => $"{typeof(Logger).FullName}.{methodName}",
-                            NotifyClientOfEvents = false
-                        });
+                        //jsonRpc.AddLocalRpcTarget(Logger.GetInstance(), new StreamJsonRpc.JsonRpcTargetOptions() {
+                        //    MethodNameTransform = (string methodName) => $"{typeof(Logger).FullName}.{methodName}",
+                        //    NotifyClientOfEvents = false
+                        //});
 
                         jsonRpc.StartListening();
 
