@@ -3,11 +3,13 @@ using Dodoco.Core.Network.HTTP;
 
 namespace Dodoco.Core.Wine {
 
-    public interface IWinePackageManager {
+    public interface IWinePackageManager: IStatefulEntity<WinePackageManagerState> {
 
         string PackagesRootDirectory { get; }
 
-        Task InstallPackageFromRelease(Release release, ProgressReporter<ProgressReport> progress);
+        event EventHandler AfterReleaseDownload;
+
+        Task InstallPackageFromRelease(Release release, ProgressReporter<ProgressReport>? progress = null);
         IWine GetWineFromTag(string releaseTagName, string prefixDirectory);
         List<string> GetInstalledTags();
         Task<List<Release>> GetAvaliableReleases();
