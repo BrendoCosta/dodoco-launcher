@@ -19,10 +19,12 @@ namespace Dodoco.Application.ReinforcedTypings {
             builder.ExportAsEnums(
                 new Type[] {
                     typeof(Dodoco.Core.Game.GameState),
+                    typeof(Dodoco.Core.Launcher.LauncherDependency),
                     typeof(Dodoco.Core.Launcher.LauncherState),
                     typeof(Dodoco.Core.Util.Log.LogType),
                     typeof(Dodoco.Core.Launcher.LauncherLanguage),
-                    typeof(Dodoco.Core.Wine.WineState)
+                    typeof(Dodoco.Core.Wine.WineState),
+                    typeof(Dodoco.Core.Wine.WinePackageManagerState)
                 },
                 conf => conf
                     .UseString(true)
@@ -33,10 +35,11 @@ namespace Dodoco.Application.ReinforcedTypings {
             builder.ExportAsInterfaces(
                 new Type[] {
                     typeof(Dodoco.Application.Control.MainViewData),
-                    typeof(Dodoco.Application.Control.SettingsViewData),
                     typeof(Dodoco.Application.Control.SplashViewData),
+                    typeof(Dodoco.Application.Control.WineControllerViewData),
                     typeof(Dodoco.Core.ProgressReport),
                     typeof(Dodoco.Core.Game.GameFileIntegrityReport),
+                    typeof(Dodoco.Core.Game.GameSettings),
                     typeof(Dodoco.Core.Game.IGame),
                     typeof(Dodoco.Core.Launcher.ILauncher),
                     typeof(Dodoco.Core.Launcher.Cache.LauncherCache),
@@ -44,7 +47,6 @@ namespace Dodoco.Application.ReinforcedTypings {
                     typeof(Dodoco.Core.Launcher.Settings.LauncherSettings),
                     typeof(Dodoco.Core.Launcher.Settings.LauncherSettings.ApiConfig),
                     typeof(Dodoco.Core.Launcher.Settings.LauncherSettings.ApiConfig.CompanyApi),
-                    typeof(Dodoco.Core.Launcher.Settings.LauncherSettings.GameConfig),
                     typeof(Dodoco.Core.Launcher.Settings.LauncherSettings.LauncherConfig),
                     typeof(Dodoco.Core.Launcher.Settings.LauncherSettings.WineConfig),
                     typeof(Dodoco.Core.Network.Api.Github.Repos.Release.Asset),
@@ -64,9 +66,11 @@ namespace Dodoco.Application.ReinforcedTypings {
 
             builder.ExportAsClasses(
                 new Type[] {
+                    typeof(Dodoco.Application.Control.GameController),
+                    typeof(Dodoco.Application.Control.LauncherController),
                     typeof(Dodoco.Application.Control.MainController),
-                    typeof(Dodoco.Application.Control.SettingsController),
-                    typeof(Dodoco.Application.Control.SplashController)
+                    typeof(Dodoco.Application.Control.SplashController),
+                    typeof(Dodoco.Application.Control.WineController)
                 },
                 conf => conf
                     .AddImport("{ Nullable }", "@Dodoco/index")
