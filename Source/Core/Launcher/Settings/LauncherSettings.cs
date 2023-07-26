@@ -10,7 +10,7 @@ namespace Dodoco.Core.Launcher.Settings {
 
         public LauncherConfig Launcher { get; set; } = new LauncherConfig();
         public WineConfig Wine { get; set; } = new WineConfig();
-        public GameConfig Game { get; set; } = new GameConfig();
+        public GameSettings Game { get; set; } = new GameSettings();
         public ApiConfig Api { get; set; } = new ApiConfig();
 
         // Schema
@@ -29,17 +29,14 @@ namespace Dodoco.Core.Launcher.Settings {
             public string SelectedRelease { get; set; } = "GE-Proton8-8";
             public string ReleasesDirectory { get; set; } = Path.Join(Constants.HOME_DIRECTORY, "wine");
             public string PrefixDirectory { get; set; } = Path.Join(Constants.HOME_DIRECTORY, "wine", "prefix");
+            public DxvkConfig DxvkConfig { get; set; } = new DxvkConfig();
 
         }
 
-        public record GameConfig {
+        public record DxvkConfig {
 
-            public CultureInfo Language { get; set; } = new CultureInfo("en-US");
-            public GameServer Server { get; set; } = GameServer.Global;
-            public string InstallationDirectory { get; set; } = Path.Join(Constants.HOME_DIRECTORY, "game");
-            public List<CultureInfo> Voices { get; set; } = new List<CultureInfo>{
-                GameConstants.DEFAULT_VOICE_LANGUAGE
-            };
+            public string SelectedVersion { get; set; } = "2.2";
+            public string ReleasesDirectory { get; set; } = Path.Join(Constants.HOME_DIRECTORY, "wine/dxvk");
 
         }
 
