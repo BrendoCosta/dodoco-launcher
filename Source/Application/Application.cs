@@ -163,7 +163,7 @@ namespace Dodoco.Application {
                  * Manages HTTP server content-folders
                 */
                 
-                string? binaryPath = Path.GetDirectoryName(Assembly.GetEntryAssembly()?.Location);
+                string? binaryPath = Path.GetDirectoryName(AppContext.BaseDirectory);
 
                 if (binaryPath != null) {
 
