@@ -79,7 +79,9 @@ settings:
     game:
       server:
         title: Servidor do Jogo
-        warning: '<strong>Aviso:</strong> alterar o servidor do jogo requer que ele seja reinstalado.'
+        warning: >-
+          <strong>Aviso:</strong> alterar o servidor do jogo requer que ele seja
+          reinstalado.
       integrity:
         title: Integridade
         description: Verificar e corrigir arquivos do jogo em falta ou corrompidos

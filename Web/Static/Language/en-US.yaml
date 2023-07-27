@@ -79,7 +79,9 @@ settings:
     game:
       server:
         title: Game Server
-        warning: '<strong>Warning:</strong> changing the game server requires it to be reinstalled.'
+        warning: >-
+          <strong>Warning:</strong> changing the game server requires it to be
+          reinstalled.
       integrity:
         title: Integrity
         description: Verify and fix missing or corrupted game's files
