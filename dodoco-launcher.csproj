@@ -19,27 +19,39 @@
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
     </PropertyGroup>
+    <PropertyGroup>
+        <BUNDLE_FOLDER_NAME>Bundle</BUNDLE_FOLDER_NAME>
+    </PropertyGroup>
     <ItemGroup>
         <EmbeddedResource Include="Source/Core/Embed/Resource/**" />
     </ItemGroup>
     <ItemGroup>
-        <Compile Remove="Web/**" />
         <Compile Remove="Source/Core/Library/dodoco-hooks/**" />
+        <Compile Remove="Source/Core/Library/Hi3Helper.SharpHDiffPatch/**" />
+        <Compile Remove="Source/Core/Library/MultiStream/**" />
+        <Compile Remove="Web/**" />
     </ItemGroup>
-    <Target Name="DodocoHooks" AfterTargets="AfterBuild;AfterPublish">
+    <Target Name="RemoveBundleDirectory" AfterTargets="AfterBuild;AfterPublish">
+        <RemoveDir Directories="$(OutDir)/$(BUNDLE_FOLDER_NAME)" />
+        <RemoveDir Directories="$(PublishDir)/$(BUNDLE_FOLDER_NAME)" />
+    </Target>
+    <Target Name="DodocoHooks" AfterTargets="AfterBuild;AfterPublish" DependsOnTargets="RemoveBundleDirectory">
         <Exec Command="cmake -D CMAKE_TOOLCHAIN_FILE=mingw-w64-x86_64.cmake -S ./Source/Core/Library/dodoco-hooks/Source -B ./Source/Core/Library/dodoco-hooks/Build" />
         <Exec Command="cmake --build ./Source/Core/Library/dodoco-hooks/Build" />
-        <Copy SourceFiles="Source/Core/Library/dodoco-hooks/Build/Starter/Starter.exe;Source/Core/Library/dodoco-hooks/Build/Payload/Payload.dll;Source/Core/Library/dodoco-hooks/Build/Driver/HoYoKProtect.sys;Source/Core/Library/dodoco-hooks/Build/Driver/mhyprot3.Sys" DestinationFolder="$(OutDir)"/>
-        <Copy SourceFiles="Source/Core/Library/dodoco-hooks/Build/Starter/Starter.exe;Source/Core/Library/dodoco-hooks/Build/Payload/Payload.dll;Source/Core/Library/dodoco-hooks/Build/Driver/HoYoKProtect.sys;Source/Core/Library/dodoco-hooks/Build/Driver/mhyprot3.Sys" DestinationFolder="$(PublishDir)"/>
+        <ItemGroup>
+            <HOOKS_BUNDLE_FILES Include="Source/Core/Library/dodoco-hooks/Build/Starter/Starter.exe;Source/Core/Library/dodoco-hooks/Build/Payload/Payload.dll;Source/Core/Library/dodoco-hooks/Build/Driver/HoYoKProtect.sys;Source/Core/Library/dodoco-hooks/Build/Driver/mhyprot3.Sys" />
+        </ItemGroup>
+        <Copy SourceFiles="@(HOOKS_BUNDLE_FILES)" DestinationFolder="$(OutDir)"/>
+        <Copy SourceFiles="@(HOOKS_BUNDLE_FILES)" DestinationFolder="$(PublishDir)"/>
     </Target>
-    <Target Name="FrontEnd" AfterTargets="AfterBuild;AfterPublish">
+    <Target Name="FrontEnd" AfterTargets="AfterBuild;AfterPublish" DependsOnTargets="RemoveBundleDirectory">
         <Exec WorkingDirectory="Web/" Command="npm install" />
         <Exec WorkingDirectory="Web/" Command="npm run build" />
         <ItemGroup>
             <FRONTEND_BUILD_OUTPUT_FILES Include="Web/Build/**/*.*" />
         </ItemGroup>
-        <Copy SourceFiles="@(FRONTEND_BUILD_OUTPUT_FILES)" DestinationFiles="$(OutDir)/Bundle/%(RecursiveDir)%(Filename)%(Extension)" />
-        <Copy SourceFiles="@(FRONTEND_BUILD_OUTPUT_FILES)" DestinationFiles="$(PublishDir)/Bundle/%(RecursiveDir)%(Filename)%(Extension)" />
+        <Copy SourceFiles="@(FRONTEND_BUILD_OUTPUT_FILES)" DestinationFiles="$(OutDir)/$(BUNDLE_FOLDER_NAME)/%(RecursiveDir)%(Filename)%(Extension)" />
+        <Copy SourceFiles="@(FRONTEND_BUILD_OUTPUT_FILES)" DestinationFiles="$(PublishDir)/$(BUNDLE_FOLDER_NAME)/%(RecursiveDir)%(Filename)%(Extension)" />
     </Target>
     <ItemGroup>
         <PackageReference Include="Grapevine" Version="5.0.0-rc.10" />
@@ -49,11 +61,7 @@
         <PackageReference Include="StreamJsonRpc" Version="2.15.29" />
         <PackageReference Include="UrlCombine" Version="2.0.0" />
         <PackageReference Include="YamlDotNet" Version="13.1.0" />
-    </ItemGroup>
-    <ItemGroup>
-        <Compile Remove="Source/Core/Library/Hi3Helper.SharpHDiffPatch/**" />
         <ProjectReference Include="Source/Core/Library/Hi3Helper.SharpHDiffPatch/Hi3Helper.SharpHDiffPatch/Hi3Helper.SharpHDiffPatch.csproj" />
-        <Compile Remove="Source/Core/Library/MultiStream/**" />
         <ProjectReference Include="Source/Core/Library/MultiStream/MultiStream.Lib/MultiStream.Lib.csproj" AdditionalProperties="TargetFramework=net7.0" />
     </ItemGroup>
 </Project>
