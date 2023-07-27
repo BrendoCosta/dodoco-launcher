@@ -14,15 +14,12 @@ int main(int argc, char* argv[]) {
     program.add_argument("gamepath")
         .help("Path to game's executable file (\"GenshinImpact.exe\" or \"YuanShen.exe\")");
 
-    program.add_argument("payloadpath")
-        .help("Path to the payload DLL file to be injected");
-
     try {
 
         program.parse_args(argc, argv);
 
         std::wstring gameExecutablePath = Dodoco::Native::StringUtil::Utf8ToWide(program.get<std::string>("gamepath"));
-        std::wstring dllPath = Dodoco::Native::StringUtil::Utf8ToWide(program.get<std::string>("payloadpath"));
+        std::wstring dllPath = L"Payload.dll";
 
         if (!PathFileExistsW(gameExecutablePath.c_str())) {
 
@@ -73,6 +70,7 @@ int main(int argc, char* argv[]) {
 
         std::cerr << err.what() << std::endl;
         std::cerr << program;
+        Dodoco::Native::Process::CloseProcess(GetCurrentProcess(), EXIT_FAILURE);
         return EXIT_FAILURE;
         
     }
