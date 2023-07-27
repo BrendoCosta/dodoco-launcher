@@ -18,6 +18,7 @@ namespace Dodoco.Application.ReinforcedTypings {
 
             builder.ExportAsEnums(
                 new Type[] {
+                    typeof(Dodoco.Core.Game.GameServer),
                     typeof(Dodoco.Core.Game.GameState),
                     typeof(Dodoco.Core.Launcher.LauncherDependency),
                     typeof(Dodoco.Core.Launcher.LauncherState),

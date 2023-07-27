@@ -13,6 +13,12 @@ namespace Dodoco.Application.Control {
 
         public GameState? GetGameState() => this.launcher.Game?.State;
 
+        public List<GameServer> GetAvaliableGameServers() {
+
+            return Enum.GetValues<GameServer>().ToList();
+
+        }
+
         public async Task Download() {
 
             if (this.launcher.Game == null)

@@ -77,6 +77,9 @@ settings:
         button_text: Search for launcher's updates
         auto_search_for_updates: Automatically search for updates on start
     game:
+      server:
+        title: Game Server
+        warning: '<strong>Warning:</strong> changing the game server requires it to be reinstalled.'
       integrity:
         title: Integrity
         description: Verify and fix missing or corrupted game's files

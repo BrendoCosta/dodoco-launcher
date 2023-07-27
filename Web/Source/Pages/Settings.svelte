@@ -12,6 +12,7 @@
     import { onMount } from "svelte";
     import { Writable, writable } from "svelte/store";
     import { CommonErrorData } from "..";
+    import sanitizeHtml from 'sanitize-html';
 
     // Generated types
     import { LauncherSettings } from "@Dodoco/Generated/Dodoco/Core/Launcher/Settings/LauncherSettings";
@@ -23,6 +24,7 @@
     import { DataUnitFormatter } from "@Dodoco/Util";
     import { GameState } from "@Dodoco/Generated/Dodoco/Core/Game/GameState";
     import { WinePackageManagerState } from "@Dodoco/Generated/Dodoco/Core/Wine/WinePackageManagerState";
+    import { GameServer } from "@Dodoco/Generated/Dodoco/Core/Game/GameServer";
 
     export let Root: ModalControl = new ModalControl();
     let errorModalControl: ConfirmPopupControl;
@@ -34,6 +36,7 @@
     let installedWineTags: string[] = [];
     let installedWineTagsRadioGroup: RadioGroup<string>;
     let avaliableWineReleases: Promise<Release[]>;
+    let avaliableServersList: Promise<GameServer[]>;
 
     onMount(async () => {
 
@@ -63,6 +66,7 @@
             installedWineTags = await WineController.GetControllerInstance().GetInstalledTags();
             installedWineTagsRadioGroup = new RadioGroup<string>(installedWineTags);
             avaliableWineReleases = WineController.GetControllerInstance().GetAvaliableReleases();
+            avaliableServersList = GameController.GetControllerInstance().GetAvaliableGameServers();
 
         } catch (err: any) {
 
@@ -157,6 +161,24 @@
                             </TabPanel>
                             <TabPanel class="panel">
                                 <ul>
+                                    <li>
+                                        <h3>{ $i18nInstance.t("settings.content.game.server.title") }</h3>
+                                        <p>{ @html sanitizeHtml($i18nInstance.t("settings.content.game.server.warning")) }</p>
+                                        {#await avaliableServersList then gameServerlist }
+                                            <Listbox bind:value={$userSettings.Game.Server}>
+                                                <ListboxButton class="input listbox-button">
+                                                    { GameServer[$userSettings.Game.Server] }<Icon icon="material-symbols:arrow-drop-down"/>
+                                                </ListboxButton>
+                                                <ListboxOptions class="input dropdown">
+                                                    {#each gameServerlist as server }
+                                                        <ListboxOption class="item" value={server}>
+                                                            { GameServer[server] }
+                                                        </ListboxOption>
+                                                    {/each}
+                                                </ListboxOptions>
+                                            </Listbox>
+                                        {/await}
+                                    </li>
                                     <li>
                                         <h3>{ $i18nInstance.t("settings.content.game.integrity.title") }</h3>
                                         <p>{ $i18nInstance.t("settings.content.game.integrity.description") }</p>
