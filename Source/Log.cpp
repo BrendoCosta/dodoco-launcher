@@ -4,6 +4,8 @@
 
 void Dodoco::Native::Log(std::string message) {
 
+    std::cout << message << std::endl;
+
     std::string msg = message.append("\r\n");
 
     HANDLE logFileHandle = CreateFileW(
