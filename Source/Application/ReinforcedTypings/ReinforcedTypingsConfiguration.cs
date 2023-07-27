@@ -46,7 +46,6 @@ namespace Dodoco.Application.ReinforcedTypings {
                     typeof(Dodoco.Core.Launcher.Cache.LauncherCache.BackgroundImage),
                     typeof(Dodoco.Core.Launcher.Settings.LauncherSettings),
                     typeof(Dodoco.Core.Launcher.Settings.LauncherSettings.ApiConfig),
-                    typeof(Dodoco.Core.Launcher.Settings.LauncherSettings.ApiConfig.CompanyApi),
                     typeof(Dodoco.Core.Launcher.Settings.LauncherSettings.LauncherConfig),
                     typeof(Dodoco.Core.Launcher.Settings.LauncherSettings.WineConfig),
                     typeof(Dodoco.Core.Network.Api.Github.Repos.Release.Asset),
