@@ -13,6 +13,9 @@
         <OutputType>Exe</OutputType>
         <TargetFramework>net7.0</TargetFramework>
         <PlatformTarget>x64</PlatformTarget>
+        <RuntimeIdentifier>linux-x64</RuntimeIdentifier>
+        <PublishSingleFile>true</PublishSingleFile>
+        <Configuration>Release</Configuration>
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
     </PropertyGroup>
@@ -20,19 +23,23 @@
         <EmbeddedResource Include="Source/Core/Embed/Resource/**" />
     </ItemGroup>
     <ItemGroup>
-        <Compile Remove="Web\Build\**" />
-        <None Include="Web\Build\**">
-            <Link>\Bundle\%(RecursiveDir)%(Filename)%(Extension)</Link>
-            <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-        </None>
-    </ItemGroup>
-    <ItemGroup>
+        <Compile Remove="Web/**" />
         <Compile Remove="Source/Core/Library/dodoco-hooks/**" />
     </ItemGroup>
-    <Target Name="Dodoco Hooks" AfterTargets="BeforeBuild">
+    <Target Name="DodocoHooks" AfterTargets="AfterBuild;AfterPublish">
         <Exec Command="cmake -D CMAKE_TOOLCHAIN_FILE=mingw-w64-x86_64.cmake -S ./Source/Core/Library/dodoco-hooks/Source -B ./Source/Core/Library/dodoco-hooks/Build" />
         <Exec Command="cmake --build ./Source/Core/Library/dodoco-hooks/Build" />
         <Copy SourceFiles="Source/Core/Library/dodoco-hooks/Build/Starter/Starter.exe;Source/Core/Library/dodoco-hooks/Build/Payload/Payload.dll;Source/Core/Library/dodoco-hooks/Build/Driver/HoYoKProtect.sys;Source/Core/Library/dodoco-hooks/Build/Driver/mhyprot3.Sys" DestinationFolder="$(OutDir)"/>
+        <Copy SourceFiles="Source/Core/Library/dodoco-hooks/Build/Starter/Starter.exe;Source/Core/Library/dodoco-hooks/Build/Payload/Payload.dll;Source/Core/Library/dodoco-hooks/Build/Driver/HoYoKProtect.sys;Source/Core/Library/dodoco-hooks/Build/Driver/mhyprot3.Sys" DestinationFolder="$(PublishDir)"/>
+    </Target>
+    <Target Name="FrontEnd" AfterTargets="AfterBuild;AfterPublish">
+        <ItemGroup>
+            <FRONTEND_BUILD_OUTPUT_FILES Include="Web/Build/**/*.*" />
+        </ItemGroup>
+        <Exec WorkingDirectory="Web/" Command="npm install" />
+        <Exec WorkingDirectory="Web/" Command="npm run build" />
+        <Copy SourceFiles="@(FRONTEND_BUILD_OUTPUT_FILES)" DestinationFiles="$(OutDir)/Bundle/%(RecursiveDir)%(Filename)%(Extension)" />
+        <Copy SourceFiles="@(FRONTEND_BUILD_OUTPUT_FILES)" DestinationFiles="$(PublishDir)/Bundle/%(RecursiveDir)%(Filename)%(Extension)" />
     </Target>
     <ItemGroup>
         <PackageReference Include="Grapevine" Version="5.0.0-rc.10" />
