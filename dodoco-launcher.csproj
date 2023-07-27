@@ -33,11 +33,11 @@
         <Copy SourceFiles="Source/Core/Library/dodoco-hooks/Build/Starter/Starter.exe;Source/Core/Library/dodoco-hooks/Build/Payload/Payload.dll;Source/Core/Library/dodoco-hooks/Build/Driver/HoYoKProtect.sys;Source/Core/Library/dodoco-hooks/Build/Driver/mhyprot3.Sys" DestinationFolder="$(PublishDir)"/>
     </Target>
     <Target Name="FrontEnd" AfterTargets="AfterBuild;AfterPublish">
+        <Exec WorkingDirectory="Web/" Command="npm install" />
+        <Exec WorkingDirectory="Web/" Command="npm run build" />
         <ItemGroup>
             <FRONTEND_BUILD_OUTPUT_FILES Include="Web/Build/**/*.*" />
         </ItemGroup>
-        <Exec WorkingDirectory="Web/" Command="npm install" />
-        <Exec WorkingDirectory="Web/" Command="npm run build" />
         <Copy SourceFiles="@(FRONTEND_BUILD_OUTPUT_FILES)" DestinationFiles="$(OutDir)/Bundle/%(RecursiveDir)%(Filename)%(Extension)" />
         <Copy SourceFiles="@(FRONTEND_BUILD_OUTPUT_FILES)" DestinationFiles="$(PublishDir)/Bundle/%(RecursiveDir)%(Filename)%(Extension)" />
     </Target>
