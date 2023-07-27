@@ -5,12 +5,25 @@ namespace Dodoco.Application.Control {
 
     public class SplashViewData {
 
-        private ILauncher launcherInstance;
+        public LogEntry? LogEntry {
+            
+            get {
 
-        public LauncherState _LauncherState { get => this.launcherInstance.State; }
-        public LogEntry? LogEntry { get; set; } = null;
+                LogEntry e = Logger.GetInstance().GetLastLogEntry();
+                
+                if (e.type != LogType.DEBUG) {
 
-        public SplashViewData(ILauncher launcher) => this.launcherInstance = launcher;
+                    return e;
+
+                } else {
+
+                    return null;
+
+                }
+
+            }
+
+        }
 
     }
 

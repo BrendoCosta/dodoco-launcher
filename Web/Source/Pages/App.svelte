@@ -1,6 +1,6 @@
 <script lang="ts">
 	
-    import { _MainViewData } from "@Dodoco/Global";
+    import { _LauncherState } from "@Dodoco/Global";
 	import { onMount } from "svelte";
 	import Router, { push } from "svelte-spa-router";
 	// Generated types
@@ -12,9 +12,9 @@
 
 		push("/Splash");
 
-		_MainViewData.subscribe((data) => {
+		_LauncherState.subscribe((data) => {
 
-			if ($_MainViewData._LauncherState != LauncherState.READY) {
+			if ($_LauncherState == LauncherState.READY) {
 				
 				push("/Main");
 

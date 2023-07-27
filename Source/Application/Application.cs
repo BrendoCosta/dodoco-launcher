@@ -57,8 +57,19 @@ namespace Dodoco.Application {
             Logger.GetInstance().Log($"Identifier: {Constants.IDENTIFIER}");
             Logger.GetInstance().Log("Starting application...");
 
-            ILauncher launcher = await Launcher.Create();
             IApplicationWindow window = new ApplicationWindow();
+            Launcher launcher = new Launcher();
+
+            launcher.OnStateUpdate += (object? sender, LauncherState e) => {
+
+                if (e == LauncherState.READY) {
+
+                    window.SetResizable(true);
+                    window.SetSize(new Size(1270, 766));
+
+                }
+
+            };
 
             window.SetTitle(this.Title);
             window.SetSize(new Size(300, 400));
@@ -126,7 +137,7 @@ namespace Dodoco.Application {
                             MethodNameTransform = (string methodName) => $"{typeof(WineController).FullName}.{methodName}"
                         });
 
-                        jsonRpc.AddLocalRpcTarget(new SplashController(launcher), new StreamJsonRpc.JsonRpcTargetOptions() {
+                        jsonRpc.AddLocalRpcTarget(new SplashController(), new StreamJsonRpc.JsonRpcTargetOptions() {
                             MethodNameTransform = (string methodName) => $"{typeof(SplashController).FullName}.{methodName}"
                         });
 
@@ -227,12 +238,10 @@ namespace Dodoco.Application {
             /*
              * Resize the screen after launcher starts
             */
-
-            window.SetSize(new Size(1270, 766));
-            window.SetResizable(true);
            
             window.SetUri(new Uri(url));
             window.Open();
+            launcher.Start();
 
             while (window.IsOpen()) {
 

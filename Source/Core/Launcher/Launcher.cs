@@ -83,17 +83,9 @@ namespace Dodoco.Core.Launcher {
         public event EventHandler<LauncherState> OnStateUpdate = delegate {};
         public event EventHandler<LauncherDependency> OnDependenciesUpdated = delegate {};
 
-        private Launcher() {
+        public Launcher() {
 
             Logger.GetInstance().Log("Initializing launcher...");
-
-        }
-
-        public static async Task<ILauncher> Create() {
-
-            Launcher instance = new Launcher();
-            await instance.Start();
-            return instance;
 
         }
 
