@@ -2,6 +2,7 @@ using Dodoco.Core.Util.Log;
 
 using System.Diagnostics;
 using System.Text.RegularExpressions;
+using System.Reflection;
 
 namespace Dodoco.Core.Wine {
 
@@ -9,6 +10,7 @@ namespace Dodoco.Core.Wine {
 
         public string Directory { get; protected set; }
         public string PrefixDirectory { get; protected set; }
+        public string ExecutableFullPath { get => Path.Join(this.Directory, "/bin/wine64"); }
         public WineState State { get; protected set; } = WineState.UNINITIALIZED;
         protected string WineBinaryFilePath;
 
@@ -40,7 +42,7 @@ namespace Dodoco.Core.Wine {
             Process process = new Process();
 
             ProcessStartInfo info = new ProcessStartInfo();
-            info.FileName = Path.Join(this.Directory, "/bin/wine");
+            info.FileName = Path.Join(this.Directory, "/bin/wine64");
             info.WorkingDirectory = Path.Join(this.Directory, "/bin/");
             info.Arguments = $"--version";
             info.RedirectStandardOutput = true;
@@ -95,6 +97,63 @@ namespace Dodoco.Core.Wine {
                 
             }
 
+        }
+
+        public virtual async Task Execute(string executablePath, List<string>? arguments = null) {
+
+            Process process = new Process();
+            ProcessStartInfo info = new ProcessStartInfo();
+
+            info.FileName = this.ExecutableFullPath;
+            info.WorkingDirectory = Path.GetDirectoryName(Assembly.GetEntryAssembly()?.Location);
+            info.EnvironmentVariables.Add("WINEPREFIX", this.PrefixDirectory);
+            info.Arguments = executablePath;
+            if (arguments != null)
+               info.Arguments += $" {String.Join(" ", arguments)}";
+            info.RedirectStandardOutput = true;
+            info.RedirectStandardError = true;
+            info.UseShellExecute = false;
+            info.CreateNoWindow = false;
+
+            Logger.GetInstance().Debug(info.Arguments);
+
+            process.StartInfo = info;
+
+            process.OutputDataReceived += new DataReceivedEventHandler((object sender, DataReceivedEventArgs e) => {
+                
+                if (!string.IsNullOrWhiteSpace(e.Data))
+                    Logger.GetInstance().Log($"Wine: {e.Data}");
+                
+            });
+
+            process.ErrorDataReceived += new DataReceivedEventHandler((object sender, DataReceivedEventArgs e) => {
+                
+                if (!string.IsNullOrWhiteSpace(e.Data))
+                    Logger.GetInstance().Log($"Wine: {e.Data}");
+                
+            });
+
+            try {
+
+                if (process.Start()) {
+
+                    Logger.GetInstance().Log($"Successfully started Wine's process");
+
+                    process.BeginOutputReadLine();
+                    process.BeginErrorReadLine();
+                    
+                    await process.WaitForExitAsync();
+
+                    Logger.GetInstance().Log($"Successfully finished Wine's process");
+
+                }
+
+            } catch (Exception e) {
+
+                throw new WineException($"Error starting Wine's process", e);
+
+            }
+            
         }
 
         protected void UpdateState(WineState newState) {

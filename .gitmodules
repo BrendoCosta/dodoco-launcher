@@ -7,3 +7,6 @@
 [submodule "Source/Core/Library/MultiStream"]
 	path = Source/Core/Library/MultiStream
 	url = https://github.com/jplane/MultiStream.git
+[submodule "Source/Core/Library/dodoco-hooks"]
+	path = Source/Core/Library/dodoco-hooks
+	url = https://github.com/BrendoCosta/dodoco-hooks.git

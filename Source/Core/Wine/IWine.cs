@@ -8,6 +8,7 @@ namespace Dodoco.Core.Wine {
 
         void SetPrefixDirectory(string directory);
         Task<string> GetWineVersion();
+        Task Execute(string executablePath, List<string>? arguments = null);
 
     }
 

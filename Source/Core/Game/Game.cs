@@ -23,7 +23,7 @@ namespace Dodoco.Core.Game {
         public GameServer GameServer { get; protected set; }
         public bool IsInstalled { get => GameInstallationManager.CheckGameInstallation(this.Settings.InstallationDirectory, this.Settings.Server); }
         public GameState State { get; private set; } = GameState.READY;
-        public IWine? Wine;
+        public IWine? Wine { get; set; }
         public Resource Resource { get; private set; }
         public Version Version { get => Version.Parse(this.Resource.data.game.latest.version); }
 
@@ -688,6 +688,32 @@ namespace Dodoco.Core.Game {
 
                 throw new GameException($"Failed to repair game's files", e);
                 
+            }
+
+        }
+
+        public virtual async Task Start() {
+
+            if (this.Wine == null)
+                throw new GameException("Wine not initialized");
+
+            if (this.State != GameState.READY)
+                throw new ForbiddenGameStateException(this.State);
+
+            GameState savedState = this.State;
+
+            try {
+
+                this.UpdateState(GameState.RUNNING);
+
+                await this.Wine.Execute("Starter.exe", new List<string> { 
+                    $"\"{Path.Join(this.Settings.InstallationDirectory, $"{GameConstants.GAME_TITLE[this.Settings.Server]}.exe")}\""
+                 });
+
+            } finally {
+
+                this.UpdateState(savedState);
+
             }
 
         }

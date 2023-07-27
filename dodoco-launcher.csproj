@@ -27,6 +27,14 @@
         </None>
     </ItemGroup>
     <ItemGroup>
+        <Compile Remove="Source/Core/Library/dodoco-hooks/**" />
+    </ItemGroup>
+    <Target Name="Dodoco Hooks" AfterTargets="BeforeBuild">
+        <Exec Command="cmake -D CMAKE_TOOLCHAIN_FILE=mingw-w64-x86_64.cmake -S ./Source/Core/Library/dodoco-hooks/Source -B ./Source/Core/Library/dodoco-hooks/Build" />
+        <Exec Command="cmake --build ./Source/Core/Library/dodoco-hooks/Build" />
+        <Copy SourceFiles="Source/Core/Library/dodoco-hooks/Build/Starter/Starter.exe;Source/Core/Library/dodoco-hooks/Build/Payload/Payload.dll;Source/Core/Library/dodoco-hooks/Build/Driver/HoYoKProtect.sys;Source/Core/Library/dodoco-hooks/Build/Driver/mhyprot3.Sys" DestinationFolder="$(OutDir)"/>
+    </Target>
+    <ItemGroup>
         <PackageReference Include="Grapevine" Version="5.0.0-rc.10" />
         <PackageReference Include="Photino.Native" Version="2.4.1" />
         <PackageReference Include="Photino.NET" Version="2.4.0" />

@@ -97,6 +97,26 @@ namespace Dodoco.Application.Control {
 
         }
 
+        public async Task Start() {
+
+            if (this.launcher.Game == null)
+                throw new UninitializedEntityException();
+
+            try {
+
+                await this.launcher.Game.Start();
+
+            } catch (Exception e) {
+
+                Logger.GetInstance().Error("Failed to start the game", e);
+                throw;
+
+            }
+
+            return;
+
+        }
+
     }
 
 }

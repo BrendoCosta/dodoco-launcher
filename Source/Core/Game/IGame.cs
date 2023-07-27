@@ -6,6 +6,7 @@ namespace Dodoco.Core.Game {
     public interface IGame: IStatefulEntity<GameState> {
 
         GameSettings Settings { get; set; }
+        IWine? Wine { get; set; }
         Version Version { get; }
         bool IsInstalled { get; }
 
@@ -21,6 +22,7 @@ namespace Dodoco.Core.Game {
         Task RepairGameFiles(ProgressReporter<ProgressReport>? progress, CancellationToken token = default);
         Task RepairGameFiles(CancellationToken token = default);
         Task Update(ProgressReporter<ProgressReport>? progress = null);
+        Task Start();
 
     }
 

@@ -91,20 +91,32 @@
 
         try {
 
-            if ($_LauncherDependency == LauncherDependency.WINE_DOWNLOAD) {
+            if ($_LauncherDependency != LauncherDependency.NONE) {
 
-                await WineController.GetControllerInstance().InstallLatestRelease();
-                let settings: LauncherSettings = await LauncherController.GetControllerInstance().GetLauncherSettings();
-                settings.Wine.SelectedRelease = (await latestWineRelease).tag_name;
-                await LauncherController.GetControllerInstance().SetLauncherSettings(settings);
+                if ($_LauncherDependency == LauncherDependency.WINE_DOWNLOAD) {
 
-            } else if ($_LauncherDependency == LauncherDependency.GAME_DOWNLOAD) {
+                    await WineController.GetControllerInstance().InstallLatestRelease();
+                    let settings: LauncherSettings = await LauncherController.GetControllerInstance().GetLauncherSettings();
+                    settings.Wine.SelectedRelease = (await latestWineRelease).tag_name;
+                    await LauncherController.GetControllerInstance().SetLauncherSettings(settings);
 
-                confirmGameDownload.Open();
+                } else if ($_LauncherDependency == LauncherDependency.GAME_DOWNLOAD) {
 
-            } else if ($_LauncherDependency == LauncherDependency.GAME_UPDATE) {
+                    confirmGameDownload.Open();
 
-                GameController.GetControllerInstance().Update();
+                } else if ($_LauncherDependency == LauncherDependency.GAME_UPDATE) {
+
+                    GameController.GetControllerInstance().Update();
+
+                }
+
+            } else {
+
+                if (!LauncherIsBusy()) {
+
+                    GameController.GetControllerInstance().Start();
+
+                }
 
             }
 
