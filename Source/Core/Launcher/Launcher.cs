@@ -135,9 +135,9 @@ namespace Dodoco.Core.Launcher {
                 this.UpdateState(LauncherState.FETCHING_WEB_DATA);
 
                 CompanyApiFactory factory = new CompanyApiFactory(
-                    this.Settings.Api.Company[this.Settings.Game.Server].Url,
-                    this.Settings.Api.Company[this.Settings.Game.Server].Key,
-                    this.Settings.Api.Company[this.Settings.Game.Server].LauncherId,
+                    this.Settings.Game.Api[this.Settings.Game.Server].Url,
+                    this.Settings.Game.Api[this.Settings.Game.Server].Key,
+                    this.Settings.Game.Api[this.Settings.Game.Server].LauncherId,
                     this.Settings.Game.Language
                 );
 
@@ -319,6 +319,7 @@ namespace Dodoco.Core.Launcher {
 
             }
 
+            this.Game.Wine = this.Wine;
             this.Game.AfterGameDownload += (object? sender, EventArgs e) => this.CheckDependencies();
             this.Game.AfterGameUpdate += (object? sender, EventArgs e) => this.CheckDependencies();
 
