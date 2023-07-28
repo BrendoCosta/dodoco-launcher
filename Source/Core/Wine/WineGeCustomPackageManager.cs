@@ -33,6 +33,9 @@ namespace Dodoco.Core.Wine {
             this.PackagesRootDirectory = packagesRootDirectory;
             this.apiFactory = apiFactory;
 
+            if (!Directory.Exists(packagesRootDirectory))
+                Directory.CreateDirectory(packagesRootDirectory);
+
         }
 
         public async Task InstallPackageFromRelease(Release release, ProgressReporter<ProgressReport>? progress = null) {
