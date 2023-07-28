@@ -321,11 +321,17 @@ namespace Dodoco.Core.Launcher {
 
         public void Stop(Exception? e = null) {
 
-            if (e != null)
+            Logger.GetInstance().Log("Finishing launcher...");
+            
+            if (e != null) {
+
                 Logger.GetInstance().Error($"A fatal error occurred", e);
 
-            Logger.GetInstance().Log("Finishing launcher...");
-            Logger.GetInstance().Log("Successfully finished launcher");
+            } else {
+
+                Logger.GetInstance().Log("Successfully finished launcher");
+
+            }
 
         }
 
