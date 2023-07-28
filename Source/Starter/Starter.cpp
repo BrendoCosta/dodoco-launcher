@@ -19,19 +19,32 @@ int main(int argc, char* argv[]) {
         program.parse_args(argc, argv);
 
         std::wstring gameExecutablePath = Dodoco::Native::StringUtil::Utf8ToWide(program.get<std::string>("gamepath"));
-        std::wstring dllPath = L"Payload.dll";
+        std::wstring dllFilename = L"Payload.dll";
+        WCHAR dllFullPath[MAX_PATH] = TEXT(L"");
 
         if (!PathFileExistsW(gameExecutablePath.c_str())) {
 
             Dodoco::Native::Log(L"Can't find the game's executable file \"" + gameExecutablePath + L"\"");
+            Dodoco::Native::Process::CloseProcess(GetCurrentProcess(), EXIT_FAILURE);
             return EXIT_FAILURE;
 
         }
 
-        if (!PathFileExistsW(dllPath.c_str())) {
+        if (!PathFileExistsW(dllFilename.c_str())) {
 
-            Dodoco::Native::Log(L"Can't find the dll file \"" + dllPath + L"\"");
+            Dodoco::Native::Log(L"Can't find the dll file \"" + dllFilename + L"\"");
+            Dodoco::Native::Process::CloseProcess(GetCurrentProcess(), EXIT_FAILURE);
             return EXIT_FAILURE;
+
+        } else {
+
+            if (!GetFullPathNameW(dllFilename.c_str(), MAX_PATH, dllFullPath, nullptr)) {
+
+                Dodoco::Native::Log("\"GetFullPathNameW\" error (" + std::to_string(GetLastError()) + ")");
+                Dodoco::Native::Process::CloseProcess(GetCurrentProcess(), EXIT_FAILURE);
+                return EXIT_FAILURE;
+
+            }
 
         }
 
@@ -50,7 +63,7 @@ int main(int argc, char* argv[]) {
         Dodoco::Native::Log("Successfully created game's process");
         Dodoco::Native::Log("Injecting dll in game's process...");
 
-        if (!Dodoco::Native::DllInjector::Inject(procInfo.hProcess, dllPath)) {
+        if (!Dodoco::Native::DllInjector::Inject(procInfo.hProcess, std::wstring(dllFullPath))) {
 
             Dodoco::Native::Log("Failed to inject the dll in game's process");
             Dodoco::Native::Process::CloseProcess(procInfo.hProcess, 9);
