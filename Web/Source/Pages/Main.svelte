@@ -24,7 +24,7 @@
     let confirmGameDownload: ConfirmPopupControl;
     let errorData: CommonErrorData = { code: 0 };
     let busyOperationProgress: number = 0;
-    let latestWineRelease: Promise<Release>;
+    let latestWineRelease: Promise<Release> = WineController.GetControllerInstance().GetLatestRelease();
 
     $: LauncherIsWaiting = (): boolean => {
 
@@ -44,8 +44,6 @@
         // Set launcher's background image
 
         mainWrapper.style.backgroundImage = "url('data:image/png;base64," + await LauncherController.GetControllerInstance().GetLauncherBackgroundImage() + "')";
-
-        latestWineRelease = WineController.GetControllerInstance().GetLatestRelease();
 
         setInterval(async () => {
 
