@@ -1,6 +1,7 @@
 <script lang="ts">
 	
-    import { _LauncherState } from "@Dodoco/Global";
+    import { Popup } from "@Dodoco/Components";
+	import { _AppError, _LauncherState, i18nInstance } from "@Dodoco/Global";
 	import { onMount } from "svelte";
 	import Router, { push } from "svelte-spa-router";
 	// Generated types
@@ -34,4 +35,30 @@
 </svelte:head>
 <div id="main-wrapper" class="w-full h-full">
 	<Router {routes}/>
+	{#each $_AppError as err }
+		<Popup open={true} title={`${$i18nInstance.t("component.popup.error_title")} ${err.code ?? ""}`} callback={() => {
+
+			_AppError.update(arr => { arr.pop(); return arr });
+
+		} }>
+			<p>
+				{#if err.type}
+					<strong>Type:</strong><br>
+					{err.type}<br>
+				{/if}
+				{#if err.message}
+					<strong>Message:</strong><br>
+					{err.message}<br>
+				{/if}
+				{#if err.stack}
+					<strong>Stack:</strong><br>
+					{err.stack}<br>
+				{/if}
+				{#if err.inner}
+					<strong>Inner exception:</strong>
+					{JSON.stringify(err.inner)}
+				{/if}
+			</p>
+		</Popup>
+	{/each}
 </div>

@@ -4,11 +4,15 @@
     import { i18nInstance } from "@Dodoco/Global";
     import { ConfirmPopupControl, Modal, ScoopedFrame } from "./";
     import { Nullable } from "..";
+    import { onMount } from "svelte";
 
     export let title: Nullable<string> = null;
+    export let open: boolean = false;
     export let confirm: Nullable<string> = null;
     export let callback: (result: boolean) => void;
     export let Root: ConfirmPopupControl = new ConfirmPopupControl(callback);
+
+    onMount(() => open ? Root.Open() : null);
 
 </script>
 <Modal bind:Root={Root}>

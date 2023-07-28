@@ -1,7 +1,8 @@
 <svelte:options accessors={true}></svelte:options>
 <script lang="ts">
 
-    import { _GameState, _LauncherDependency, _LauncherState, _WineControllerViewData, _WinePackageManagerState, i18nInstance } from "@Dodoco/Global";
+    import { ErrorHandler } from "@Dodoco/index";
+    import { _GameState, _LauncherState, _WineControllerViewData, _WinePackageManagerState, i18nInstance } from "@Dodoco/Global";
     import { Checkbox, ConfirmPopup, ConfirmPopupControl, LoadingDots, Modal, ModalControl, Popup, Radio, RadioGroup, ScoopedFrame } from "@Dodoco/Components";
     import { LanguageConstants, LanguageName } from "@Dodoco/Language";
     
@@ -11,7 +12,6 @@
     import Icon from "@iconify/svelte";
     import { onMount } from "svelte";
     import { Writable, writable } from "svelte/store";
-    import { CommonErrorData } from "..";
     import sanitizeHtml from 'sanitize-html';
 
     // Generated types
@@ -20,15 +20,12 @@
     import { LauncherController } from "@Dodoco/Generated/Dodoco/Application/Control/LauncherController";
     import { WineController } from "@Dodoco/Generated/Dodoco/Application/Control/WineController";
     import { GameController } from "@Dodoco/Generated/Dodoco/Application/Control/GameController";
-    import { LauncherDependency } from "@Dodoco/Generated/Dodoco/Core/Launcher/LauncherDependency";
     import { DataUnitFormatter } from "@Dodoco/Util";
     import { GameState } from "@Dodoco/Generated/Dodoco/Core/Game/GameState";
     import { WinePackageManagerState } from "@Dodoco/Generated/Dodoco/Core/Wine/WinePackageManagerState";
     import { GameServer } from "@Dodoco/Generated/Dodoco/Core/Game/GameServer";
 
     export let Root: ModalControl = new ModalControl();
-    let errorModalControl: ConfirmPopupControl;
-    let errorData: CommonErrorData = { code: 0 };
     let confirmRestoreSettings: ConfirmPopupControl;
     let confirmSaveSettings: ConfirmPopupControl;
     let userSettingsPromise: Promise<LauncherSettings>;
@@ -70,13 +67,7 @@
 
         } catch (err: any) {
 
-            if (err.data) {
-
-                errorData = err.data as CommonErrorData;
-                errorModalControl.Open();
-                return;
-
-            }
+            ErrorHandler.PushError(err);
 
         }
 
@@ -84,8 +75,16 @@
 
     async function DownloadWine(release: Release): Promise<void> {
 
-        await WineController.GetControllerInstance().InstallPackageFromRelease(release);
-        await LoadData();
+        try {
+
+            await WineController.GetControllerInstance().InstallPackageFromRelease(release);
+            await LoadData();
+
+        } catch (err: any) {
+
+            ErrorHandler.PushError(err);
+
+        }
 
     }
 
@@ -97,13 +96,7 @@
             
         } catch (err: any) {
 
-            if (err.data) {
-
-                errorData = err.data as CommonErrorData;
-                errorModalControl.Open();
-                return;
-
-            }
+            ErrorHandler.PushError(err);
 
         }
         
@@ -182,7 +175,7 @@
                                     <li>
                                         <h3>{ $i18nInstance.t("settings.content.game.integrity.title") }</h3>
                                         <p>{ $i18nInstance.t("settings.content.game.integrity.description") }</p>
-                                        <button disabled={$_LauncherDependency == LauncherDependency.GAME_DOWNLOAD } class="input" on:click={() => {
+                                        <button disabled={$_GameState != GameState.READY } class="input" on:click={() => {
                                             Root.Close();
                                             RepairGame();
                                         }}>
@@ -300,26 +293,6 @@
 }}>
     <p>{ $i18nInstance.t("settings.confirm.save_settings") }</p>
 </ConfirmPopup>
-<Popup bind:Root={errorModalControl} title={`${$i18nInstance.t("component.popup.error_title")} ${errorData.code}`} callback={() => {}}>
-    <p>
-        {#if errorData.type}
-            <strong>Type:</strong><br>
-            {errorData.type}<br>
-        {/if}
-        {#if errorData.message}
-            <strong>Message:</strong><br>
-            {errorData.message}<br>
-        {/if}
-        {#if errorData.stack}
-            <strong>Stack:</strong><br>
-            {errorData.stack}<br>
-        {/if}
-        {#if errorData.inner}
-            <strong>Inner exception:</strong>
-            {JSON.stringify(errorData.inner)}
-        {/if}
-    </p>
-</Popup>
 <style lang="postcss">
 
     .panel {

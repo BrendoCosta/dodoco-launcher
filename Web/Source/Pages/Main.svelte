@@ -1,6 +1,7 @@
 <script lang="ts">
     
-    import { _GameState, _MainViewData, _LauncherDependency, _WinePackageManagerState, i18nInstance } from "@Dodoco/Global";
+    import { CommonErrorData, ErrorHandler } from "@Dodoco/index";
+    import { _AppError, _GameState, _MainViewData, _LauncherDependency, _WinePackageManagerState, i18nInstance } from "@Dodoco/Global";
     import { Button, ButtonGroup, ConfirmPopup, ConfirmPopupControl, ModalControl, Popup, ProgressBar } from "@Dodoco/Components";
     import { DataUnitFormatter } from "@Dodoco/Util";
     import Settings from "./Settings.svelte";
@@ -16,21 +17,11 @@
     import { WineController } from "@Dodoco/Generated/Dodoco/Application/Control/WineController";
     import { LauncherController } from "@Dodoco/Generated/Dodoco/Application/Control/LauncherController";
     import { GameController } from "@Dodoco/Generated/Dodoco/Application/Control/GameController";
-    import { CommonErrorData } from "..";
 
     let mainWrapper: HTMLDivElement;
     let settingsModal: ModalControl;
-    let errorModalControl: ConfirmPopupControl;
     let confirmGameDownload: ConfirmPopupControl;
-    let errorData: CommonErrorData = { code: 0 };
-    let busyOperationProgress: number = 0;
     let latestWineRelease: Promise<Release> = WineController.GetControllerInstance().GetLatestRelease();
-
-    $: LauncherIsWaiting = (): boolean => {
-
-        return ($_LauncherDependency ?? LauncherDependency.NONE) != LauncherDependency.NONE;
-
-    }
 
     $: LauncherIsBusy = (): boolean => {
 
@@ -45,20 +36,6 @@
 
         mainWrapper.style.backgroundImage = "url('data:image/png;base64," + await LauncherController.GetControllerInstance().GetLauncherBackgroundImage() + "')";
 
-        setInterval(async () => {
-
-            if (LauncherIsBusy()) {
-
-                if ($_GameState == GameState.CHECKING_INTEGRITY) {
-
-                    busyOperationProgress = $_MainViewData._ProgressReport?.CompletionPercentage ?? 0;
-
-                }
-
-            }
-
-        }, 500);
-
         confirmGameDownload.OnChoose.Add(async (s, e) => {
 
             if (e) {
@@ -69,13 +46,7 @@
 
                 } catch (err: any) {
 
-                    if (err.data) {
-
-                        errorData = err.data as CommonErrorData;
-                        errorModalControl.Open();
-                        return;
-
-                    }
+                    ErrorHandler.PushError(err);
 
                 }
 
@@ -120,13 +91,7 @@
 
         } catch (err: any) {
 
-            if (err.data) {
-
-                errorData = err.data as CommonErrorData;
-                errorModalControl.Open();
-                return;
-
-            }
+            ErrorHandler.PushError(err);
 
         }
 
@@ -240,26 +205,6 @@
             </div>
         </div>
     </div>
-    <Popup bind:Root={errorModalControl} title={`${$i18nInstance.t("component.popup.error_title")} ${errorData.code}`} callback={() => {}}>
-        <p>
-            {#if errorData.type}
-                <strong>Type:</strong><br>
-                {errorData.type}<br>
-            {/if}
-            {#if errorData.message}
-                <strong>Message:</strong><br>
-                {errorData.message}<br>
-            {/if}
-            {#if errorData.stack}
-                <strong>Stack:</strong><br>
-                {errorData.stack}<br>
-            {/if}
-            {#if errorData.inner}
-                <strong>Inner exception:</strong>
-                {JSON.stringify(errorData.inner)}
-            {/if}
-        </p>
-    </Popup>
     <ConfirmPopup bind:Root={confirmGameDownload} callback={(e) => null}>
         {#await LauncherController.GetControllerInstance().GetLauncherSettings() then result }
             <p>{ $i18nInstance.t("main.confirm.game_download.text", { directory: result.Game.InstallationDirectory, menu_path: `${$i18nInstance.t("settings.title")} > ${$i18nInstance.t("settings.menu.game")}` }) }</p>
