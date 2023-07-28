@@ -20,7 +20,25 @@ Please keep in mind that this project is experimental and that the source code m
     </div>
 </div>
 
-# Build
+## Download
+
+### Install
+
+Latest launcher's version can be downloaded [here](https://github.com/BrendoCosta/dodoco-launcher/releases/latest). Unzip the file `dodoco-launcher-vX.X.X.zip` to a directory of your choice.
+
+### Run
+
+Run the executable file `dodoco-launcher` through your file explorer or the terminal:
+
+```sh
+chmod +x ./dodoco-launcher
+```
+
+```sh
+./dodoco-launcher
+```
+
+## Build
 
 ### Requirements
 
@@ -31,15 +49,17 @@ Please keep in mind that this project is experimental and that the source code m
 
 **Important:** The build scripts expect all the paths to the executables of the above tools to be correctly configured in the PATH variable.
 
+**Important:** You must reserve at least 1 GB of storage space to build the project.
+
 ### Clone
 
-Clone this project's repository with `--recurse-submodules` flag
+Clone this project's repository with `--recurse-submodules` flag:
 
 ```sh
 git clone --recurse-submodules https://github.com/BrendoCosta/dodoco-launcher.git
 ```
 
-Enter project's directory
+Enter project's directory:
 
 ```sh
 cd ./dodoco-launcher
@@ -47,7 +67,7 @@ cd ./dodoco-launcher
 
 ### Run
 
-Run the launcher directly from the source code
+Run the launcher directly from the source code:
 
 ```sh
 dotnet run
@@ -55,7 +75,7 @@ dotnet run
 
 ### Release
 
-Creates a release build of the project to `/bin/Release/net7.0/linux-x64/publish/` directory
+Creates a release build of the project to `/bin/Release/net7.0/linux-x64/publish/` directory:
 
 ```sh
 dotnet publish
