@@ -1,11 +1,11 @@
 <Project Sdk="Microsoft.NET.Sdk">
     <PropertyGroup>
         <Product>Dodoco Launcher</Product>
-        <Version>1.0.0</Version>
-        <FileVersion>1.0.0</FileVersion>
+        <Version>0.0.1</Version>
+        <FileVersion>0.0.1</FileVersion>
         <Authors>Brendo Costa</Authors>
         <Company>https://github.com/BrendoCosta/dodoco-launcher</Company>
-        <Description>2023/06/21</Description>
+        <Description>2023/07/27</Description>
         <GenerateAssemblyInfo>true</GenerateAssemblyInfo>
     </PropertyGroup>
     <PropertyGroup>
