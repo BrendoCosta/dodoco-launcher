@@ -81,7 +81,7 @@ namespace Dodoco.Core.Util.Log {
 
             // Add the new log entry
             
-            LogEntry newEntry = new LogEntry(type, message, method);
+            LogEntry newEntry = new LogEntry(type, exception != null ? message + $": {exception.Message}" : message, method);
             Entries.Add(newEntry);
 
             // Pass event to listners with the new entry as the argument
@@ -174,12 +174,12 @@ namespace Dodoco.Core.Util.Log {
 
         }
 
-        public LogEntry? GetLastLogEntry(LogType type) {
+        public LogEntry? GetLastLogEntry(IList<LogType> types) {
 
-            foreach (LogEntry entry in Entries) {
+            for (int i = Entries.Count - 1; i >= 0; i--) {
 
-                if (entry.type == type)
-                    return entry;
+                if (types.Contains(Entries[i].type))
+                    return Entries[i];
 
             }
 

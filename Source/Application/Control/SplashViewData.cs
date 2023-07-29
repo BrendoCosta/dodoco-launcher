@@ -7,21 +7,7 @@ namespace Dodoco.Application.Control {
 
         public LogEntry? LogEntry {
             
-            get {
-
-                LogEntry e = Logger.GetInstance().GetLastLogEntry();
-                
-                if (e.type != LogType.DEBUG) {
-
-                    return e;
-
-                } else {
-
-                    return null;
-
-                }
-
-            }
+            get => Logger.GetInstance().GetLastLogEntry(new List<LogType> { LogType.LOG, LogType.ERROR, LogType.WARNING });
 
         }
 
