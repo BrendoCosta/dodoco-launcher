@@ -27,7 +27,7 @@
 
 </script>
 <!-- svelte-ignore a11y-missing-attribute -->
-<div class="w-screen h-screen flex flex-col items-center justify-center">
+<div class="w-screen h-screen flex flex-col items-center justify-center p-1">
     <img src="/Image/klee_by_kkomdastro.webp" class="object-contain h-1/2 drop-shadow-md"/>
     <div class="flex flex-col items-center justify-center gap-y-2">
         <h1 class="text-red-600 text-xl font-['HYImpact'] font-medium drop-shadow-md uppercase">Loading<LoadingDots/></h1>
