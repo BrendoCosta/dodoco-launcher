@@ -31,10 +31,10 @@
 </script>
 <button disabled={disabled} bind:this={element} on:click={() => OnClick()} use:forwardEvents class="
     {_class != "" ? _class : `
-        transition-all ease-in-out bg-transparent text-white/50 font-normal border-white/50 p-4 flex flex-row items-center
-        hover:bg-transparent hover:border-yellow-300 hover:text-yellow-300 hover:ring-0 hover:outline-0 hover:shadow-[inset_0_0_0_0.2rem_black] hover:shadow-yellow-300
-        [&.active]:bg-yellow-300 [&.active]:text-yellow-700 [&.active]:ring-0 [&.active]:outline-0
-        focus:bg-yellow-300 focus:text-yellow-700 focus:ring-0 focus:outline-0
+        h-full transition-all ease-in-out bg-gradient-to-t from-yellow-500 to-yellow-400 text-yellow-700 font-normal p-4 flex flex-row items-center
+        hover:to-yellow-300
+        [&.active]:bg-yellow-300
+        focus:bg-yellow-300
     ` }
     { active ? "active" : "" }
     { disabled ? "opacity-50" : "" }

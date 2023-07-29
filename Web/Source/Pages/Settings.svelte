@@ -2,7 +2,7 @@
 <script lang="ts">
 
     import { ErrorHandler } from "@Dodoco/index";
-    import { _GameState, _LauncherState, _WineControllerViewData, _WinePackageManagerState, i18nInstance } from "@Dodoco/Global";
+    import { _GameState, _LauncherDependency, _LauncherState, _WineControllerViewData, _WinePackageManagerState, i18nInstance } from "@Dodoco/Global";
     import { Checkbox, ConfirmPopup, ConfirmPopupControl, LoadingDots, Modal, ModalControl, Popup, Radio, RadioGroup, ScoopedFrame } from "@Dodoco/Components";
     import { LanguageConstants, LanguageName } from "@Dodoco/Language";
     
@@ -24,6 +24,7 @@
     import { GameState } from "@Dodoco/Generated/Dodoco/Core/Game/GameState";
     import { WinePackageManagerState } from "@Dodoco/Generated/Dodoco/Core/Wine/WinePackageManagerState";
     import { GameServer } from "@Dodoco/Generated/Dodoco/Core/Game/GameServer";
+    import { LauncherDependency } from "@Dodoco/Generated/Dodoco/Core/Launcher/LauncherDependency";
 
     export let Root: ModalControl = new ModalControl();
     let confirmRestoreSettings: ConfirmPopupControl;
@@ -46,6 +47,12 @@
         });
 
     });
+
+    $: LauncherIsWaiting = (): boolean => {
+
+        return ($_LauncherDependency ?? LauncherDependency.NONE) != LauncherDependency.NONE;
+
+    }
 
     $: LauncherIsBusy = (): boolean => {
 
@@ -106,16 +113,16 @@
 <Modal bind:Root={Root} closable={!LauncherIsBusy()}>
     <ScoopedFrame width="[60%]" height="[80%]">
         <div class="w-full h-full flex flex-col items-start gap-y-10 m-2">
-            <h1 class="text-3xl font-medium text-gray-800 drop-shadow-md">✦ { $i18nInstance.t("settings.title") }</h1>
+            <h1 class="text-3xl font-medium text-zinc-700 drop-shadow-md">✦ { $i18nInstance.t("settings.title") }</h1>
             <div class="w-full h-full overflow-y-scroll">
                 {#await userSettingsPromise}
                     Loading settings
                 {:then us}
                     <TabGroup class="flex flex-row gap-x-20 p-2">
                         <TabList class="flex flex-col items-start gap-y-4">
-                            <Tab class={(e) => e.selected ? "[&>h2]:(font-medium text-gray-800 drop-shadow-md)" : "[&>h2]:(text-gray-800/50 drop-shadow-md)"}><h2>{ $i18nInstance.t("settings.menu.general") }</h2></Tab>
-                            <Tab class={(e) => e.selected ? "[&>h2]:(font-medium text-gray-800 drop-shadow-md)" : "[&>h2]:(text-gray-800/50 drop-shadow-md)"}><h2>{ $i18nInstance.t("settings.menu.game") }</h2></Tab>
-                            <Tab class={(e) => e.selected ? "[&>h2]:(font-medium text-gray-800 drop-shadow-md)" : "[&>h2]:(text-gray-800/50 drop-shadow-md)"}><h2>Wine</h2></Tab>
+                            <Tab class={(e) => e.selected ? "[&>h2]:(font-medium text-zinc-700 drop-shadow-md)" : "[&>h2]:(text-zinc-700/50 drop-shadow-md)"}><h2>{ $i18nInstance.t("settings.menu.general") }</h2></Tab>
+                            <Tab class={(e) => e.selected ? "[&>h2]:(font-medium text-zinc-700 drop-shadow-md)" : "[&>h2]:(text-zinc-700/50 drop-shadow-md)"}><h2>{ $i18nInstance.t("settings.menu.game") }</h2></Tab>
+                            <Tab class={(e) => e.selected ? "[&>h2]:(font-medium text-zinc-700 drop-shadow-md)" : "[&>h2]:(text-zinc-700/50 drop-shadow-md)"}><h2>Wine</h2></Tab>
                         </TabList>
                         <TabPanels class="w-full">
                             <TabPanel class="panel">
@@ -175,7 +182,7 @@
                                     <li>
                                         <h3>{ $i18nInstance.t("settings.content.game.integrity.title") }</h3>
                                         <p>{ $i18nInstance.t("settings.content.game.integrity.description") }</p>
-                                        <button disabled={$_GameState != GameState.READY } class="input" on:click={() => {
+                                        <button disabled={ LauncherIsBusy() || LauncherIsWaiting() } class="input" on:click={() => {
                                             Root.Close();
                                             RepairGame();
                                         }}>
@@ -223,7 +230,7 @@
                                                         <div class="inline-flex w-full items-center">
                                                             <div class="w-[70%] flex flex-col items-start">
                                                                 <p>{ release.tag_name }</p>
-                                                                <small class="text-gray-800/50 text-left">
+                                                                <small class="text-zinc-700/50 text-left">
                                                                     {#if release.tag_name in $_WineControllerViewData.ReleaseDownloadProgressReport }
                                                                         {   $i18nInstance.t("settings.content.wine.version.downloading_release", {
                                                                                 percentage: Math.floor($_WineControllerViewData.ReleaseDownloadProgressReport[release.tag_name].CompletionPercentage),
@@ -269,7 +276,7 @@
             </div>
             <div class="w-full">
                 <div class="w-2/3 inline-flex justify-center gap-x-6">
-                    <button class="input" disabled={LauncherIsBusy()} on:click={() => { confirmSaveSettings.Open(); }}>{ $i18nInstance.t("settings.button.save_settings") }</button>
+                    <button class="input highlight" disabled={LauncherIsBusy()} on:click={() => { confirmSaveSettings.Open(); }}>{ $i18nInstance.t("settings.button.save_settings") }</button>
                 </div>
             </div>
         </div>
@@ -309,7 +316,7 @@
 
     .panel ul li {
 
-        @apply w-full flex flex-col items-start gap-y-2 text-gray-800
+        @apply w-full flex flex-col items-start gap-y-2 text-zinc-700
 
     }
 

@@ -183,7 +183,7 @@
                         <ProgressBar value={GetProgress()} width="1/4"/>
                     {/if}
                     <ButtonGroup>
-                        <Button on:click={() => settingsModal.Open() } disabled={LauncherIsBusy()}><Icon icon="material-symbols:settings"/>&nbsp;{$i18nInstance.t("settings.title")}</Button>
+                        <Button on:click={() => settingsModal.Open() } disabled={LauncherIsBusy()}><Icon icon="material-symbols:settings"/></Button>
                         <Button focused disabled={LauncherIsBusy()} on:click={() => MainButtonClick()}>
                             {#if $_LauncherDependency == LauncherDependency.WINE_DOWNLOAD }
                                 {#await latestWineRelease then result}
@@ -199,7 +199,6 @@
                                 <Icon icon="material-symbols:autorenew-outline-rounded" class="animate-spin"/>&nbsp;Unready
                             {/if}
                         </Button>
-                        <Button><Icon icon="material-symbols:info"/>&nbsp;Changelog</Button>
                     </ButtonGroup>
                 </div>
             </div>

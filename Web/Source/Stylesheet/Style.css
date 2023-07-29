@@ -51,31 +51,37 @@ html, body {
 
 .input {
 
-    @apply transition-all ease-in-out border-[1px] border-gray-300 text-gray-800 rounded-xl text-sm hover:bg-gray-200/80 cursor-pointer
+    @apply transition-all ease-in-out text-zinc-700 rounded-md text-sm hover:bg-gray-200/70 cursor-pointer
 
 }
 
 .input.text {
 
-    @apply py-2 px-4 rounded-md hover:bg-transparent cursor-auto caret-gray-800
+    @apply py-2 px-4 border-b-[2px] border-gray-300 rounded-none hover:bg-transparent cursor-auto caret-zinc-700
 
 }
 
 .input.checkbox {
 
-    @apply rounded-lg w-6 h-6 flex flex-row justify-center items-center
+    @apply w-6 h-6 border-[1px] border-gray-300 flex flex-row justify-center items-center
+
+}
+
+.input.checkbox.checked {
+
+    @apply bg-zinc-700 text-lightgolden
 
 }
 
 .input.radio {
 
-    @apply rounded-full w-6 h-6 flex flex-row justify-center items-center p-1
+    @apply rounded-full w-6 h-6 border-[1px] border-gray-300 flex flex-row justify-center items-center p-1
 
 }
 
 .input.radio .check {
 
-    @apply rounded-[50%] bg-gray-800 w-full h-full
+    @apply rounded-[50%] bg-zinc-700 w-full h-full
 
 }
 
@@ -87,24 +93,30 @@ html, body {
 
 .input.dropdown {
 
-    @apply w-64 flex flex-col mt-1 border-[1px] border-gray-300 bg-white text-sm text-left rounded-xl [&>:first-child]:rounded-t-xl [&>:last-child]:rounded-b-xl cursor-pointer
+    @apply w-64 flex flex-col mt-1 border-[1px] border-gray-300 bg-white text-sm text-left rounded-md [&>:first-child]:rounded-t-md [&>:last-child]:rounded-b-md cursor-pointer
 
 }
 
 .input.dropdown .item {
 
-    @apply py-3 px-4 text-gray-800 hover:bg-gray-200/80
+    @apply py-3 px-4 text-zinc-700 hover:bg-gray-200/80
+
+}
+
+.input.dropdown .item:hover {
+
+    @apply text-golden
 
 }
 
 button.input {
 
-    @apply py-2 px-4 inline-flex items-center justify-center
+    @apply bg-white text-golden font-medium border-[1px] border-gray-300 py-3 px-9 inline-flex items-center justify-center disabled:opacity-80 disabled:cursor-default
 
 }
 
-button.input:disabled {
+button.input.highlight {
 
-    @apply opacity-50 cursor-default
+    @apply bg-zinc-700 text-lightgolden border-none py-3 px-9 inline-flex items-center justify-center hover:bg-zinc-800
 
 }

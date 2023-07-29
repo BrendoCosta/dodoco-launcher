@@ -7,8 +7,8 @@
 
 </script>
 <div class="{_class != "" ? _class : `
-    w-auto bg-black/20 flex flex-row justify-center items-center
-    rounded-2xl [&>*:first-child]:rounded-l-2xl [&>*:last-child]:rounded-r-2xl
+    w-auto flex flex-row justify-center items-center
+    rounded-md [&>*:first-child]:rounded-l-md [&>*:last-child]:rounded-r-md
     ` }
     { additionalClass }
 ">

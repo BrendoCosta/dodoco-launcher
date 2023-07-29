@@ -15,6 +15,7 @@ export default {
             "darkgray": "#393b40",
             "lightgray": "#78797b",
             "golden": "#dcbc60",
+            "lightgolden": "#e6d6a8"
         })
     }
 }
