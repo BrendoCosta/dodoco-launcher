@@ -66,11 +66,11 @@ settings:
   content:
     general:
       default_settings:
-        title: Default settings
+        title: Default Settings
         description: Restore launcher's default settings
         button_text: Restore
       language:
-        title: Language
+        title: Launcher's Language
       update:
         title: Update
         description: Installed launcher's version is {{version}}
@@ -87,7 +87,7 @@ settings:
         description: Verify and fix missing or corrupted game's files
         button_text: Start repair
       installation_directory:
-        title: Installation directory
+        title: Installation Directory
     wine:
       version:
         title: Version

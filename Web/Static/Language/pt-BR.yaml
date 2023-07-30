@@ -66,11 +66,11 @@ settings:
   content:
     general:
       default_settings:
-        title: Configurações padrão
+        title: Configurações Padrão
         description: Restaurar as configurações padrão do launcher
         button_text: Restaurar
       language:
-        title: Idioma
+        title: Idioma do Launcher
       update:
         title: Atualização
         description: A versão instalada do launcher é {{version}}
@@ -87,7 +87,7 @@ settings:
         description: Verificar e corrigir arquivos do jogo em falta ou corrompidos
         button_text: Iniciar reparo
       installation_directory:
-        title: Diretório de instalação
+        title: Diretório de Instalação
     wine:
       version:
         title: Versão
