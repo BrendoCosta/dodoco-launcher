@@ -136,7 +136,7 @@
                                     </li>
                                     <li>
                                         <h3>{ $i18nInstance.t("settings.content.general.language.title") }</h3>
-                                        <Listbox bind:value={$userSettings.Launcher.Language} on:change={(e) => { $userSettings.Launcher.Language = e.detail; }}>
+                                        <Listbox class="relative" bind:value={$userSettings.Launcher.Language} on:change={(e) => { $userSettings.Launcher.Language = e.detail; }}>
                                             <ListboxButton class="input listbox-button">
                                                 { LanguageName.get($userSettings.Launcher.Language) }<Icon icon="material-symbols:arrow-drop-down"/>
                                             </ListboxButton>
@@ -165,7 +165,7 @@
                                         <h3>{ $i18nInstance.t("settings.content.game.server.title") }</h3>
                                         <p>{ @html sanitizeHtml($i18nInstance.t("settings.content.game.server.warning")) }</p>
                                         {#await avaliableServersList then gameServerlist }
-                                            <Listbox bind:value={$userSettings.Game.Server}>
+                                            <Listbox class="relative" bind:value={$userSettings.Game.Server}>
                                                 <ListboxButton class="input listbox-button">
                                                     { GameServer[$userSettings.Game.Server] }<Icon icon="material-symbols:arrow-drop-down"/>
                                                 </ListboxButton>
@@ -191,7 +191,7 @@
                                     </li>
                                     <li>
                                         <h3>{ $i18nInstance.t("settings.content.game.installation_directory.title") }</h3>
-                                        <input bind:value={$userSettings.Game.InstallationDirectory} type="text" class="input text"/>
+                                        <input bind:value={$userSettings.Game.InstallationDirectory} type="text" spellcheck="false" class="input text"/>
                                     </li>
                                 </ul>
                             </TabPanel>
@@ -207,17 +207,17 @@
                                         {#if $userSettings.Wine.UserDefinedInstallation }
                                             <h3>Installation Directory</h3>
                                             <p>Path to your Wine installation directory</p>
-                                            <input bind:value={$userSettings.Wine.InstallationDirectory} type="text" class="input text"/>
+                                            <input bind:value={$userSettings.Wine.InstallationDirectory} type="text" spellcheck="false" class="input text"/>
                                         {:else}
                                             <h3>Releases Directory</h3>
                                             <p>Path to Launcher's Wine's releases directory</p>
-                                            <input bind:value={$userSettings.Wine.ReleasesDirectory} type="text" class="input text"/>
+                                            <input bind:value={$userSettings.Wine.ReleasesDirectory} type="text" spellcheck="false" class="input text"/>
                                         {/if}
                                     </li>
                                     <li>
                                         <h3>Prefix</h3>
                                         <p>Path to Wine's prefix directory</p>
-                                        <input bind:value={$userSettings.Wine.PrefixDirectory} type="text" class="input text"/>
+                                        <input bind:value={$userSettings.Wine.PrefixDirectory} type="text" spellcheck="false" class="input text"/>
                                     </li>
                                     {#if !$userSettings.Wine.UserDefinedInstallation }
                                         <li>

@@ -57,13 +57,13 @@ html, body {
 
 .input.text {
 
-    @apply py-2 px-4 border-b-[2px] border-gray-300 rounded-none hover:bg-transparent cursor-auto caret-zinc-700
+    @apply py-2 px-4 border-[2px] border-gray-300 rounded-md hover:bg-transparent cursor-auto caret-zinc-700 focus:outline-golden
 
 }
 
 .input.checkbox {
 
-    @apply w-6 h-6 border-[1px] border-gray-300 flex flex-row justify-center items-center
+    @apply w-6 h-6 border-[2px] border-gray-200 flex flex-row justify-center items-center
 
 }
 
@@ -75,7 +75,7 @@ html, body {
 
 .input.radio {
 
-    @apply rounded-full w-6 h-6 border-[1px] border-gray-300 flex flex-row justify-center items-center p-1
+    @apply rounded-full w-6 h-6 border-[2px] border-gray-200 flex flex-row justify-center items-center p-1
 
 }
 
@@ -93,7 +93,7 @@ html, body {
 
 .input.dropdown {
 
-    @apply w-64 flex flex-col mt-1 border-[1px] border-gray-300 bg-white text-sm text-left rounded-md [&>:first-child]:rounded-t-md [&>:last-child]:rounded-b-md cursor-pointer
+    @apply absolute z-50 w-64 flex flex-col mt-1 border-[2px] border-gray-200 bg-white text-sm text-left rounded-md [&>:first-child]:rounded-t-md [&>:last-child]:rounded-b-md
 
 }
 
@@ -111,7 +111,7 @@ html, body {
 
 button.input {
 
-    @apply hy-impact-font bg-white text-golden font-medium border-[1px] border-gray-300 py-3 px-9 inline-flex items-center justify-center disabled:opacity-80 disabled:cursor-default
+    @apply bg-white text-golden font-medium border-[2px] border-gray-200 py-3 px-9 inline-flex items-center justify-center disabled:opacity-80 disabled:cursor-default
 
 }
 
