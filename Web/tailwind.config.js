@@ -3,6 +3,7 @@
 import { DodocoConfig } from "./dodoco-launcher.config.js";
 import * as Path from "path";
 import colors from "tailwindcss/colors";
+import plugin from "tailwindcss/plugin";
 
 export default {
     content: [
@@ -15,8 +16,17 @@ export default {
             "darkgray": "#393b40",
             "lightgray": "#78797b",
             "golden": "#dcbc60",
-            "lightgolden": "#e6d6a8"
+            "lightgolden": "#f4d8a8"
         })
-    }
+    },
+    plugins: [
+        plugin(({ addComponents }) => {
+            addComponents({
+                ".hy-impact-font": {
+                    fontFamily: "'HYImpact', sans-serif"
+                }
+            })
+        })
+    ]
 }
 

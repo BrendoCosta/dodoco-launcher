@@ -113,16 +113,16 @@
 <Modal bind:Root={Root} closable={!LauncherIsBusy()}>
     <ScoopedFrame width="[60%]" height="[80%]">
         <div class="w-full h-full flex flex-col items-start gap-y-10 m-2">
-            <h1 class="text-3xl font-medium text-zinc-700 drop-shadow-md">✦ { $i18nInstance.t("settings.title") }</h1>
+            <h1 class="text-3xl hy-impact-font font-medium text-zinc-700 drop-shadow-md">✦ { $i18nInstance.t("settings.title") }</h1>
             <div class="w-full h-full overflow-y-scroll">
                 {#await userSettingsPromise}
                     Loading settings
                 {:then us}
                     <TabGroup class="flex flex-row gap-x-20 p-2">
-                        <TabList class="flex flex-col items-start gap-y-4">
-                            <Tab class={(e) => e.selected ? "[&>h2]:(font-medium text-zinc-700 drop-shadow-md)" : "[&>h2]:(text-zinc-700/50 drop-shadow-md)"}><h2>{ $i18nInstance.t("settings.menu.general") }</h2></Tab>
-                            <Tab class={(e) => e.selected ? "[&>h2]:(font-medium text-zinc-700 drop-shadow-md)" : "[&>h2]:(text-zinc-700/50 drop-shadow-md)"}><h2>{ $i18nInstance.t("settings.menu.game") }</h2></Tab>
-                            <Tab class={(e) => e.selected ? "[&>h2]:(font-medium text-zinc-700 drop-shadow-md)" : "[&>h2]:(text-zinc-700/50 drop-shadow-md)"}><h2>Wine</h2></Tab>
+                        <TabList class="flex flex-col items-start gap-y-4 hy-impact-font font-medium drop-shadow-md">
+                            <Tab class={(e) => e.selected ? "text-zinc-700" : "[&>h2]:text-zinc-700/50"}><h2>{ $i18nInstance.t("settings.menu.general") }</h2></Tab>
+                            <Tab class={(e) => e.selected ? "text-zinc-700" : "[&>h2]:text-zinc-700/50"}><h2>{ $i18nInstance.t("settings.menu.game") }</h2></Tab>
+                            <Tab class={(e) => e.selected ? "text-zinc-700" : "[&>h2]:text-zinc-700/50"}><h2>Wine</h2></Tab>
                         </TabList>
                         <TabPanels class="w-full">
                             <TabPanel class="panel">
@@ -322,7 +322,7 @@
 
     .panel ul li h3 {
 
-        @apply text-xl drop-shadow-md
+        @apply text-xl drop-shadow-md hy-impact-font
 
     }
 

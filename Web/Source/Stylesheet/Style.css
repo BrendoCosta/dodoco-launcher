@@ -111,7 +111,7 @@ html, body {
 
 button.input {
 
-    @apply bg-white text-golden font-medium border-[1px] border-gray-300 py-3 px-9 inline-flex items-center justify-center disabled:opacity-80 disabled:cursor-default
+    @apply hy-impact-font bg-white text-golden font-medium border-[1px] border-gray-300 py-3 px-9 inline-flex items-center justify-center disabled:opacity-80 disabled:cursor-default
 
 }
 
