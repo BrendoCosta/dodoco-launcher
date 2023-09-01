@@ -1,6 +1,6 @@
 namespace Dodoco.Core.Game {
 
-    public class GameDeleteFiles: ReadableManagedFile<List<string>> {
+    public class GameDeleteFiles: WritableManagedFile<List<string>> {
 
         public GameDeleteFiles(string gameInstallationDirectory): base(
             "deletefiles",
@@ -19,6 +19,12 @@ namespace Dodoco.Core.Game {
             }
 
             return result;
+
+        }
+
+        public override void Write(List<string> content) {
+
+            throw new NotSupportedException();
 
         }
 

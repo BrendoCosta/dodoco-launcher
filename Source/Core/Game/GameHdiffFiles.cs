@@ -3,7 +3,7 @@ using Dodoco.Core.Serialization.Json;
 
 namespace Dodoco.Core.Game {
 
-    public class GameHdiffFiles: ReadableManagedFile<List<GameHdiffFilesEntry>> {
+    public class GameHdiffFiles: WritableManagedFile<List<GameHdiffFilesEntry>> {
 
         public GameHdiffFiles(string gameInstallationDirectory): base(
             "hdifffiles",
@@ -23,6 +23,12 @@ namespace Dodoco.Core.Game {
             }
 
             return result;
+
+        }
+
+        public override void Write(List<GameHdiffFilesEntry> content) {
+
+            throw new NotSupportedException();
 
         }
 

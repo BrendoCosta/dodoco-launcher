@@ -2,6 +2,7 @@ using Dodoco.Core.Network;
 using Dodoco.Core.Network.Api.Company;
 using Dodoco.Core.Network.Api.Company.Launcher.Resource;
 using Dodoco.Core.Network.HTTP;
+using Dodoco.Core.Extension;
 using Dodoco.Core.Util.Log;
 using Dodoco.Core.Util.Hash;
 using Dodoco.Core.Util.FileSystem;
@@ -88,7 +89,8 @@ namespace Dodoco.Core.Game {
                         this.UpdateState(GameState.RECOVERING_DOWNLOADED_SEGMENTS);
 
                         ProgressReport report = new ProgressReport {
-                            CompletionPercentage = (((double) i + 1) / (double) latestResource.data.game.latest.segments.Count) * 100.0D,
+                            Done = i + 1,
+                            Total = latestResource.data.game.latest.segments.Count,
                             Message = Path.Join(this.Settings.InstallationDirectory, segmentFileName)
                         };
 
@@ -112,17 +114,20 @@ namespace Dodoco.Core.Game {
                     ProgressReporter<ProgressReport> segmentProgress = new ProgressReporter<ProgressReport>();
                     segmentProgress.ProgressChanged += (object? s, ProgressReport e) => {
 
-                        totalBytesTransferred += e.BytesTransferred;
+                        totalBytesTransferred += e.Done;
 
                         ProgressReport generalProgress = new ProgressReport {
-
-                            CompletionPercentage = (totalBytesTransferred / (double) latestResource.data.game.latest.package_size) * 100.0D,
-                            BytesPerSecond = e.BytesPerSecond,
-                            TotalBytesTransferred = totalBytesTransferred,
-                            EstimatedRemainingTime = TimeSpan.FromSeconds((double) (latestResource.data.game.latest.package_size - (double) totalBytesTransferred) / e.BytesPerSecond),
+                            Done = totalBytesTransferred,
+                            Total = latestResource.data.game.latest.package_size,
+                            Rate = e.Rate,
                             Message = e.Message
-
                         };
+
+                        if (e.Rate != null) {
+
+                            generalProgress.EstimatedRemainingTime = TimeSpan.FromSeconds((double) (latestResource.data.game.latest.package_size - (double) totalBytesTransferred) / (double) e.Rate);
+
+                        }
 
                         progress?.Report(generalProgress);
 
@@ -180,59 +185,12 @@ namespace Dodoco.Core.Game {
                 using (MultiStream.Lib.MultiStream segmentsMultiStream = new MultiStream.Lib.MultiStream(latestResource.data.game.latest.segments.Select(s => File.OpenRead(Path.Join(this.Settings.InstallationDirectory, s.path.Split("/").Last()))))) {
 
                     ZipArchive zipArchive = new ZipArchive(segmentsMultiStream, ZipArchiveMode.Read);
-                   
-                    long zipArchiveFullLengthBytes = zipArchive.Entries.Select(e => e.Length).Sum();
-                    long totalBytesRead = 0;
-
-                    List<double> remainingTimeGuesses = new List<double>();
-                    Stopwatch watch = new Stopwatch();
 
                     long storageFreeBytes = FileSystem.GetAvaliableStorageSpace(this.Settings.InstallationDirectory);
-                    if (zipArchiveFullLengthBytes > storageFreeBytes)
-                        throw new GameException($"There is no enough storage space available to extract the game's segments. This process requires {DataUnitFormatter.Format(zipArchiveFullLengthBytes)} of storage space, but there is only {DataUnitFormatter.Format(storageFreeBytes)} avaliable. Try freeing up storage space and restart the download; already downloaded files will not need to be redownloaded");
+                    if (zipArchive.GetFullLength() > storageFreeBytes)
+                        throw new GameException($"There is no enough storage space available to extract the game's segments. This process requires {DataUnitFormatter.Format(zipArchive.GetFullLength())} of storage space, but there is only {DataUnitFormatter.Format(storageFreeBytes)} avaliable. Try freeing up storage space and restart the download; already downloaded files will not need to be redownloaded");
                     
-                    for (int i = 0; i < zipArchive.Entries.Count; i++) {
-
-                        ZipArchiveEntry entry = zipArchive.Entries[i];
-
-                        if (entry.FullName.EndsWith("/") && string.IsNullOrWhiteSpace(entry.Name)) {
-
-                            /* The ZipArchiveEntry.ExtractToFile method doesn't creates zip archive's internal
-                             * directories due some unknown reason, so we need to create them otherwise an
-                             * UnauthorizedAccessException will be raised up. */
-
-                            Directory.CreateDirectory(Path.Join(this.Settings.InstallationDirectory, entry.FullName));
-                            continue;
-
-                        }
-
-                        string entryDestinationFullPath = Path.Join(this.Settings.InstallationDirectory, entry.FullName);
-
-                        watch.Restart();
-                        entry.ExtractToFile(entryDestinationFullPath, true);
-                        watch.Stop();
-
-                        totalBytesRead += entry.Length;
-                        double bytesPerSecond = (double) entry.Length / (double) watch.Elapsed.TotalSeconds;
-                        double currentRemainingTimeEstimation = ((double) zipArchiveFullLengthBytes - (double) totalBytesRead) / (double) bytesPerSecond;
-                        remainingTimeGuesses.Add(currentRemainingTimeEstimation);
-
-                        ProgressReport report = new ProgressReport {
-                            BytesTransferred = entry.Length,
-                            BytesPerSecond = bytesPerSecond,
-                            CompletionPercentage = (((double) i + 1) / (double) zipArchive.Entries.Count) * 100.0D,
-                            EstimatedRemainingTime = TimeSpan.FromSeconds(remainingTimeGuesses.Count >= 2 ? remainingTimeGuesses.Average() : currentRemainingTimeEstimation),
-                            Message = entryDestinationFullPath,
-                            TotalBytesTransferred = totalBytesRead
-                        };
-
-                        progress?.Report(report);
-                        if (remainingTimeGuesses.Count > 9)
-                            remainingTimeGuesses.Clear();
-
-                    }
-
-                    watch.Stop();
+                    zipArchive.ExtractToDirectory(this.Settings.InstallationDirectory, true, progress);
 
                 }
 
@@ -341,134 +299,138 @@ namespace Dodoco.Core.Game {
                     await this.RepairGameFiles(progress);
 
                     /*
-                     * Decompress the update's zip file
+                     * Removes the old update's files
                     */
 
-                    this.UpdateState(GameState.EXTRACTING_UPDATE);
-                    Logger.GetInstance().Log($"Decompressing the game update zip file...");
-                    
-                    try {
-
-                        // overwriteFiles = true
-                        ZipFile.ExtractToDirectory(zipFilePath, this.Settings.InstallationDirectory, true);
-
-                    } catch (Exception e) {
-
-                        throw new GameException($"Failed to decompress the game update zip file", e);
-
-                    }
-                    
-                    Logger.GetInstance().Log($"Successfully finished decompressing the game's update's zip file");
-
-                    /*
-                     * Reads the "hdifffiles.txt" file and apply the patches for every referenced file
-                    */
-
-                    this.UpdateState(GameState.PATCHING_FILES);
                     GameHdiffFiles hdiffFilesHandler = new GameHdiffFiles(this.Settings.InstallationDirectory);
-                    
-                    Logger.GetInstance().Log($"Patching game's files...");
-
-                    if (!hdiffFilesHandler.Exist()) {
-
-                        throw new GameException($"Can't find the file \"{hdiffFilesHandler.FileName}\" inside the directory \"{hdiffFilesHandler.Directory}\"");
-
-                    } else {
-
-                        HDiffPatch patcher = new HDiffPatch();
-                        int appliedPatchesCount = 0;
-                        List<GameHdiffFilesEntry> patchesList = hdiffFilesHandler.Read();
-
-                        foreach (GameHdiffFilesEntry entry in patchesList) {
-
-                            string oldFilePath = Path.Join(this.Settings.InstallationDirectory, entry.remoteName);
-                            string oldFileBackupPath = Path.Join(this.Settings.InstallationDirectory, entry.remoteName + ".bak");
-                            string patchFilePath = Path.Join(this.Settings.InstallationDirectory, entry.remoteName + ".hdiff");
-                            
-                            try {
-
-                                Logger.GetInstance().Log($"Patching the file \"{oldFilePath}\"...");
-
-                                // Creates a backup of the file from current game's version
-                                File.Copy(oldFilePath, oldFileBackupPath);
-
-                                // Loads its patch file into the patcher
-                                patcher.Initialize(patchFilePath);
-
-                                // Patches the old file (it becomes the newer/updated file)
-                                patcher.Patch(oldFileBackupPath, oldFilePath);
-
-                                // Removes the backup file and the patch file
-                                File.Delete(oldFileBackupPath);
-                                File.Delete(patchFilePath);
-
-                                Logger.GetInstance().Log($"Successfully patched the file \"{oldFilePath}\"");
-
-                                appliedPatchesCount++;
-                                progress?.Report(new ProgressReport {
-
-                                    CompletionPercentage = ((double) appliedPatchesCount / (double) patchesList.Count) * 100,
-                                    Message = oldFilePath
-
-                                });
-
-                            } catch (Exception e) {
-
-                                Logger.GetInstance().Error($"Failed to patch the file \"{oldFilePath}\"", e);
-
-                            }
-
-                        }
-
-                    }
-
-                    /*
-                     * Reads the "deletefiles.txt" file and deletes every referenced file
-                    */
-
-                    this.UpdateState(GameState.REMOVING_DEPRECATED_FILES);
                     GameDeleteFiles deleteFilesHandler = new GameDeleteFiles(this.Settings.InstallationDirectory);
 
-                    if (!deleteFilesHandler.Exist()) {
+                    if (hdiffFilesHandler.Exist())
+                        hdiffFilesHandler.Delete();
+                    
+                    if (deleteFilesHandler.Exist())
+                        deleteFilesHandler.Delete();
 
-                        throw new GameException($"Can't find the file \"{deleteFilesHandler.FileName}\" inside the directory \"{deleteFilesHandler.Directory}\"");
+                    using (FileStream zipFileStream = File.OpenRead(zipFilePath)) {
 
-                    } else {
+                        /*
+                         * Unzips the game update
+                        */
 
-                        int removedFilesCount = 0;
-                        List<string> filesToRemove = deleteFilesHandler.Read();
+                        this.UpdateState(GameState.EXTRACTING_UPDATE);
+                        Logger.GetInstance().Log($"Decompressing the game update zip file...");
+                        
+                        try {
 
-                        Logger.GetInstance().Log($"Removing deprecated files...");
+                            ZipArchive zipArchive = new ZipArchive(zipFileStream, ZipArchiveMode.Read);
+                            // overwrite files = true
+                            zipArchive.ExtractToDirectory(this.Settings.InstallationDirectory, true, progress);
 
-                        foreach (string filePath in deleteFilesHandler.Read()) {
+                        } catch (Exception e) {
 
-                            string fullPath = Path.Join(this.Settings.InstallationDirectory, filePath);
+                            throw new GameException($"Failed to decompress the game update zip file", e);
 
-                            try {
+                        }
+                        
+                        Logger.GetInstance().Log($"Successfully finished decompressing the game's update's zip file");
 
-                                Logger.GetInstance().Log($"Removing the file \"{fullPath}\"...");
+                        if (hdiffFilesHandler.Exist()) {
 
-                                File.Delete(fullPath);
+                            /*
+                             * Reads the "hdifffiles.txt" file and apply the patches for every referenced file
+                            */
+
+                            this.UpdateState(GameState.PATCHING_FILES);
+                            Logger.GetInstance().Log($"Patching game's files...");
+
+                            HDiffPatch patcher = new HDiffPatch();
+                            int appliedPatchesCount = 0;
+                            List<GameHdiffFilesEntry> patchesList = hdiffFilesHandler.Read();
+
+                            foreach (GameHdiffFilesEntry entry in patchesList) {
+
+                                string oldFilePath = Path.Join(this.Settings.InstallationDirectory, entry.remoteName);
+                                string oldFileBackupPath = Path.Join(this.Settings.InstallationDirectory, entry.remoteName + ".bak");
+                                string patchFilePath = Path.Join(this.Settings.InstallationDirectory, entry.remoteName + ".hdiff");
                                 
-                                Logger.GetInstance().Log($"Successfully removed the file \"{fullPath}\"");
+                                try {
 
-                                removedFilesCount++;
-                                progress?.Report(new ProgressReport {
-                                    
-                                    CompletionPercentage = ((double) removedFilesCount / (double) filesToRemove.Count) * 100,
-                                    Message = fullPath
-                                    
-                                });
+                                    Logger.GetInstance().Log($"Patching the file \"{oldFilePath}\"...");
 
-                            } catch (Exception e) {
+                                    // Creates a backup of the file from current game's version
+                                    File.Copy(oldFilePath, oldFileBackupPath);
 
-                                Logger.GetInstance().Error($"Failed to remove the file \"{fullPath}\"", e);
+                                    // Loads its patch file into the patcher
+                                    patcher.Initialize(patchFilePath);
+
+                                    // Patches the old file (it becomes the newer/updated file)
+                                    patcher.Patch(oldFileBackupPath, oldFilePath);
+
+                                    // Removes the backup file and the patch file
+                                    File.Delete(oldFileBackupPath);
+                                    File.Delete(patchFilePath);
+
+                                    Logger.GetInstance().Log($"Successfully patched the file \"{oldFilePath}\"");
+
+                                    appliedPatchesCount++;
+                                    progress?.Report(new ProgressReport {
+                                        Done = appliedPatchesCount,
+                                        Total = patchesList.Count,
+                                        Message = oldFilePath
+                                    });
+
+                                } catch (Exception e) {
+
+                                    Logger.GetInstance().Error($"Failed to patch the file \"{oldFilePath}\"", e);
+
+                                }
 
                             }
 
                         }
 
-                        Logger.GetInstance().Log($"Finished removing deprecated files");
+                        if (deleteFilesHandler.Exist()) {
+
+                            /*
+                             * Reads the "deletefiles.txt" file and deletes every referenced file
+                            */
+
+                            this.UpdateState(GameState.REMOVING_DEPRECATED_FILES);
+                            Logger.GetInstance().Log($"Removing deprecated files...");
+
+                            int removedFilesCount = 0;
+                            List<string> filesToRemove = deleteFilesHandler.Read();
+
+                            foreach (string filePath in filesToRemove) {
+
+                                string fullPath = Path.Join(this.Settings.InstallationDirectory, filePath);
+
+                                try {
+
+                                    Logger.GetInstance().Log($"Removing the file \"{fullPath}\"...");
+
+                                    File.Delete(fullPath);
+                                    
+                                    Logger.GetInstance().Log($"Successfully removed the file \"{fullPath}\"");
+
+                                    removedFilesCount++;
+                                    progress?.Report(new ProgressReport {
+                                        Done = removedFilesCount,
+                                        Total = filesToRemove.Count,
+                                        Message = fullPath
+                                    });
+
+                                } catch (Exception e) {
+
+                                    Logger.GetInstance().Error($"Failed to remove the file \"{fullPath}\"", e);
+
+                                }
+
+                            }
+
+                            Logger.GetInstance().Log($"Finished removing deprecated files");
+
+                        }
 
                     }
 
@@ -574,11 +536,10 @@ namespace Dodoco.Core.Game {
                     }
 
                     ProgressReport report = new ProgressReport {
-
-                        CompletionPercentage = ((double) i / (double) entries.Count) * 100.0D,
+                        Done = i + 1,
+                        Total = entries.Count,
                         EstimatedRemainingTime = TimeSpan.FromSeconds(estimatedRemainingTime.Count >= 2 ? estimatedRemainingTime.Average() : 1),
                         Message = file.FullName
-
                     };
 
                     progress?.Report(report);
