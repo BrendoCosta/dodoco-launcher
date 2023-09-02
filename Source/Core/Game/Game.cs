@@ -248,13 +248,6 @@ namespace Dodoco.Core.Game {
 
                     this.UpdateState(GameState.DOWNLOADING_UPDATE);
 
-                    long avaliableStorageSpace = FileSystem.GetAvaliableStorageSpace(this.Settings.InstallationDirectory);
-                    if (hdiffInfo.size >= avaliableStorageSpace) {
-
-                        throw new GameException($"There is no enough storage space available to download the game update. This update requires {DataUnitFormatter.Format(hdiffInfo.size)} of storage space, but there is only {DataUnitFormatter.Format(avaliableStorageSpace)} avaliable");
-
-                    }
-
                     if (File.Exists(zipFilePath) && new Hash(MD5.Create()).ComputeHash(zipFilePath).ToUpper() == hdiffInfo.md5.ToUpper()) {
 
                         Logger.GetInstance().Log($"Found the game's update's zip file already inside the game's installation directory, skipping the download");
@@ -262,6 +255,13 @@ namespace Dodoco.Core.Game {
                     } else {
 
                         try {
+
+                            long avaliableStorageSpace = FileSystem.GetAvaliableStorageSpace(this.Settings.InstallationDirectory);
+                            if (hdiffInfo.size >= avaliableStorageSpace) {
+
+                                throw new GameException($"There is no enough storage space available to download the game update. This update requires {DataUnitFormatter.Format(hdiffInfo.size)} of storage space, but there is only {DataUnitFormatter.Format(avaliableStorageSpace)} avaliable");
+
+                            }
 
                             Logger.GetInstance().Log($"Downloading the game update...");
                             await Client.GetInstance().DownloadFileAsync(new Uri(hdiffInfo.path), zipFilePath, progress);
