@@ -10,7 +10,15 @@ import { LauncherDependency } from "./Generated/Dodoco/Core/Launcher/LauncherDep
 import { LauncherState } from "./Generated/Dodoco/Core/Launcher/LauncherState";
 import { WinePackageManagerState } from "./Generated/Dodoco/Core/Wine/WinePackageManagerState";
 
+interface ConfirmPopupParams {
+
+    text: string,
+    callback: (e: boolean) => void;
+
+}
+
 export const _AppError: Writable<CommonErrorData[]> = writable([] as CommonErrorData[]);
+export const _ConfirmPopup: Writable<ConfirmPopupParams[]> = writable([] as ConfirmPopupParams[]);
 export const _MainViewData = writable({} as MainViewData);
 export const _SplashViewData = writable({} as SplashViewData);
 export const _WineControllerViewData = writable({} as WineControllerViewData);

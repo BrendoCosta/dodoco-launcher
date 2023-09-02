@@ -99,13 +99,16 @@
 
     $: GetProgress = (): number => {
 
-        return Math.floor($_MainViewData._ProgressReport?.CompletionPercentage ?? 0);
+        if ($_MainViewData._ProgressReport == null)
+            return 0;
+
+        return Math.floor(($_MainViewData._ProgressReport.Done / $_MainViewData._ProgressReport.Total) * 100);
 
     }
 
-    $: GetBytesPerSecond = (): string => {
+    $: GetRate = (): string => {
 
-        return DataUnitFormatter.Format($_MainViewData._ProgressReport?.BytesPerSecond ?? 0) + "/s";
+        return DataUnitFormatter.Format($_MainViewData._ProgressReport?.Rate ?? 0) + "/s";
 
     }
 
@@ -113,13 +116,12 @@
 
         if ($_MainViewData._ProgressReport) {
 
-            return ($_MainViewData._ProgressReport.EstimatedRemainingTime as string).split(":").map(e => parseInt(e).toString().padStart(2, "0")).join(":");
-
-        } else {
-
-            return "";
+            if ($_MainViewData._ProgressReport.EstimatedRemainingTime)
+                return ($_MainViewData._ProgressReport.EstimatedRemainingTime as string).split(":").map(e => parseInt(e).toString().padStart(2, "0")).join(":");
 
         }
+
+        return "";
 
     }
 
@@ -133,17 +135,21 @@
                         {#if $_LauncherDependency != LauncherDependency.NONE }
                             {#if $_LauncherDependency == LauncherDependency.GAME_DOWNLOAD }
                                 {#if $_GameState == GameState.DOWNLOADING }
-                                    { $i18nInstance.t("main.message.game_state.downloading", { percentage: GetProgress(), remaining_time: GetEta(), download_rate: GetBytesPerSecond() }) }
+                                    { $i18nInstance.t("main.message.game_state.downloading", { percentage: GetProgress(), remaining_time: GetEta(), download_rate: GetRate() }) }
                                 {:else if $_GameState == GameState.RECOVERING_DOWNLOADED_SEGMENTS }
                                     { $i18nInstance.t("main.message.game_state.recovering_downloaded_segments", { percentage: GetProgress() }) }
                                 {:else if $_GameState == GameState.EXTRACTING_DOWNLOADED_SEGMENTS }
-                                    { $i18nInstance.t("main.message.game_state.extracting_downloaded_segments", { percentage: GetProgress(), remaining_time: GetEta(), decompression_rate: GetBytesPerSecond() }) }
+                                    { $i18nInstance.t("main.message.game_state.extracting_downloaded_segments", { percentage: GetProgress(), remaining_time: GetEta(), decompression_rate: GetRate() }) }
                                 {:else}
                                     { $i18nInstance.t("main.message.dependency.game_download") }
                                 {/if}
                             {:else if $_LauncherDependency == LauncherDependency.GAME_UPDATE }
                                 {#if $_GameState == GameState.DOWNLOADING_UPDATE }
-                                    { $i18nInstance.t("main.message.game_state.downloading_update", { percentage: GetProgress(), remaining_time: GetEta(), download_rate: GetBytesPerSecond() }) }
+                                    { $i18nInstance.t("main.message.game_state.downloading_update", { percentage: GetProgress(), remaining_time: GetEta(), download_rate: GetRate() }) }
+                                {:else if $_GameState == GameState.CHECKING_INTEGRITY }
+                                    { $i18nInstance.t("main.message.game_state.checking_integrity", { percentage: GetProgress(), remaining_time: GetEta() }) }
+                                {:else if $_GameState == GameState.REPAIRING_FILES }
+                                    { $i18nInstance.t("main.message.game_state.repairing_files", { percentage: GetProgress(), remaining_time: GetEta(), download_rate: GetRate() }) }
                                 {:else if $_GameState == GameState.EXTRACTING_UPDATE }
                                     { $i18nInstance.t("main.message.game_state.extracting_update") }
                                 {:else if $_GameState == GameState.PATCHING_FILES }
@@ -157,7 +163,7 @@
                                 { $i18nInstance.t("main.message.dependency.wine_configuration") }
                             {:else if $_LauncherDependency == LauncherDependency.WINE_DOWNLOAD }
                                 {#if $_WinePackageManagerState == WinePackageManagerState.DOWNLOADING_PACKAGE }
-                                    { $i18nInstance.t("main.message.wine_package_manager_state.downloading_package", { percentage: GetProgress(), remaining_time: GetEta(), download_rate: GetBytesPerSecond() }) }
+                                    { $i18nInstance.t("main.message.wine_package_manager_state.downloading_package", { percentage: GetProgress(), remaining_time: GetEta(), download_rate: GetRate() }) }
                                 {:else if $_WinePackageManagerState == WinePackageManagerState.DECOMPRESSING_PACKAGE }
                                     { $i18nInstance.t("main.message.wine_package_manager_state.decompressing_package") }
                                 {:else if $_WinePackageManagerState == WinePackageManagerState.CHECKING_PACKAGE_CHECKSUM }
@@ -172,7 +178,7 @@
                             {#if $_GameState == GameState.CHECKING_INTEGRITY }
                                 { $i18nInstance.t("main.message.game_state.checking_integrity", { percentage: GetProgress(), remaining_time: GetEta() }) }
                             {:else if $_GameState == GameState.REPAIRING_FILES }
-                                { $i18nInstance.t("main.message.game_state.repairing_files", { percentage: GetProgress(), remaining_time: GetEta(), download_rate: GetBytesPerSecond() }) }
+                                { $i18nInstance.t("main.message.game_state.repairing_files", { percentage: GetProgress(), remaining_time: GetEta(), download_rate: GetRate() }) }
                             {/if}
                         {/if}
                         {#if LauncherIsBusy() && $_MainViewData._ProgressReport?.Message }

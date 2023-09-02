@@ -26,7 +26,7 @@
                 </div>
             </div>
             <div class="w-full h-1/5 inline-flex justify-center gap-x-6">
-                <button class="input w-full" on:click={() => Root.Choose(true) }>{ confirm ?? $i18nInstance.t("component.popup.button_confirm") }</button>
+                <button data-role="button" data-highlight class="w-full" on:click={() => Root.Choose(true) }>{ confirm ?? $i18nInstance.t("component.popup.button_confirm") }</button>
             </div>
         </div>
     </ScoopedFrame>

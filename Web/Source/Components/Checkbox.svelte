@@ -7,7 +7,7 @@
 
 </script>
 {#if show}
-    <div on:click={() => (checked = !checked)} class="input checkbox {checked ? "checked" : ""}">
+    <div data-role="input checkbox" on:click={() => (checked = !checked)} data-checked={checked ? "checked" : undefined}>
         {#if checked}
             <Icon icon="mingcute:check-fill" />
         {/if}

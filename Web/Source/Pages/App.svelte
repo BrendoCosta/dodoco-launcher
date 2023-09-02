@@ -1,7 +1,7 @@
 <script lang="ts">
 	
-    import { Popup } from "@Dodoco/Components";
-	import { _AppError, _LauncherState, i18nInstance } from "@Dodoco/Global";
+    import { ConfirmPopup, Popup } from "@Dodoco/Components";
+	import { _AppError, _ConfirmPopup, _LauncherState, i18nInstance } from "@Dodoco/Global";
 	import { onMount } from "svelte";
 	import Router, { push } from "svelte-spa-router";
 	// Generated types
@@ -33,7 +33,7 @@
 	<link rel="stylesheet" href="/Stylesheet/Style.css">
 	<title>Dodoco Launcher</title>
 </svelte:head>
-<div id="main-wrapper" class="w-full h-full">
+<div data-theme="mhy-ui" id="main-wrapper" class="w-full h-full">
 	<Router {routes}/>
 	{#each $_AppError as err }
 		<Popup open={true} title={`${$i18nInstance.t("component.popup.error_title")} ${err.code ?? ""}`} callback={() => {
@@ -60,5 +60,13 @@
 				{/if}
 			</p>
 		</Popup>
+	{/each}
+	{#each $_ConfirmPopup as popup }
+		<ConfirmPopup open={true} callback={(e) => {
+			popup.callback(e);
+			_ConfirmPopup.update(arr => { arr.pop(); return arr });
+		}}>
+			<p>{ popup.text }</p>
+		</ConfirmPopup>
 	{/each}
 </div>

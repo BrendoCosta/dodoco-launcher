@@ -1,35 +1,32 @@
 <script lang="ts">
 
-    import { RadioGroup } from "./RadioGroup";
-    
-    import { onMount } from "svelte";
     import { forwardEventsBuilder } from "@smui/common/internal";
     import { get_current_component } from "svelte/internal";
     const forwardEvents = forwardEventsBuilder(get_current_component());
 
-    export let show: boolean = true;
-    export let selected: boolean = false;
-    export let group: RadioGroup<any>;
+    export let selected: any;
     export let value: any;
 
-    onMount(() => {
+</script>
+<input class="opacity-0 w-0 h-0" bind:group={selected} type="radio" value={value} />
+<div data-role="input radio" on:click={() => (selected = value)} use:forwardEvents>
+    {#if selected == value}
+        <div data-role="check"/>
+    {/if}
+</div>
 
-        if (selected) MarkAsSelected()
+<style lang="postcss">
 
-    });
+    .dodoco.input.radio {
 
-    let MarkAsSelected = () => {
-
-        group.Selected = value;
-        group = group;
+        @apply rounded-full w-6 h-6 border-[2px] border-gray-200 flex flex-row justify-center items-center p-1
 
     }
 
-</script>
-{#if show}
-    <div on:click={MarkAsSelected} use:forwardEvents class="input radio">
-        {#if group.Selected == value }
-            <div class="check"></div>
-        {/if}
-    </div>
-{/if}
+    .dodoco.input.radio .check {
+
+        @apply rounded-[50%] bg-zinc-700 w-full h-full
+
+    }
+
+</style>

@@ -8,6 +8,7 @@ export { default as Popup } from "./Popup.svelte";
 export { default as ProgressBar } from "./ProgressBar.svelte";
 export { default as Radio } from "./Radio.svelte";
 export { default as ScoopedFrame } from "./ScoopedFrame.svelte";
+export { default as TextInput } from "./TextInput.svelte";
 export type { IComponentControl } from "./IComponentControl";
 export type { IConfirmPopupControl } from "./IConfirmPopupControl";
 export type { TConfirmPopupProperties } from "./TConfirmPopupProperties";

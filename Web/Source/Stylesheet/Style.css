@@ -49,74 +49,92 @@ html, body {
 
 }
 
-.input {
+div[data-theme="mhy-ui"] div[data-role="form"] section {
 
-    @apply transition-all ease-in-out text-zinc-700 rounded-md text-sm hover:bg-gray-200/70 cursor-pointer
-
-}
-
-.input.text {
-
-    @apply py-2 px-4 border-[2px] border-gray-300 rounded-md hover:bg-transparent cursor-auto caret-zinc-700 focus:outline-golden
+    @apply inline-flex items-center
 
 }
 
-.input.checkbox {
+div[data-theme="mhy-ui"] div[data-role="form"] section label {
+
+    @apply ms-2
+
+}
+
+div[data-theme="mhy-ui"] div[data-role="form"] h3 {
+
+    @apply text-lg hy-impact-font
+
+}
+
+div[data-theme="mhy-ui"] *[data-role^="input"] {
+
+    @apply transition-all ease-in-out text-zinc-700 rounded-md hover:bg-gray-200/70
+
+}
+
+div[data-theme="mhy-ui"] div[data-role="input checkbox"] {
 
     @apply w-6 h-6 border-[2px] border-gray-200 flex flex-row justify-center items-center
 
 }
 
-.input.checkbox.checked {
+div[data-theme="mhy-ui"] div[data-role="input checkbox"][data-checked] {
 
     @apply bg-zinc-700 text-lightgolden
 
 }
 
-.input.radio {
+div[data-theme="mhy-ui"] div[data-role="input radio"] {
 
-    @apply rounded-full w-6 h-6 border-[2px] border-gray-200 flex flex-row justify-center items-center p-1
+    @apply rounded-full w-6 h-6 border-[2px] border-gray-200 flex flex-row justify-center items-center p-1 cursor-pointer
 
 }
 
-.input.radio .check {
+div[data-theme="mhy-ui"] div[data-role="input radio"] > div[data-role="check"] {
 
     @apply rounded-[50%] bg-zinc-700 w-full h-full
 
 }
 
-.input.listbox-button {
+div[data-theme="mhy-ui"] input[data-role="input text"] {
 
-    @apply w-64 flex flex-row items-center justify-between py-2 px-4 gap-x-3
-
-}
-
-.input.dropdown {
-
-    @apply absolute z-50 w-64 flex flex-col mt-1 border-[2px] border-gray-200 bg-white text-sm text-left rounded-md [&>:first-child]:rounded-t-md [&>:last-child]:rounded-b-md
+    @apply w-full py-2 px-4 caret-zinc-700 rounded-md outline-none focus:text-golden border-[2px] border-gray-200
 
 }
 
-.input.dropdown .item {
+div[data-theme="mhy-ui"] button[data-role="button"], div[data-theme="mhy-ui"] .listbox-button {
 
-    @apply py-3 px-4 text-zinc-700 hover:bg-gray-200/80
-
-}
-
-.input.dropdown .item:hover {
-
-    @apply text-golden
+    @apply transition-all ease-in-out bg-white text-golden font-medium border-[2px] border-gray-200 py-3 px-9 inline-flex items-center justify-center cursor-pointer rounded-md hover:bg-gray-200/70 disabled:opacity-80 disabled:cursor-default
 
 }
 
-button.input {
-
-    @apply bg-white text-golden font-medium border-[2px] border-gray-200 py-3 px-9 inline-flex items-center justify-center disabled:opacity-80 disabled:cursor-default
-
-}
-
-button.input.highlight {
+div[data-theme="mhy-ui"] button[data-role="button"][data-highlight] {
 
     @apply bg-zinc-700 text-lightgolden border-none py-3 px-9 inline-flex items-center justify-center hover:bg-zinc-800
+
+}
+
+div[data-theme="mhy-ui"] .listbox-button {
+
+    @apply inline-flex items-center justify-between py-2 px-4 gap-x-3
+
+}
+
+div[data-theme="mhy-ui"] .listbox-button, div[data-theme="mhy-ui"] .listbox-dropdown {
+
+    @apply w-64
+
+}
+
+div[data-theme="mhy-ui"] .listbox-dropdown {
+
+    @apply absolute z-50 flex flex-col mt-1 border-[2px] border-gray-200 bg-white text-left rounded-md [&>:first-child]:rounded-t-md [&>:last-child]:rounded-b-md
+
+}
+
+div[data-theme="mhy-ui"] .listbox-dropdown .item {
+
+    @apply py-3 px-4 text-zinc-700 cursor-pointer hover:bg-gray-200/80 hover:text-golden
 
 }
