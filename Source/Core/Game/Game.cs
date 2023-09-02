@@ -110,11 +110,13 @@ namespace Dodoco.Core.Game {
                     }
 
                     this.UpdateState(GameState.DOWNLOADING);
+                    double doneFromLastReport = 0;
 
                     ProgressReporter<ProgressReport> segmentProgress = new ProgressReporter<ProgressReport>();
                     segmentProgress.ProgressChanged += (object? s, ProgressReport e) => {
 
-                        totalBytesTransferred += e.Done;
+                        totalBytesTransferred += e.Done - doneFromLastReport;
+                        doneFromLastReport = e.Done;
 
                         ProgressReport generalProgress = new ProgressReport {
                             Done = totalBytesTransferred,
