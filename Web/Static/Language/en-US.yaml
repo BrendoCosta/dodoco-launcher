@@ -18,20 +18,19 @@ main:
         while ({{percentage}}%)
       extracting_downloaded_segments: >-
         Extracting downloaded game's segments, it may take a while
-        ({{percentage}}% / Remaining time: {{remaining_time}} / Decompression
-        rate: {{decompression_rate}})
+        ({{percentage}}%)
       downloading_update: >-
         Downloading game's update ({{percentage}}% / Remaining time:
         {{remaining_time}} / Download rate: {{download_rate}})
-      extracting_update: Decompressing the game's update
-      patching_files: Patching the game's files ({{percentage}}%)
-      removing_deprecated_files: Removing deprecated files ({{percentage}}%)
       checking_integrity: >-
         Checking game's files integrity ({{percentage}}% / Remaining time:
         {{remaining_time}})
       repairing_files: >-
         Downloading and repairing game's files ({{percentage}}% / Remaining
         time: {{remaining_time}} / Download rate: {{download_rate}})
+      extracting_update: Decompressing the game's update
+      patching_files: Patching the game's files ({{percentage}}%)
+      removing_deprecated_files: Removing deprecated files ({{percentage}}%)
     dependency:
       game_download: >-
         Please download the game or select a directory with an existing game
@@ -77,6 +76,8 @@ settings:
         button_text: Search for launcher's updates
         auto_search_for_updates: Automatically search for updates on start
     game:
+      installation_directory:
+        title: Installation Directory
       server:
         title: Game Server
         warning: >-
@@ -86,8 +87,6 @@ settings:
         title: Integrity
         description: Verify and fix missing or corrupted game's files
         button_text: Start repair
-      installation_directory:
-        title: Installation Directory
     wine:
       version:
         title: Version
@@ -100,7 +99,7 @@ settings:
         filesize: 'Filesize: {{filesize}}'
         downloads_count: 'Downloads count: {{downloads_count}}'
         download: Download
-  button:
-    save_settings: Save settings
   confirm:
     save_settings: Apply and save the selected settings?
+  button:
+    save_settings: Save settings

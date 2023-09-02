@@ -18,20 +18,19 @@ main:
         um pouco ({{percentage}}%)
       extracting_downloaded_segments: >-
         Extraindo os segmentos do jogo baixados, isso pode demorar um pouco
-        ({{percentage}}% / Tempo restante: {{remaining_time}} / Taxa de
-        descompressão: {{decompression_rate}})
+        ({{percentage}}%)
       downloading_update: >-
         Baixando a atualização do jogo ({{percentage}}% / Tempo restante:
         {{remaining_time}} / Taxa de transferência: {{download_rate}})
-      extracting_update: Extraindo a atualização do jogo
-      patching_files: Atualizando os arquivos do jogo ({{percentage}}%)
-      removing_deprecated_files: Removendo arquivos desatualizados ({{percentage}}%)
       checking_integrity: >-
         Verificando a integridade dos arquivos do jogo ({{percentage}}% / Tempo
         restante: {{remaining_time}})
       repairing_files: >-
         Baixando e reparando os arquivos do jogo ({{percentage}}% / Tempo
         restante: {{remaining_time}} / Taxa de transferência: {{download_rate}})
+      extracting_update: Extraindo a atualização do jogo
+      patching_files: Atualizando os arquivos do jogo ({{percentage}}%)
+      removing_deprecated_files: Removendo arquivos desatualizados ({{percentage}}%)
     dependency:
       game_download: >-
         Por favor, baixe o jogo ou selecione um diretório com uma instalação
@@ -77,6 +76,8 @@ settings:
         button_text: Buscar por atualizações do launcher
         auto_search_for_updates: Buscar por atualizações automaticamente ao inicializar
     game:
+      installation_directory:
+        title: Diretório de Instalação
       server:
         title: Servidor do Jogo
         warning: >-
@@ -86,8 +87,6 @@ settings:
         title: Integridade
         description: Verificar e corrigir arquivos do jogo em falta ou corrompidos
         button_text: Iniciar reparo
-      installation_directory:
-        title: Diretório de Instalação
     wine:
       version:
         title: Versão
@@ -100,7 +99,7 @@ settings:
         filesize: 'Tamanho do arquivo: {{filesize}}'
         downloads_count: 'Quantidade de downloads: {{downloads_count}}'
         download: Baixar
-  button:
-    save_settings: Salvar configurações
   confirm:
     save_settings: Aplicar e salvar as configurações selecionadas?
+  button:
+    save_settings: Salvar configurações
