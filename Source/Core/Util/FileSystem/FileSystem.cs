@@ -4,12 +4,12 @@ namespace Dodoco.Core.Util.FileSystem {
 
     public class FileSystem {
 
-        public static long GetAvaliableStorageSpace(string directory) {
+        public static long GetAvailableStorageSpace(string directory) {
 
             /*
              * If the directory actually doesn't exist, the
              * "new DriveInfo(directory)" will fail, so we
-             * create the directory, get the free space avaliable
+             * create the directory, get the free space available
              * and then delete it.
             */
 

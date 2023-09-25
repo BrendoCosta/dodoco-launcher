@@ -1,6 +1,7 @@
 using Dodoco.Core;
 using Dodoco.Core.Launcher;
 using Dodoco.Core.Game;
+using Dodoco.Core.Network.Api.Company.Launcher.Resource;
 using Dodoco.Core.Util.Log;
 
 namespace Dodoco.Application.Control {
@@ -47,18 +48,45 @@ namespace Dodoco.Application.Control {
 
         }
 
-        public async Task Update() {
+        public async Task<Resource.Game?> GetUpdateAsync() {
 
             if (this.launcher.Game == null)
                 throw new UninitializedEntityException();
 
-            ProgressReporter<ProgressReport> progress = new ProgressReporter<ProgressReport>();
+            return await this.launcher.Game.GetUpdateAsync();
+
+        }
+
+        public async Task<Resource.Game?> GetPreUpdateAsync() {
+
+            if (this.launcher.Game == null)
+                throw new UninitializedEntityException();
+
+            return await this.launcher.Game.GetPreUpdateAsync();
+
+        }
+
+        public async Task<bool> IsPreUpdateDownloadedAsync() {
+
+            if (this.launcher.Game == null)
+                throw new UninitializedEntityException();
+
+            return await this.launcher.Game.IsPreUpdateDownloadedAsync();
+
+        }
+
+        public async Task UpdateAsync(bool isPreUpdate) {
+
+            if (this.launcher.Game == null)
+                throw new UninitializedEntityException();
+
+            ProgressReporter<ProgressReport> reporter = new ProgressReporter<ProgressReport>();
             // Reports the progress to the main view
-            progress.ProgressChanged += (object? sender, ProgressReport report) => MainController.ViewData._ProgressReport = report;
+            reporter.ProgressChanged += (object? sender, ProgressReport report) => MainController.ViewData._ProgressReport = report;
 
             try {
 
-                await this.launcher.Game.Update(progress);
+                await this.launcher.Game.UpdateAsync(isPreUpdate, reporter, CancellationToken.None);
 
             } catch (Exception e) {
 

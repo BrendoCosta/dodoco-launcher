@@ -22,6 +22,7 @@
     let settingsModal: ModalControl;
     let confirmGameDownload: ConfirmPopupControl;
     let latestWineRelease: Promise<Release> = WineController.GetControllerInstance().GetLatestRelease();
+    let preUpdating: boolean = false;
 
     $: LauncherIsBusy = (): boolean => {
 
@@ -75,7 +76,7 @@
 
                 } else if ($_LauncherDependency == LauncherDependency.GAME_UPDATE) {
 
-                    GameController.GetControllerInstance().Update();
+                    GameController.GetControllerInstance().UpdateAsync(false);
 
                 }
 
@@ -189,8 +190,28 @@
                         <ProgressBar value={GetProgress()} width="1/4"/>
                     {/if}
                     <ButtonGroup>
-                        <Button on:click={() => settingsModal.Open() } disabled={LauncherIsBusy()}><Icon icon="material-symbols:settings"/></Button>
-                        <Button focused disabled={LauncherIsBusy()} on:click={() => MainButtonClick()}>
+                        <Button on:click={() => settingsModal.Open() } disabled={LauncherIsBusy() || preUpdating}><Icon icon="material-symbols:settings"/></Button>
+                        {#await GameController.GetControllerInstance().GetPreUpdateAsync() then preUpdate}
+                            {#if preUpdate}
+                                {#await GameController.GetControllerInstance().IsPreUpdateDownloadedAsync() then preUpdateDownloaded}
+                                    {#if !preUpdateDownloaded}
+                                        <Button on:click={async (e) => {
+
+                                            try {
+                                                preUpdating = true;
+                                                await GameController.GetControllerInstance().UpdateAsync(true);
+                                            }
+                                            catch (err) { ErrorHandler.PushError(err); }
+                                            preUpdating = false;
+
+                                        }} disabled={ preUpdating }>
+                                            <Icon icon="material-symbols:deployed-code-update-rounded" />&nbsp;Pre-update
+                                        </Button>
+                                    {/if}
+                                {/await}
+                            {/if}
+                        {/await}
+                        <Button focused disabled={LauncherIsBusy() && !preUpdating} on:click={() => MainButtonClick()}>
                             {#if $_LauncherDependency == LauncherDependency.WINE_DOWNLOAD }
                                 {#await latestWineRelease then result}
                                     <Icon icon="material-symbols:cloud-download-rounded" />&nbsp;{ $i18nInstance.t("main.button.main.download_wine", { version: result.tag_name } ) }

@@ -50,10 +50,46 @@ namespace Dodoco.Core.Game {
 
         }
 
-        public virtual async Task<bool> IsUpdateAvaliable() {
+        public virtual async Task<Resource.Game?> GetUpdateAsync() {
 
             Resource latestResource = await this.apiFactory.FetchLauncherResource();
-            return Version.Parse(latestResource.data.game.latest.version) > GameInstallationManager.SearchForGameVersion(this.Settings.InstallationDirectory, this.Settings.Server);
+
+            if (!latestResource.IsSuccessfull())
+                throw new GameException("Invalid resource");
+
+            if (Version.Parse(latestResource.data.game.latest.version) > GameInstallationManager.SearchForGameVersion(this.Settings.InstallationDirectory, this.Settings.Server))
+                return latestResource.data.game;
+
+            return null;
+
+        }
+
+        public virtual async Task<Resource.Game?> GetPreUpdateAsync() {
+
+            Resource latestResource = await this.apiFactory.FetchLauncherResource();
+            
+            if (!latestResource.IsSuccessfull())
+                throw new GameException("Invalid resource");
+
+            return latestResource.data.pre_download_game;
+
+        }
+
+        public virtual async Task<bool> IsPreUpdateDownloadedAsync() {
+
+            Resource.Game? gameResource = await this.GetPreUpdateAsync();
+
+            if (gameResource != null) {
+
+                Version remoteVersion = Version.Parse(((Resource.Game) gameResource).latest.version);
+                string packageFilenamePattern = @$"(game_{this.Version.ToString().Replace(".", @"\.")}_{remoteVersion.ToString().Replace(".", @"\.")}_hdiff_(\w*)\.zip)";
+
+                if (Directory.EnumerateFiles(this.Settings.InstallationDirectory).ToList().Exists(someFile => Regex.IsMatch(Path.GetFileName(someFile), packageFilenamePattern)))
+                    return true;
+
+            }
+
+            return false;
 
         }
 
@@ -138,9 +174,9 @@ namespace Dodoco.Core.Game {
                     Logger.GetInstance().Log($"Downloading the game segment \"{segmentFileName}\" (segment no. {i+1} of {latestResource.data.game.latest.segments.Count})");
                     
                     Logger.GetInstance().Log($"Checking storage device available space...");
-                    long storageFreeBytes = FileSystem.GetAvaliableStorageSpace(this.Settings.InstallationDirectory); 
+                    long storageFreeBytes = FileSystem.GetAvailableStorageSpace(this.Settings.InstallationDirectory); 
                     if (segment.package_size > storageFreeBytes)
-                        throw new GameException($"There is no enough storage space available to download the game's segment {i+1}. The download's process requires {DataUnitFormatter.Format(segment.package_size)} of storage space, but there is only {DataUnitFormatter.Format(storageFreeBytes)} avaliable. Try freeing up storage space and restart the download; already downloaded files will not need to be redownloaded");
+                        throw new GameException($"There is no enough storage space available to download the game's segment {i+1}. The download's process requires {DataUnitFormatter.Format(segment.package_size)} of storage space, but there is only {DataUnitFormatter.Format(storageFreeBytes)} available. Try freeing up storage space and restart the download; already downloaded files will not need to be redownloaded");
 
                     await Client.GetInstance().DownloadFileAsync(new Uri(segment.path), Path.Join(this.Settings.InstallationDirectory, segmentFileName), segmentProgress, token);
 
@@ -188,9 +224,9 @@ namespace Dodoco.Core.Game {
 
                     ZipArchive zipArchive = new ZipArchive(segmentsMultiStream, ZipArchiveMode.Read);
 
-                    long storageFreeBytes = FileSystem.GetAvaliableStorageSpace(this.Settings.InstallationDirectory);
+                    long storageFreeBytes = FileSystem.GetAvailableStorageSpace(this.Settings.InstallationDirectory);
                     if (zipArchive.GetFullLength() > storageFreeBytes)
-                        throw new GameException($"There is no enough storage space available to extract the game's segments. This process requires {DataUnitFormatter.Format(zipArchive.GetFullLength())} of storage space, but there is only {DataUnitFormatter.Format(storageFreeBytes)} avaliable. Try freeing up storage space and restart the download; already downloaded files will not need to be redownloaded");
+                        throw new GameException($"There is no enough storage space available to extract the game's segments. This process requires {DataUnitFormatter.Format(zipArchive.GetFullLength())} of storage space, but there is only {DataUnitFormatter.Format(storageFreeBytes)} available. Try freeing up storage space and restart the download; already downloaded files will not need to be redownloaded");
                     
                     zipArchive.ExtractToDirectory(this.Settings.InstallationDirectory, true, progress);
 
@@ -213,242 +249,315 @@ namespace Dodoco.Core.Game {
 
         }
 
-        public virtual async Task Update(ProgressReporter<ProgressReport>? progress = null) {
+        public virtual async Task UpdateAsync(bool isPreUpdate, ProgressReporter<ProgressReport>? reporter = null, CancellationToken token = default) {
 
             if (!this.IsInstalled)
                 throw new GameException("Game is not installed");
-
-            if (!await this.IsUpdateAvaliable())
-                throw new GameException("Game is already updated");
-                
-            Resource latestResource = await this.apiFactory.FetchLauncherResource();
-
-            if (!latestResource.IsSuccessfull())
-                throw new GameException("Invalid resource");
 
             GameState previousState = this.State;
 
             try {
 
-                Version remoteVersion = Version.Parse(latestResource.data.game.latest.version);
-                if (this.Version >= remoteVersion)
-                    throw new GameException($"Game is already updated");
+                Resource.Game gameResource = isPreUpdate ? await this.GetPreUpdateAsync() ?? throw new GameException("Game pre-update is not available") : await this.GetUpdateAsync() ?? throw new GameException("Game update is not available");
 
-                Logger.GetInstance().Log($"Updating the game from version \"{this.Version.ToString()}\" to \"{remoteVersion.ToString()}\"...");
+                Version remoteVersion = Version.Parse(gameResource.latest.version);
+                string packageFilenamePattern = @$"(game_{this.Version.ToString().Replace(".", @"\.")}_{remoteVersion.ToString().Replace(".", @"\.")}_hdiff_(\w*)\.zip)";
 
-                string zipFileNamePattern = @$"(game_{this.Version.ToString().Replace(".", @"\.")}_{remoteVersion.ToString().Replace(".", @"\.")}_hdiff_(\w*)\.zip)";
-                
-                if (latestResource.data.game.diffs.Exists(d => Regex.IsMatch(d.name, zipFileNamePattern))) {
+                Logger.GetInstance().Log($"{(isPreUpdate ? "Pre-updating" : "Updating")} the game to version {remoteVersion.ToString()}...");
 
-                    Resource.Diff hdiffInfo = latestResource.data.game.diffs.Find(d => Regex.IsMatch(d.name, zipFileNamePattern));
-                    string zipFilePath = Path.Join(this.Settings.InstallationDirectory, hdiffInfo.name);
+                if (gameResource.diffs.Exists(d => Regex.IsMatch(d.name, packageFilenamePattern))) {
 
-                    /*
-                     * Downloads the update's zip file or skips
-                     * its download if already in game's directory
-                    */
-
-                    this.UpdateState(GameState.DOWNLOADING_UPDATE);
-
-                    if (File.Exists(zipFilePath) && new Hash(MD5.Create()).ComputeHash(zipFilePath).ToUpper() == hdiffInfo.md5.ToUpper()) {
-
-                        Logger.GetInstance().Log($"Found the game's update's zip file already inside the game's installation directory, skipping the download");
-
-                    } else {
-
-                        try {
-
-                            long avaliableStorageSpace = FileSystem.GetAvaliableStorageSpace(this.Settings.InstallationDirectory);
-                            if (hdiffInfo.size >= avaliableStorageSpace) {
-
-                                throw new GameException($"There is no enough storage space available to download the game update. This update requires {DataUnitFormatter.Format(hdiffInfo.size)} of storage space, but there is only {DataUnitFormatter.Format(avaliableStorageSpace)} avaliable");
-
-                            }
-
-                            Logger.GetInstance().Log($"Downloading the game update...");
-                            await Client.GetInstance().DownloadFileAsync(new Uri(hdiffInfo.path), zipFilePath, progress);
-                            
-                            Logger.GetInstance().Log($"Succesfully downloaded the game update");
-                            Logger.GetInstance().Log($"Checking game's update's zip file's integrity...");
-
-                            string zipFileHash = new Hash(MD5.Create()).ComputeHash(zipFilePath);
-
-                            if (zipFileHash.ToUpper() == hdiffInfo.md5.ToUpper()) {
-
-                                Logger.GetInstance().Log($"The downloaded file's hash match the expected remote hash");
-
-                            } else {
-
-                                throw new GameException($"The downloaded file's hash ({zipFileHash}) doesn't match the expected remote hash ({hdiffInfo.md5.ToUpper()})");
-
-                            }
-
-                        } catch (NetworkException e) {
-
-                            throw new GameException($"Failed to update the game due to a network error", e);
-
-                        }
-
-                    }
-
-                    /*
-                     * Before apply the update, all game's files from the
-                     * current game version must be upright,
-                     * otherwise the hdiff patches will fail to apply and the
-                     * game's installation will stay in an inconsistent state.
-                    */
-
-                    await this.RepairGameFiles(progress);
-
-                    /*
-                     * Removes the old update's files
-                    */
-
-                    GameHdiffFiles hdiffFilesHandler = new GameHdiffFiles(this.Settings.InstallationDirectory);
-                    GameDeleteFiles deleteFilesHandler = new GameDeleteFiles(this.Settings.InstallationDirectory);
-
-                    if (hdiffFilesHandler.Exist())
-                        hdiffFilesHandler.Delete();
+                    Resource.Diff diff = gameResource.diffs.Find(d => Regex.IsMatch(d.name, packageFilenamePattern));
+                    string packageFileFullPath = Path.Join(this.Settings.InstallationDirectory, diff.name);
+                    await this.DownloadUpdatePackageAsync(diff, reporter, token);
                     
-                    if (deleteFilesHandler.Exist())
-                        deleteFilesHandler.Delete();
+                    if (!isPreUpdate) {
 
-                    using (FileStream zipFileStream = File.OpenRead(zipFilePath)) {
-
-                        /*
-                         * Unzips the game update
-                        */
-
-                        this.UpdateState(GameState.EXTRACTING_UPDATE);
-                        Logger.GetInstance().Log($"Decompressing the game update zip file...");
-                        
-                        try {
-
-                            ZipArchive zipArchive = new ZipArchive(zipFileStream, ZipArchiveMode.Read);
-                            // overwrite files = true
-                            zipArchive.ExtractToDirectory(this.Settings.InstallationDirectory, true, progress);
-
-                        } catch (Exception e) {
-
-                            throw new GameException($"Failed to decompress the game update zip file", e);
-
-                        }
-                        
-                        Logger.GetInstance().Log($"Successfully finished decompressing the game's update's zip file");
-
-                        if (hdiffFilesHandler.Exist()) {
-
-                            /*
-                             * Reads the "hdifffiles.txt" file and apply the patches for every referenced file
-                            */
-
-                            this.UpdateState(GameState.PATCHING_FILES);
-                            Logger.GetInstance().Log($"Patching game's files...");
-
-                            HDiffPatch patcher = new HDiffPatch();
-                            int appliedPatchesCount = 0;
-                            List<GameHdiffFilesEntry> patchesList = hdiffFilesHandler.Read();
-
-                            foreach (GameHdiffFilesEntry entry in patchesList) {
-
-                                string oldFilePath = Path.Join(this.Settings.InstallationDirectory, entry.remoteName);
-                                string oldFileBackupPath = Path.Join(this.Settings.InstallationDirectory, entry.remoteName + ".bak");
-                                string patchFilePath = Path.Join(this.Settings.InstallationDirectory, entry.remoteName + ".hdiff");
-                                
-                                try {
-
-                                    Logger.GetInstance().Log($"Patching the file \"{oldFilePath}\"...");
-
-                                    // Creates a backup of the file from current game's version
-                                    File.Copy(oldFilePath, oldFileBackupPath);
-
-                                    // Loads its patch file into the patcher
-                                    patcher.Initialize(patchFilePath);
-
-                                    // Patches the old file (it becomes the newer/updated file)
-                                    patcher.Patch(oldFileBackupPath, oldFilePath);
-
-                                    // Removes the backup file and the patch file
-                                    File.Delete(oldFileBackupPath);
-                                    File.Delete(patchFilePath);
-
-                                    Logger.GetInstance().Log($"Successfully patched the file \"{oldFilePath}\"");
-
-                                    appliedPatchesCount++;
-                                    progress?.Report(new ProgressReport {
-                                        Done = appliedPatchesCount,
-                                        Total = patchesList.Count,
-                                        Message = oldFilePath
-                                    });
-
-                                } catch (Exception e) {
-
-                                    Logger.GetInstance().Error($"Failed to patch the file \"{oldFilePath}\"", e);
-
-                                }
-
-                            }
-
-                        }
-
-                        if (deleteFilesHandler.Exist()) {
-
-                            /*
-                             * Reads the "deletefiles.txt" file and deletes every referenced file
-                            */
-
-                            this.UpdateState(GameState.REMOVING_DEPRECATED_FILES);
-                            Logger.GetInstance().Log($"Removing deprecated files...");
-
-                            int removedFilesCount = 0;
-                            List<string> filesToRemove = deleteFilesHandler.Read();
-
-                            foreach (string filePath in filesToRemove) {
-
-                                string fullPath = Path.Join(this.Settings.InstallationDirectory, filePath);
-
-                                try {
-
-                                    Logger.GetInstance().Log($"Removing the file \"{fullPath}\"...");
-
-                                    File.Delete(fullPath);
-                                    
-                                    Logger.GetInstance().Log($"Successfully removed the file \"{fullPath}\"");
-
-                                    removedFilesCount++;
-                                    progress?.Report(new ProgressReport {
-                                        Done = removedFilesCount,
-                                        Total = filesToRemove.Count,
-                                        Message = fullPath
-                                    });
-
-                                } catch (Exception e) {
-
-                                    Logger.GetInstance().Error($"Failed to remove the file \"{fullPath}\"", e);
-
-                                }
-
-                            }
-
-                            Logger.GetInstance().Log($"Finished removing deprecated files");
-
-                        }
+                        this.UnzipUpdatePackage(packageFileFullPath, reporter, token);
+                        this.ApplyUpdatePackagePatches(reporter, token);
+                        this.RemoveDeprecatedFiles(reporter, token);
 
                     }
 
                 } else {
 
-                    throw new GameException($"Can't find a diff object whose name matchs the string pattern \"{zipFileNamePattern}\"");
+                    throw new GameException($"Can't find a diff object whose name matchs the string pattern \"{packageFilenamePattern}\"");
+
+                }
+                
+                Logger.GetInstance().Log($"Sucessfully {(isPreUpdate ? "pre-updated" : "updated")} the game to version {remoteVersion.ToString()}");
+                this.UpdateState(previousState);
+                return;
+
+            } catch (Exception) {
+
+                this.UpdateState(previousState);
+                throw;
+
+            }
+
+        }
+        
+        protected virtual async Task DownloadUpdatePackageAsync(Resource.Diff diff, ProgressReporter<ProgressReport>? reporter, CancellationToken token = default) {
+
+            GameState previousState = this.State;
+
+            try {
+
+                string packageFileFullPath = Path.Join(this.Settings.InstallationDirectory, diff.name);
+
+                /*
+                    * Downloads the update's package or skips
+                    * its download if already in game's directory
+                */
+
+                this.UpdateState(GameState.DOWNLOADING_UPDATE);
+
+                if (File.Exists(packageFileFullPath) && new Hash(MD5.Create()).ComputeHash(packageFileFullPath).ToUpper() == diff.md5.ToUpper()) {
+
+                    Logger.GetInstance().Log($"Found the game's update's package already inside the game's installation directory, skipping the download");
+
+                } else {
+
+                    try {
+
+                        long availableStorageSpace = FileSystem.GetAvailableStorageSpace(this.Settings.InstallationDirectory);
+                        if (diff.size >= availableStorageSpace) {
+
+                            throw new GameException($"There is no enough storage space available to download the game update. This update requires {DataUnitFormatter.Format(diff.size)} of storage space, but there is only {DataUnitFormatter.Format(availableStorageSpace)} available");
+
+                        }
+
+                        await Client.GetInstance().DownloadFileAsync(new Uri(diff.path), packageFileFullPath, reporter, CancellationToken.None);
+                        
+                        Logger.GetInstance().Log($"Finished downloading the game's update package");
+                        Logger.GetInstance().Log($"Checking game's update package's integrity...");
+
+                        string downloadedPackageFileChecksum = new Hash(MD5.Create()).ComputeHash(packageFileFullPath);
+
+                        if (downloadedPackageFileChecksum.ToUpper() == diff.md5.ToUpper()) {
+
+                            Logger.GetInstance().Log($"The downloaded game's update package's checksum match the expected remote checksum");
+
+                        } else {
+
+                            throw new GameException($"The downloaded file's checksum ({downloadedPackageFileChecksum}) doesn't match the expected remote checksum ({diff.md5.ToUpper()})");
+
+                        }
+
+                    } catch (NetworkException e) {
+
+                        throw new GameException($"Failed to download game's update package due to a network error", e);
+
+                    }
 
                 }
 
-                Logger.GetInstance().Log($"Finished game update");
-                this.AfterGameUpdate.Invoke(this, EventArgs.Empty);
-            
-            } catch (CoreException e) {
+                Logger.GetInstance().Log($"Sucessfully downloaded game's update package");
+                this.UpdateState(previousState);
+                return;
+
+            } catch (Exception) {
 
                 this.UpdateState(previousState);
-                throw e;
+                throw;
+
+            }
+
+        }
+
+        protected virtual void UnzipUpdatePackage(string packagePath, ProgressReporter<ProgressReport>? reporter, CancellationToken token = default) {
+
+            if (string.IsNullOrWhiteSpace(packagePath))
+                throw new GameException("Empty package's path");
+
+            if (!File.Exists(packagePath))
+                throw new GameException("The update package is missing");
+
+            GameState previousState = this.State;
+
+            try {
+
+                /*
+                 * Removes old update package's files
+                */
+
+                GameHdiffFiles hdiffFilesHandler = new GameHdiffFiles(this.Settings.InstallationDirectory);
+                GameDeleteFiles deleteFilesHandler = new GameDeleteFiles(this.Settings.InstallationDirectory);
+
+                if (hdiffFilesHandler.Exist())
+                    hdiffFilesHandler.Delete();
+                
+                if (deleteFilesHandler.Exist())
+                    deleteFilesHandler.Delete();
+
+                using (FileStream zipFileStream = File.OpenRead(packagePath)) {
+
+                    /*
+                     * Unzips the update package
+                    */
+
+                    this.UpdateState(GameState.EXTRACTING_UPDATE);
+                    Logger.GetInstance().Log($"Unzipping the game's update package...");
+                    
+                    try {
+
+                        ZipArchive zipArchive = new ZipArchive(zipFileStream, ZipArchiveMode.Read);
+                        // overwrite files = true
+                        zipArchive.ExtractToDirectory(this.Settings.InstallationDirectory, true, reporter);
+
+                    } catch (Exception e) {
+
+                        throw new GameException($"Failed to unzip the game's update package", e);
+
+                    }
+                    
+                    Logger.GetInstance().Log($"Successfully finished unzipping the game's update package");
+                    this.UpdateState(previousState);
+                    return;
+
+                }
+
+            } catch (Exception) {
+
+                this.UpdateState(previousState);
+                throw;
+
+            }
+
+        }
+
+        protected virtual void ApplyUpdatePackagePatches(ProgressReporter<ProgressReport>? reporter, CancellationToken token = default) {
+
+            GameHdiffFiles hdiffFilesHandler = new GameHdiffFiles(this.Settings.InstallationDirectory);
+
+            if (!hdiffFilesHandler.Exist())
+                throw new GameException($"Missing \"{hdiffFilesHandler.FileName}\" file");
+
+            GameState previousState = this.State;
+
+            try {
+
+                /*
+                 * Reads the "hdifffiles.txt" file and apply the patches for every referenced file
+                */
+
+                this.UpdateState(GameState.PATCHING_FILES);
+                Logger.GetInstance().Log($"Applying game's update package patches...");
+
+                HDiffPatch patcher = new HDiffPatch();
+                int appliedPatchesCount = 0;
+                List<GameHdiffFilesEntry> patchesList = hdiffFilesHandler.Read();
+
+                foreach (GameHdiffFilesEntry entry in patchesList) {
+
+                    string oldFilePath = Path.Join(this.Settings.InstallationDirectory, entry.remoteName);
+                    string oldFileBackupPath = Path.Join(this.Settings.InstallationDirectory, entry.remoteName + ".bak");
+                    string patchFilePath = Path.Join(this.Settings.InstallationDirectory, entry.remoteName + ".hdiff");
+                    
+                    try {
+
+                        Logger.GetInstance().Log($"Patching the file \"{oldFilePath}\"...");
+
+                        // Creates a backup of the file from current game's version
+                        File.Copy(oldFilePath, oldFileBackupPath);
+
+                        // Loads its patch file into the patcher
+                        patcher.Initialize(patchFilePath);
+
+                        // Patches the old file (it becomes the newer/updated file)
+                        patcher.Patch(oldFileBackupPath, oldFilePath);
+
+                        // Removes the backup file and the patch file
+                        File.Delete(oldFileBackupPath);
+                        File.Delete(patchFilePath);
+
+                        Logger.GetInstance().Log($"Successfully patched the file \"{oldFilePath}\"");
+
+                        appliedPatchesCount++;
+                        reporter?.Report(new ProgressReport {
+                            Done = appliedPatchesCount,
+                            Total = patchesList.Count,
+                            Message = oldFilePath
+                        });
+
+                    } catch (Exception e) {
+
+                        Logger.GetInstance().Error($"Failed to patch the file \"{oldFilePath}\"", e);
+
+                    }
+
+                }
+
+                Logger.GetInstance().Log($"Sucessfully applied game's update package patches");
+                this.UpdateState(previousState);
+                return;
+
+            } catch (Exception) {
+
+                this.UpdateState(previousState);
+                throw;
+
+            }
+
+        }
+
+        protected virtual void RemoveDeprecatedFiles(ProgressReporter<ProgressReport>? reporter, CancellationToken token = default) {
+
+            GameDeleteFiles deleteFilesHandler = new GameDeleteFiles(this.Settings.InstallationDirectory);
+
+            if (!deleteFilesHandler.Exist())
+                throw new GameException($"Missing \"{deleteFilesHandler.FileName}\" file");
+
+            GameState previousState = this.State;
+
+            try {
+
+                /*
+                 * Reads the "deletefiles.txt" file and deletes every listed file
+                */
+
+                this.UpdateState(GameState.REMOVING_DEPRECATED_FILES);
+                Logger.GetInstance().Log($"Removing game's deprecated files...");
+
+                int removedFilesCount = 0;
+                List<string> filesToRemove = deleteFilesHandler.Read();
+
+                foreach (string filePath in filesToRemove) {
+
+                    string fullPath = Path.Join(this.Settings.InstallationDirectory, filePath);
+
+                    try {
+
+                        Logger.GetInstance().Log($"Removing the file \"{fullPath}\"...");
+
+                        File.Delete(fullPath);
+                        
+                        Logger.GetInstance().Log($"Successfully removed the file \"{fullPath}\"");
+
+                        removedFilesCount++;
+                        reporter?.Report(new ProgressReport {
+                            Done = removedFilesCount,
+                            Total = filesToRemove.Count,
+                            Message = fullPath
+                        });
+
+                    } catch (Exception e) {
+
+                        Logger.GetInstance().Error($"Failed to remove the file \"{fullPath}\"", e);
+
+                    }
+
+                }
+
+                Logger.GetInstance().Log($"Sucessfully removed game's deprecated files");
+                this.UpdateState(previousState);
+                return;
+
+            } catch (Exception) {
+
+                this.UpdateState(previousState);
+                throw;
 
             }
 

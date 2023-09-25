@@ -13,7 +13,9 @@ namespace Dodoco.Core.Game {
         event EventHandler AfterGameDownload;
         event EventHandler AfterGameUpdate;
 
-        Task<bool> IsUpdateAvaliable();
+        Task<Resource.Game?> GetUpdateAsync();
+        Task<Resource.Game?> GetPreUpdateAsync();
+        Task<bool> IsPreUpdateDownloadedAsync();
         Task<List<GameFileIntegrityReport>> CheckFilesIntegrity(CancellationToken token = default);
         Task<List<GameFileIntegrityReport>> CheckFilesIntegrity(ProgressReporter<ProgressReport> progress, CancellationToken token = default);
         Task Download(ProgressReporter<ProgressReport>? progress, CancellationToken token = default);
@@ -21,7 +23,7 @@ namespace Dodoco.Core.Game {
         Task RepairFile(GameFileIntegrityReport report, ProgressReporter<ProgressReport>? progress, CancellationToken token = default);
         Task RepairGameFiles(ProgressReporter<ProgressReport>? progress, CancellationToken token = default);
         Task RepairGameFiles(CancellationToken token = default);
-        Task Update(ProgressReporter<ProgressReport>? progress = null);
+        Task UpdateAsync(bool isPreUpdate, ProgressReporter<ProgressReport>? reporter = null, CancellationToken token = default);
         Task Start();
 
     }

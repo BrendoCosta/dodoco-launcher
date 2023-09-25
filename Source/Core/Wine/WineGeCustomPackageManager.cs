@@ -56,7 +56,7 @@ namespace Dodoco.Core.Wine {
                 if (!release.assets.Contains(checksumAsset))
                     throw new WineException($"Unable to find the checksum asset for the requested release \"{release.tag_name}\"");
                 
-                long storageFreeBytes = FileSystem.GetAvaliableStorageSpace(this.PackagesRootDirectory);
+                long storageFreeBytes = FileSystem.GetAvailableStorageSpace(this.PackagesRootDirectory);
                 if (storageFreeBytes <= (tarballAsset.size + checksumAsset.size))
                     throw new WineException("There is not enough space available in the storage device for Wine's installation");
                 
