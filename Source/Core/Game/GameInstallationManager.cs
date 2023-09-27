@@ -117,6 +117,7 @@ namespace Dodoco.Core.Game {
 
                 return new Dictionary<Version, IGame> {
 
+                    { Version.Parse("4.1.0"), stable },
                     { Version.Parse("4.0.1"), stable },
                     { Version.Parse("4.0.0"), stable },
                     { Version.Parse("3.8.0"), stable },
