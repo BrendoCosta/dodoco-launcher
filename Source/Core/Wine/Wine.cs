@@ -121,15 +121,17 @@ namespace Dodoco.Core.Wine {
 
             process.OutputDataReceived += new DataReceivedEventHandler((object sender, DataReceivedEventArgs e) => {
                 
-                if (!string.IsNullOrWhiteSpace(e.Data))
-                    Logger.GetInstance().Log($"Wine: {e.Data}");
+                // TODO: Select what Wine debug messages will be logged
+                //if (!string.IsNullOrWhiteSpace(e.Data))
+                //    Logger.GetInstance().Log($"Wine: {e.Data}");
                 
             });
 
             process.ErrorDataReceived += new DataReceivedEventHandler((object sender, DataReceivedEventArgs e) => {
                 
-                if (!string.IsNullOrWhiteSpace(e.Data))
-                    Logger.GetInstance().Log($"Wine: {e.Data}");
+                // TODO: Select what Wine debug messages will be logged
+                //if (!string.IsNullOrWhiteSpace(e.Data))
+                //    Logger.GetInstance().Log($"Wine: {e.Data}");
                 
             });
 
