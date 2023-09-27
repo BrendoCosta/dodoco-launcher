@@ -13,9 +13,9 @@ Um launcher não-oficial para Genshin Impact escrito em C#, TypeScript e Svelte,
 Por favor, tenha em mente que este projeto é experimental e que o código-fonte pode mudar abruptamente ou até mesmo parecer não fazer sentido.
 
 <div align="center">
-    <img style="width: 100%" alt="Launcher's main's user interface" src="Repository/Image/401_0.png">
+    <img style="width: 100%" alt="Launcher's main's user interface" src="Repository/Image/410_0.png">
     <div align="center">
-      <img style="width: 80%" alt="Launcher's settings's user interface" src="Repository/Image/401_1.png">
+      <img style="width: 80%" alt="Launcher's settings's user interface" src="Repository/Image/410_1.png">
     </div>
 </div>
 

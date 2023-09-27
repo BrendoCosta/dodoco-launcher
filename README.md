@@ -13,9 +13,9 @@ A work in progress (WIP) unofficial Genshin Impact launcher written in C#, TypeS
 Please keep in mind that this project is experimental and that the source code may change abruptly or even seem to make no sense.
 
 <div align="center">
-    <img style="width: 100%" alt="Launcher's main's user interface" src="Repository/Image/401_0.png">
+    <img style="width: 100%" alt="Launcher's main's user interface" src="Repository/Image/410_0.png">
     <div align="center">
-      <img style="width: 80%" alt="Launcher's settings's user interface" src="Repository/Image/401_1.png">
+      <img style="width: 80%" alt="Launcher's settings's user interface" src="Repository/Image/410_1.png">
     </div>
 </div>
 
