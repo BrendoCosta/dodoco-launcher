@@ -6,6 +6,9 @@ namespace Dodoco.Core.Game {
     public interface IGame: IStatefulEntity<GameState> {
 
         GameSettings Settings { get; set; }
+        GameDownloadState DownloadState { get; }
+        GameUpdateState UpdateState { get; }
+        GameIntegrityCheckState IntegrityCheckState { get; }
         IWine? Wine { get; set; }
         Version Version { get; }
         bool IsInstalled { get; }

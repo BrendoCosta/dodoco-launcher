@@ -20,6 +20,9 @@ namespace Dodoco.Application.ReinforcedTypings {
                 new Type[] {
                     typeof(Dodoco.Core.Game.GameServer),
                     typeof(Dodoco.Core.Game.GameState),
+                    typeof(Dodoco.Core.Game.GameDownloadState),
+                    typeof(Dodoco.Core.Game.GameUpdateState),
+                    typeof(Dodoco.Core.Game.GameIntegrityCheckState),
                     typeof(Dodoco.Core.Launcher.LauncherDependency),
                     typeof(Dodoco.Core.Launcher.LauncherState),
                     typeof(Dodoco.Core.Util.Log.LogType),

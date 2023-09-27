@@ -9,28 +9,32 @@ component:
     error_title: Erro
 main:
   message:
-    game_state:
-      downloading: >-
-        Baixando o jogo ({{percentage}}% / Tempo restante: {{remaining_time}} /
-        Taxa de transferência: {{download_rate}})
-      recovering_downloaded_segments: >-
-        Tentando recuperar os segmentos do jogo já baixados, isso pode demorar
-        um pouco ({{percentage}}%)
-      extracting_downloaded_segments: >-
-        Extraindo os segmentos do jogo baixados, isso pode demorar um pouco
-        ({{percentage}}%)
-      downloading_update: >-
-        Baixando a atualização do jogo ({{percentage}}% / Tempo restante:
-        {{remaining_time}} / Taxa de transferência: {{download_rate}})
+    game_update_state:
+      downloading_update_package: >-
+        Baixando o pacote de atualização do jogo ({{percentage}}% / Tempo
+        restante: {{remaining_time}} / Taxa de transferência: {{download_rate}})
+      unzipping_update_package: Descompactando o pacote de atualização do jogo ({{percentage}}%)
+      applying_update_package: Aplicando o pacote de atualização do jogo ({{percentage}}%)
+      removing_deprecated_files: Removendo arquivos obsoletos da versão antiga do jogo ({{percentage}}%)
+    game_integrity_check_state:
       checking_integrity: >-
         Verificando a integridade dos arquivos do jogo ({{percentage}}% / Tempo
         restante: {{remaining_time}})
-      repairing_files: >-
-        Baixando e reparando os arquivos do jogo ({{percentage}}% / Tempo
+      downloading_file: >-
+        Baixando arquivo faltante ou corrompido ({{percentage}}% / Tempo
         restante: {{remaining_time}} / Taxa de transferência: {{download_rate}})
-      extracting_update: Extraindo a atualização do jogo
-      patching_files: Atualizando os arquivos do jogo ({{percentage}}%)
-      removing_deprecated_files: Removendo arquivos desatualizados ({{percentage}}%)
+      repairing_file: >-
+        Reparando o arquivo faltante ou corrompido
+    game_download_state:
+      recovering_downloaded_segments: >-
+        Tentando recuperar os segmentos do jogo já baixados, isso pode demorar
+        um pouco ({{percentage}}%)
+      downloading_segments: >-
+        Baixando os segmentos do jogo ({{percentage}}% / Tempo restante: {{remaining_time}} /
+        Taxa de transferência: {{download_rate}})
+      unzipping_segments: >-
+        Extraindo os segmentos do jogo baixados, isso pode demorar um pouco
+        ({{percentage}}%)
     dependency:
       game_download: >-
         Por favor, baixe o jogo ou selecione um diretório com uma instalação
@@ -49,6 +53,7 @@ main:
     main:
       download_wine: Baixar o Wine (versão {{version}})
       download_game: Baixar o jogo
+      pre_update_game: Pre-atualizar o jogo
       update_game: Atualizar o jogo
       start_game: Iniciar o jogo
   confirm:

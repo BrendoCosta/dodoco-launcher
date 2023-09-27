@@ -9,28 +9,32 @@ component:
     error_title: Error
 main:
   message:
-    game_state:
-      downloading: >-
-        Downloading the game ({{percentage}}% / Remaining time:
+    game_update_state:
+      downloading_update_package: >-
+        Downloading the game update package ({{percentage}}% / Remaining time:
         {{remaining_time}} / Download rate: {{download_rate}})
-      recovering_downloaded_segments: >-
-        Trying to recover already downloaded game's segments, it may take a
-        while ({{percentage}}%)
-      extracting_downloaded_segments: >-
-        Extracting downloaded game's segments, it may take a while
-        ({{percentage}}%)
-      downloading_update: >-
-        Downloading game's update ({{percentage}}% / Remaining time:
-        {{remaining_time}} / Download rate: {{download_rate}})
+      unzipping_update_package: Unzipping the game update package ({{percentage}}%)
+      applying_update_package: Applying the game update package ({{percentage}}%)
+      removing_deprecated_files: Removing deprecated files from old game version ({{percentage}}%)
+    game_integrity_check_state:
       checking_integrity: >-
         Checking game's files integrity ({{percentage}}% / Remaining time:
         {{remaining_time}})
-      repairing_files: >-
-        Downloading and repairing game's files ({{percentage}}% / Remaining
-        time: {{remaining_time}} / Download rate: {{download_rate}})
-      extracting_update: Decompressing the game's update
-      patching_files: Patching the game's files ({{percentage}}%)
-      removing_deprecated_files: Removing deprecated files ({{percentage}}%)
+      downloading_file: >-
+        Downloading the missing or corrupted file ({{percentage}}% / Remaining time:
+        {{remaining_time}} / Download rate: {{download_rate}})
+      repairing_file: >-
+        Repairing the missing or corrupted file
+    game_download_state:
+      recovering_downloaded_segments: >-
+        Trying to recover already downloaded game's segments, it may take a
+        while ({{percentage}}%)
+      downloading_segments: >-
+        Downloading the game's segments ({{percentage}}% / Remaining time:
+        {{remaining_time}} / Download rate: {{download_rate}})
+      unzipping_segments: >-
+        Unzipping downloaded game's segments, it may take a while
+        ({{percentage}}%)
     dependency:
       game_download: >-
         Please download the game or select a directory with an existing game
@@ -49,6 +53,7 @@ main:
     main:
       download_wine: Download Wine (release {{version}})
       download_game: Download game
+      pre_update_game: Pre-update game
       update_game: Update game
       start_game: Start game
   confirm:

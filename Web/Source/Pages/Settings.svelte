@@ -2,7 +2,7 @@
 <script lang="ts">
 
     import { ErrorHandler } from "@Dodoco/index";
-    import { _ConfirmPopup, _GameState, _LauncherDependency, _LauncherState, _WineControllerViewData, _WinePackageManagerState, i18nInstance } from "@Dodoco/Global";
+    import { _ConfirmPopup, _GameState, _LauncherDependency, _LauncherState, _UiStatesHelpers, _WineControllerViewData, _WinePackageManagerState, i18nInstance } from "@Dodoco/Global";
     import { Checkbox, LoadingDots, Modal, ModalControl, Radio, RadioGroup, ScoopedFrame } from "@Dodoco/Components";
     import { LanguageConstants, LanguageName } from "@Dodoco/Language";
     
@@ -46,19 +46,6 @@
         });
 
     });
-
-    $: LauncherIsWaiting = (): boolean => {
-
-        return ($_LauncherDependency ?? LauncherDependency.NONE) != LauncherDependency.NONE;
-
-    }
-
-    $: LauncherIsBusy = (): boolean => {
-
-        return ($_GameState ?? GameState.READY) != GameState.READY
-        || ($_WinePackageManagerState ?? WinePackageManagerState.READY) != WinePackageManagerState.READY;
-
-    }
 
     async function LoadData(): Promise<void> {
 
@@ -109,7 +96,7 @@
     }
 
 </script>
-<Modal bind:Root={Root} closable={!LauncherIsBusy()}>
+<Modal bind:Root={Root} closable={!$_UiStatesHelpers.LauncherIsBusy}>
     <ScoopedFrame width="[60%]" height="[80%]">
         <div class="w-full h-full flex flex-col items-start gap-y-10 m-2">
             <h1 class="text-3xl hy-impact-font font-medium text-zinc-700 drop-shadow-md">✦ { $i18nInstance.t("settings.title") }</h1>
@@ -201,7 +188,7 @@
                                         <li>
                                             <h3>{ $i18nInstance.t("settings.content.game.integrity.title") }</h3>
                                             <p>{ $i18nInstance.t("settings.content.game.integrity.description") }</p>
-                                            <button data-role="button" disabled={ LauncherIsBusy() || LauncherIsWaiting() } on:click={() => {
+                                            <button data-role="button" disabled={ $_UiStatesHelpers.LauncherIsBusy || $_UiStatesHelpers.LauncherIsWaiting } on:click={() => {
                                                 Root.Close();
                                                 RepairGame();
                                             }}>
@@ -296,7 +283,7 @@
             </div>
             <div class="w-full">
                 <div class="w-2/3 inline-flex justify-center gap-x-6">
-                    <button data-role="button" data-highlight disabled={LauncherIsBusy()} on:click={() => {
+                    <button data-role="button" data-highlight disabled={$_UiStatesHelpers.LauncherIsBusy} on:click={() => {
                         _ConfirmPopup.update(arr => { arr.push({
                             text: $i18nInstance.t("settings.confirm.save_settings"),
                             callback: async (e) => {

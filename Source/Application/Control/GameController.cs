@@ -13,6 +13,9 @@ namespace Dodoco.Application.Control {
         public GameController(ILauncher launcher) => this.launcher = launcher;
 
         public GameState? GetGameState() => this.launcher.Game?.State;
+        public GameDownloadState? GetGameDownloadState() => this.launcher.Game?.DownloadState;
+        public GameUpdateState? GetGameUpdateState() => this.launcher.Game?.UpdateState;
+        public GameIntegrityCheckState? GetGameIntegrityCheckState() => this.launcher.Game?.IntegrityCheckState;
 
         public List<GameServer> GetAvaliableGameServers() {
 

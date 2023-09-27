@@ -21,6 +21,30 @@ namespace Dodoco.Core.Game {
     public class Game: IGame {
 
         public GameSettings Settings { get; set; }
+        private GameDownloadState _DownloadState { get; set; } = GameDownloadState.DOWNLOADED;
+        public GameDownloadState DownloadState {
+            get => this._DownloadState;
+            protected set {
+                Logger.GetInstance().Debug($"Updating game download state from {this._DownloadState.ToString()} to {value.ToString()}");
+                this._DownloadState = value;
+            }
+        }
+        private GameUpdateState _UpdateState { get; set; } = GameUpdateState.UPDATED;
+        public GameUpdateState UpdateState {
+            get => this._UpdateState;
+            protected set {
+                Logger.GetInstance().Debug($"Updating game update state from {this._UpdateState.ToString()} to {value.ToString()}");
+                this._UpdateState = value;
+            }
+        }
+        private GameIntegrityCheckState _IntegrityCheckState { get; set; } = GameIntegrityCheckState.IDLE;
+        public GameIntegrityCheckState IntegrityCheckState {
+            get => this._IntegrityCheckState;
+            protected set {
+                Logger.GetInstance().Debug($"Updating game integrity check state from {this._IntegrityCheckState.ToString()} to {value.ToString()}");
+                this._IntegrityCheckState = value;
+            }
+        }
         public GameServer GameServer { get; protected set; }
         public bool IsInstalled { get => GameInstallationManager.CheckGameInstallation(this.Settings.InstallationDirectory, this.Settings.Server); }
         public GameState State { get; private set; } = GameState.READY;
@@ -95,7 +119,7 @@ namespace Dodoco.Core.Game {
 
         public virtual async Task Download(ProgressReporter<ProgressReport>? progress, CancellationToken token = default) {
 
-            GameState savedState = this.State;
+            GameDownloadState previousState = this.DownloadState;
 
             try {
 
@@ -122,7 +146,7 @@ namespace Dodoco.Core.Game {
 
                     if (File.Exists(Path.Join(this.Settings.InstallationDirectory, segmentFileName))) {
 
-                        this.UpdateState(GameState.RECOVERING_DOWNLOADED_SEGMENTS);
+                        this.DownloadState = GameDownloadState.RECOVERING_DOWNLOADED_SEGMENTS;
 
                         ProgressReport report = new ProgressReport {
                             Done = i + 1,
@@ -145,7 +169,7 @@ namespace Dodoco.Core.Game {
 
                     }
 
-                    this.UpdateState(GameState.DOWNLOADING);
+                    this.DownloadState = GameDownloadState.DOWNLOADING_SEGMENTS;
                     double doneFromLastReport = 0;
 
                     ProgressReporter<ProgressReport> segmentProgress = new ProgressReporter<ProgressReport>();
@@ -212,38 +236,39 @@ namespace Dodoco.Core.Game {
 
                 }
 
-                this.UpdateState(GameState.EXTRACTING_DOWNLOADED_SEGMENTS);
-                Logger.GetInstance().Log($"Extracting downloaded game's segments...");
+                this.DownloadState = GameDownloadState.UNZIPPING_SEGMENTS;
+                Logger.GetInstance().Log($"Unzipping downloaded game's segments...");
 
                 /* Creates a single and memory-contiguous stream composed by the filestreams of
                  * each segment file. This eliminates the need of joining all segments into
-                 * a single, big zip file before extracting it, thereby saving disk space and
+                 * a single, big zip file before unzipping it, thereby saving disk space and
                  * speeding up the whole process. */
 
                 using (MultiStream.Lib.MultiStream segmentsMultiStream = new MultiStream.Lib.MultiStream(latestResource.data.game.latest.segments.Select(s => File.OpenRead(Path.Join(this.Settings.InstallationDirectory, s.path.Split("/").Last()))))) {
 
-                    ZipArchive zipArchive = new ZipArchive(segmentsMultiStream, ZipArchiveMode.Read);
+                    using (ZipArchive zipArchive = new ZipArchive(segmentsMultiStream, ZipArchiveMode.Read)) {
 
-                    long storageFreeBytes = FileSystem.GetAvailableStorageSpace(this.Settings.InstallationDirectory);
-                    if (zipArchive.GetFullLength() > storageFreeBytes)
-                        throw new GameException($"There is no enough storage space available to extract the game's segments. This process requires {DataUnitFormatter.Format(zipArchive.GetFullLength())} of storage space, but there is only {DataUnitFormatter.Format(storageFreeBytes)} available. Try freeing up storage space and restart the download; already downloaded files will not need to be redownloaded");
-                    
-                    zipArchive.ExtractToDirectory(this.Settings.InstallationDirectory, true, progress);
+                        long storageFreeBytes = FileSystem.GetAvailableStorageSpace(this.Settings.InstallationDirectory);
+                        if (zipArchive.GetFullLength() > storageFreeBytes)
+                            throw new GameException($"There is no enough storage space available to unzip the game's segments. This process requires {DataUnitFormatter.Format(zipArchive.GetFullLength())} of storage space, but there is only {DataUnitFormatter.Format(storageFreeBytes)} available. Try freeing up storage space and restart the download; already downloaded files will not need to be redownloaded");
+                        
+                        zipArchive.ExtractToDirectory(this.Settings.InstallationDirectory, true, progress);
+
+                    }
 
                 }
 
-                Logger.GetInstance().Log($"Sucessfully extracted downloaded game's segments...");
+                Logger.GetInstance().Log($"Sucessfully unzipped downloaded game's segments...");
 
                 Logger.GetInstance().Log($"Successfully downloaded the game");
+                this.DownloadState = previousState;
                 this.AfterGameDownload.Invoke(this, EventArgs.Empty);
+                return;
 
-            } catch (NetworkException e) {
+            } catch (Exception) {
 
-                throw new GameException($"Failed to download the game due to a network error", e);
-
-            } finally {
-
-                this.UpdateState(savedState);
+                this.DownloadState = previousState;
+                throw;
 
             }
 
@@ -254,7 +279,7 @@ namespace Dodoco.Core.Game {
             if (!this.IsInstalled)
                 throw new GameException("Game is not installed");
 
-            GameState previousState = this.State;
+            GameUpdateState previousState = this.UpdateState;
 
             try {
 
@@ -267,11 +292,18 @@ namespace Dodoco.Core.Game {
 
                 if (gameResource.diffs.Exists(d => Regex.IsMatch(d.name, packageFilenamePattern))) {
 
+                    Task repairTask = this.RepairGameFiles(reporter, token);
+
+                    if (!isPreUpdate)
+                        repairTask.Start();
+
                     Resource.Diff diff = gameResource.diffs.Find(d => Regex.IsMatch(d.name, packageFilenamePattern));
                     string packageFileFullPath = Path.Join(this.Settings.InstallationDirectory, diff.name);
                     await this.DownloadUpdatePackageAsync(diff, reporter, token);
                     
                     if (!isPreUpdate) {
+
+                        await repairTask;
 
                         this.UnzipUpdatePackage(packageFileFullPath, reporter, token);
                         this.ApplyUpdatePackagePatches(reporter, token);
@@ -286,12 +318,13 @@ namespace Dodoco.Core.Game {
                 }
                 
                 Logger.GetInstance().Log($"Sucessfully {(isPreUpdate ? "pre-updated" : "updated")} the game to version {remoteVersion.ToString()}");
-                this.UpdateState(previousState);
+                this.UpdateState = previousState;
+                this.AfterGameUpdate.Invoke(this, EventArgs.Empty);
                 return;
 
             } catch (Exception) {
 
-                this.UpdateState(previousState);
+                this.UpdateState = previousState;
                 throw;
 
             }
@@ -300,7 +333,7 @@ namespace Dodoco.Core.Game {
         
         protected virtual async Task DownloadUpdatePackageAsync(Resource.Diff diff, ProgressReporter<ProgressReport>? reporter, CancellationToken token = default) {
 
-            GameState previousState = this.State;
+            GameUpdateState previousState = this.UpdateState;
 
             try {
 
@@ -311,7 +344,7 @@ namespace Dodoco.Core.Game {
                     * its download if already in game's directory
                 */
 
-                this.UpdateState(GameState.DOWNLOADING_UPDATE);
+                this.UpdateState = GameUpdateState.DOWNLOADING_UPDATE_PACKAGE;
 
                 if (File.Exists(packageFileFullPath) && new Hash(MD5.Create()).ComputeHash(packageFileFullPath).ToUpper() == diff.md5.ToUpper()) {
 
@@ -354,12 +387,12 @@ namespace Dodoco.Core.Game {
                 }
 
                 Logger.GetInstance().Log($"Sucessfully downloaded game's update package");
-                this.UpdateState(previousState);
+                this.UpdateState = previousState;
                 return;
 
             } catch (Exception) {
 
-                this.UpdateState(previousState);
+                this.UpdateState = previousState;
                 throw;
 
             }
@@ -374,7 +407,7 @@ namespace Dodoco.Core.Game {
             if (!File.Exists(packagePath))
                 throw new GameException("The update package is missing");
 
-            GameState previousState = this.State;
+            GameUpdateState previousState = this.UpdateState;
 
             try {
 
@@ -397,14 +430,18 @@ namespace Dodoco.Core.Game {
                      * Unzips the update package
                     */
 
-                    this.UpdateState(GameState.EXTRACTING_UPDATE);
+                    this.UpdateState = GameUpdateState.UNZIPPING_UPDATE_PACKAGE;
                     Logger.GetInstance().Log($"Unzipping the game's update package...");
                     
                     try {
 
-                        ZipArchive zipArchive = new ZipArchive(zipFileStream, ZipArchiveMode.Read);
-                        // overwrite files = true
-                        zipArchive.ExtractToDirectory(this.Settings.InstallationDirectory, true, reporter);
+                        using(ZipArchive zipArchive = new ZipArchive(zipFileStream, ZipArchiveMode.Read)) {
+
+                            // overwrite files = true
+                            zipArchive.ExtractToDirectory(this.Settings.InstallationDirectory, true, reporter);
+
+                        }
+                        
 
                     } catch (Exception e) {
 
@@ -413,14 +450,14 @@ namespace Dodoco.Core.Game {
                     }
                     
                     Logger.GetInstance().Log($"Successfully finished unzipping the game's update package");
-                    this.UpdateState(previousState);
+                    this.UpdateState = previousState;
                     return;
 
                 }
 
             } catch (Exception) {
 
-                this.UpdateState(previousState);
+                this.UpdateState = previousState;
                 throw;
 
             }
@@ -434,7 +471,7 @@ namespace Dodoco.Core.Game {
             if (!hdiffFilesHandler.Exist())
                 throw new GameException($"Missing \"{hdiffFilesHandler.FileName}\" file");
 
-            GameState previousState = this.State;
+            GameUpdateState previousState = this.UpdateState;
 
             try {
 
@@ -442,7 +479,7 @@ namespace Dodoco.Core.Game {
                  * Reads the "hdifffiles.txt" file and apply the patches for every referenced file
                 */
 
-                this.UpdateState(GameState.PATCHING_FILES);
+                this.UpdateState = GameUpdateState.APPLYING_UPDATE_PACKAGE;
                 Logger.GetInstance().Log($"Applying game's update package patches...");
 
                 HDiffPatch patcher = new HDiffPatch();
@@ -490,12 +527,12 @@ namespace Dodoco.Core.Game {
                 }
 
                 Logger.GetInstance().Log($"Sucessfully applied game's update package patches");
-                this.UpdateState(previousState);
+                this.UpdateState = previousState;
                 return;
 
             } catch (Exception) {
 
-                this.UpdateState(previousState);
+                this.UpdateState = previousState;
                 throw;
 
             }
@@ -509,7 +546,7 @@ namespace Dodoco.Core.Game {
             if (!deleteFilesHandler.Exist())
                 throw new GameException($"Missing \"{deleteFilesHandler.FileName}\" file");
 
-            GameState previousState = this.State;
+            GameUpdateState previousState = this.UpdateState;
 
             try {
 
@@ -517,7 +554,7 @@ namespace Dodoco.Core.Game {
                  * Reads the "deletefiles.txt" file and deletes every listed file
                 */
 
-                this.UpdateState(GameState.REMOVING_DEPRECATED_FILES);
+                this.UpdateState = GameUpdateState.REMOVING_DEPRECATED_FILES;
                 Logger.GetInstance().Log($"Removing game's deprecated files...");
 
                 int removedFilesCount = 0;
@@ -551,12 +588,12 @@ namespace Dodoco.Core.Game {
                 }
 
                 Logger.GetInstance().Log($"Sucessfully removed game's deprecated files");
-                this.UpdateState(previousState);
+                this.UpdateState = previousState;
                 return;
 
             } catch (Exception) {
 
-                this.UpdateState(previousState);
+                this.UpdateState = previousState;
                 throw;
 
             }
@@ -566,59 +603,80 @@ namespace Dodoco.Core.Game {
         public virtual async Task<List<GameFileIntegrityReport>> CheckFilesIntegrity(CancellationToken token = default) => await this.CheckFilesIntegrity(null, token);
         public virtual async Task<List<GameFileIntegrityReport>> CheckFilesIntegrity(ProgressReporter<ProgressReport>? progress, CancellationToken token = default) {
 
-            GameState savedState = this.State;
-            this.UpdateState(GameState.CHECKING_INTEGRITY);
-            
-            Logger.GetInstance().Log($"Starting game integrity check...");
-            
-            Uri pkgVersionRemoteUrl = new Uri(UrlCombine.Combine(this.Resource.data.game.latest.decompressed_path.ToString(), "pkg_version"));
-            HttpResponseMessage response = await Client.GetInstance().FetchAsync(pkgVersionRemoteUrl);
-            List<GamePkgVersionEntry> entries = new List<GamePkgVersionEntry>();
-            List<GameFileIntegrityReport> mismatches = new List<GameFileIntegrityReport>();
-            double pkgVersionTotalPackageSize = 0;
-            double totalBytesRead = 0;
-            List<double> estimatedRemainingTime = new List<double>();
-            Stopwatch watch = new Stopwatch();
-            watch.Start();
+            GameIntegrityCheckState previousState = this.IntegrityCheckState;
 
-            if (response.IsSuccessStatusCode) {
+            try {
 
-                string pkgVersionTextContent = await response.Content.ReadAsStringAsync();
-                string? line;
+                this.IntegrityCheckState = GameIntegrityCheckState.CHECKING_INTEGRITY;
 
-                using (StringReader reader = new StringReader(await response.Content.ReadAsStringAsync())) {
+                Logger.GetInstance().Log($"Starting game integrity check...");
+                
+                Uri pkgVersionRemoteUrl = new Uri(UrlCombine.Combine(this.Resource.data.game.latest.decompressed_path.ToString(), "pkg_version"));
+                HttpResponseMessage response = await Client.GetInstance().FetchAsync(pkgVersionRemoteUrl);
+                List<GamePkgVersionEntry> entries = new List<GamePkgVersionEntry>();
+                List<GameFileIntegrityReport> mismatches = new List<GameFileIntegrityReport>();
+                double pkgVersionTotalPackageSize = 0;
+                double totalBytesRead = 0;
+                List<double> estimatedRemainingTime = new List<double>();
+                Stopwatch watch = new Stopwatch();
+                watch.Start();
 
-                    while ((line = reader.ReadLine()) != null) {
+                if (response.IsSuccessStatusCode) {
 
-                        GamePkgVersionEntry entry = JsonSerializer.Deserialize<GamePkgVersionEntry>(line);
-                        entries.Add(entry);
-                        
-                        pkgVersionTotalPackageSize += (double) entry.fileSize;
+                    string pkgVersionTextContent = await response.Content.ReadAsStringAsync();
+                    string? line;
+
+                    using (StringReader reader = new StringReader(await response.Content.ReadAsStringAsync())) {
+
+                        while ((line = reader.ReadLine()) != null) {
+
+                            GamePkgVersionEntry entry = JsonSerializer.Deserialize<GamePkgVersionEntry>(line);
+                            entries.Add(entry);
+                            
+                            pkgVersionTotalPackageSize += (double) entry.fileSize;
+
+                        }
 
                     }
 
-                }
-
-                Logger.GetInstance().Log($"pkg_version total size is {DataUnitFormatter.Format(pkgVersionTotalPackageSize)}");
-                
-                for (int i = 0; i < entries.Count; i++) {
-
-                    GamePkgVersionEntry currentEntry = entries[i];
-                    FileInfo file = new FileInfo(Path.Join(this.Settings.InstallationDirectory, currentEntry.remoteName));
-                    Logger.GetInstance().Log($"Checking the file \"{file.FullName}\"...");
+                    Logger.GetInstance().Log($"pkg_version total size is {DataUnitFormatter.Format(pkgVersionTotalPackageSize)}");
                     
-                    if (file.Exists) {
+                    for (int i = 0; i < entries.Count; i++) {
 
-                        string localHash = new Hash(MD5.Create()).ComputeHash(file.FullName);
+                        GamePkgVersionEntry currentEntry = entries[i];
+                        FileInfo file = new FileInfo(Path.Join(this.Settings.InstallationDirectory, currentEntry.remoteName));
+                        
+                        if (file.Exists) {
 
-                        if (localHash.ToUpper() != currentEntry.md5.ToUpper()) {
+                            string localHash = new Hash(MD5.Create()).ComputeHash(file.FullName);
+
+                            if (localHash.ToUpper() != currentEntry.md5.ToUpper()) {
+
+                                mismatches.Add(new GameFileIntegrityReport {
+
+                                    localFileIntegrityState = GameFileIntegrityState.CORRUPTED,
+                                    localFilePath = file.FullName,
+                                    localFileHash = localHash,
+                                    localFileSize = (ulong) file.Length,
+                                    remoteFilePath = currentEntry.remoteName,
+                                    remoteFileHash = currentEntry.md5.ToUpper(),
+                                    remoteFileSize = currentEntry.fileSize
+
+                                });
+
+                            }
+
+                            totalBytesRead += file.Length;
+                            estimatedRemainingTime.Add(((pkgVersionTotalPackageSize - totalBytesRead) * watch.Elapsed.TotalSeconds) / totalBytesRead);
+
+                        } else {
 
                             mismatches.Add(new GameFileIntegrityReport {
 
-                                localFileIntegrityState = GameFileIntegrityState.CORRUPTED,
+                                localFileIntegrityState = GameFileIntegrityState.MISSING,
                                 localFilePath = file.FullName,
-                                localFileHash = localHash,
-                                localFileSize = (ulong) file.Length,
+                                localFileHash = string.Empty,
+                                localFileSize = 0,
                                 remoteFilePath = currentEntry.remoteName,
                                 remoteFileHash = currentEntry.md5.ToUpper(),
                                 remoteFileSize = currentEntry.fileSize
@@ -627,60 +685,49 @@ namespace Dodoco.Core.Game {
 
                         }
 
-                        totalBytesRead += file.Length;
-                        estimatedRemainingTime.Add(((pkgVersionTotalPackageSize - totalBytesRead) * watch.Elapsed.TotalSeconds) / totalBytesRead);
+                        ProgressReport report = new ProgressReport {
+                            Done = i + 1,
+                            Total = entries.Count,
+                            EstimatedRemainingTime = TimeSpan.FromSeconds(estimatedRemainingTime.Count >= 2 ? estimatedRemainingTime.Average() : 1),
+                            Message = file.FullName
+                        };
 
-                    } else {
+                        progress?.Report(report);
 
-                        mismatches.Add(new GameFileIntegrityReport {
-
-                            localFileIntegrityState = GameFileIntegrityState.MISSING,
-                            localFilePath = file.FullName,
-                            localFileHash = string.Empty,
-                            localFileSize = 0,
-                            remoteFilePath = currentEntry.remoteName,
-                            remoteFileHash = currentEntry.md5.ToUpper(),
-                            remoteFileSize = currentEntry.fileSize
-
-                        });
+                        if (estimatedRemainingTime.Count > 9) estimatedRemainingTime.Clear();
 
                     }
 
-                    ProgressReport report = new ProgressReport {
-                        Done = i + 1,
-                        Total = entries.Count,
-                        EstimatedRemainingTime = TimeSpan.FromSeconds(estimatedRemainingTime.Count >= 2 ? estimatedRemainingTime.Average() : 1),
-                        Message = file.FullName
-                    };
+                } else {
 
-                    progress?.Report(report);
-
-                    if (estimatedRemainingTime.Count > 9) estimatedRemainingTime.Clear();
+                    throw new GameException($"Failed to fetch the pkg_version file from remote servers (received HTTP status code {response.StatusCode})");
 
                 }
 
-            } else {
+                watch.Stop();
 
-                throw new GameException($"Failed to fetch the pkg_version file from remote servers (received HTTP status code {response.StatusCode})");
+                Logger.GetInstance().Log($"Successfully finished game integrity check ({DataUnitFormatter.Format(totalBytesRead)} read with {mismatches.Count} mismatches found)");
+
+                this.IntegrityCheckState = previousState;
+                return mismatches;
+
+            } catch (Exception) {
+
+                this.IntegrityCheckState = previousState;
+                throw;
 
             }
-
-            watch.Stop();
-
-            Logger.GetInstance().Log($"Successfully finished game integrity check ({DataUnitFormatter.Format(totalBytesRead)} read with {mismatches.Count} mismatches found)");
-
-            this.UpdateState(savedState);
-            return mismatches;
 
         }
 
         public async Task RepairFile(GameFileIntegrityReport report, CancellationToken token = default) => await this.RepairFile(report, null, token);
         public async Task RepairFile(GameFileIntegrityReport report, ProgressReporter<ProgressReport>? progress, CancellationToken token = default) {
 
-            GameState savedState = this.State;
-            this.UpdateState(GameState.REPAIRING_FILES);
+            GameIntegrityCheckState previousState = this.IntegrityCheckState;
 
             try {
+
+                this.IntegrityCheckState = GameIntegrityCheckState.DOWNLOADING_FILE;
 
                 Logger.GetInstance().Log($"Trying to repair the game file \"{report.localFilePath}\"...");
 
@@ -692,6 +739,8 @@ namespace Dodoco.Core.Game {
                 
                 await Client.GetInstance().DownloadFileAsync(fileRemoteUrl, tempFile.FullName, progress, token);
                 
+                this.IntegrityCheckState = GameIntegrityCheckState.REPAIRING_FILE;
+
                 Logger.GetInstance().Log($"Computing the hash of the downloaded file...");
 
                 string tempFileHash = new Hash(MD5.Create()).ComputeHash(tempFile.FullName);
@@ -713,17 +762,14 @@ namespace Dodoco.Core.Game {
 
                 }
 
-            } catch (NetworkException e) {
+                this.IntegrityCheckState = previousState;
 
-                throw new GameException($"Failed to repair the game file \"{report.localFilePath}\" due to a network error", e);
+            } catch (Exception) {
 
-            } finally {
-
-                this.UpdateState(savedState);
+                this.IntegrityCheckState = previousState;
+                throw;
 
             }
-
-            return;
 
         }
 
@@ -776,7 +822,7 @@ namespace Dodoco.Core.Game {
 
             try {
 
-                this.UpdateState(GameState.RUNNING);
+                this.UpdateEntityState(GameState.RUNNING);
 
                 await this.Wine.Execute("Starter.exe", new List<string> { 
                     $"\"{Path.Join(this.Settings.InstallationDirectory, $"{GameConstants.GAME_TITLE[this.Settings.Server]}.exe")}\""
@@ -784,13 +830,13 @@ namespace Dodoco.Core.Game {
 
             } finally {
 
-                this.UpdateState(savedState);
+                this.UpdateEntityState(savedState);
 
             }
 
         }
 
-        private void UpdateState(GameState newState) {
+        private void UpdateEntityState(GameState newState) {
 
             Logger.GetInstance().Debug($"Updating game state from {this.State.ToString()} to {newState.ToString()}");
             this.State = newState;

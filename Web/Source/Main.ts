@@ -1,4 +1,11 @@
 import { Global } from "@Dodoco/index";
+import { GameState } from "./Generated/Dodoco/Core/Game/GameState";
+import { GameDownloadState } from "@Dodoco/Generated/Dodoco/Core/Game/GameDownloadState";
+import { GameIntegrityCheckState } from "@Dodoco/Generated/Dodoco/Core/Game/GameIntegrityCheckState";
+import { GameUpdateState } from "@Dodoco/Generated/Dodoco/Core/Game/GameUpdateState";
+import { LauncherDependency } from "@Dodoco/Generated/Dodoco/Core/Launcher/LauncherDependency";
+import { WinePackageManagerState } from "@Dodoco/Generated/Dodoco/Core/Wine/WinePackageManagerState";
+import { get } from "svelte/store";
 
 // Stylesheets
 
@@ -76,9 +83,23 @@ setInterval(async () => {
         Global._SplashViewData.set(await SplashController.GetControllerInstance().GetViewData());
         Global._WineControllerViewData.set(await WineController.GetControllerInstance().GetViewData());
         Global._GameState.set(await GameController.GetControllerInstance().GetGameState());
+        Global._GameDownloadState.set(await GameController.GetControllerInstance().GetGameDownloadState());
+        Global._GameIntegrityCheckState.set(await GameController.GetControllerInstance().GetGameIntegrityCheckState());
+        Global._GameUpdateState.set(await GameController.GetControllerInstance().GetGameUpdateState());
         Global._LauncherDependency.set(await LauncherController.GetControllerInstance().GetLauncherDependency());
         Global._LauncherState.set(await LauncherController.GetControllerInstance().GetLauncherState());
         Global._WinePackageManagerState.set(await WineController.GetControllerInstance().GetWinePackageManagerState());
+        Global._UiStatesHelpers.set({
+            GameIsDownloading: (get(Global._GameDownloadState) ?? GameDownloadState.DOWNLOADED) != GameDownloadState.DOWNLOADED,
+            GameIsUpdating: (get(Global._GameUpdateState) ?? GameUpdateState.UPDATED) != GameUpdateState.UPDATED,
+            GameIsCheckingIntegrity: (get(Global._GameIntegrityCheckState) ?? GameIntegrityCheckState.IDLE) != GameIntegrityCheckState.IDLE,
+            GameIsRunning: (get(Global._GameState) ?? GameState.READY) == GameState.RUNNING,
+            WinePackageManagerIsWorking: (get(Global._WinePackageManagerState) ?? WinePackageManagerState.READY) != WinePackageManagerState.READY,
+            get LauncherIsBusy() {
+                return this.GameIsCheckingIntegrity || this.GameIsDownloading || this.GameIsUpdating || this.GameIsRunning || this.WinePackageManagerIsWorking
+            },
+            LauncherIsWaiting: (get(Global._LauncherDependency) ?? LauncherDependency.NONE) != LauncherDependency.NONE
+        });
 
     } catch (error: any) {}
 
