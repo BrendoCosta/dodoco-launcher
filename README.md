@@ -69,15 +69,15 @@ cd ./dodoco-launcher
 Run the launcher directly from the source code:
 
 ```sh
-dotnet run
+dotnet run --project ./Dodoco.Launcher/Source/Dodoco.Launcher.csproj
 ```
 
 ### Release
 
-Creates a release build of the project to `/bin/Release/net7.0/linux-x64/publish/` directory:
+Creates a release build of the project to `/Dodoco.Launcher/Source/bin/Release/net7.0/linux-x64/publish/` directory:
 
 ```sh
-dotnet publish
+dotnet publish -c Release
 ```
 
 ## License

@@ -1,12 +1,6 @@
-[submodule "Web/Modules/i18next-parser"]
-	path = Web/Modules/i18next-parser
-	url = https://github.com/BrendoCosta/i18next-parser.git
-[submodule "Source/Core/Library/Hi3Helper.SharpHDiffPatch"]
-	path = Source/Core/Library/Hi3Helper.SharpHDiffPatch
+[submodule "Dodoco.Core/Hi3Helper.SharpHDiffPatch"]
+	path = Dodoco.Core/Hi3Helper.SharpHDiffPatch
 	url = https://github.com/neon-nyan/Hi3Helper.SharpHDiffPatch.git
-[submodule "Source/Core/Library/MultiStream"]
-	path = Source/Core/Library/MultiStream
+[submodule "Dodoco.Core/MultiStream"]
+	path = Dodoco.Core/MultiStream
 	url = https://github.com/jplane/MultiStream.git
-[submodule "Source/Core/Library/dodoco-hooks"]
-	path = Source/Core/Library/dodoco-hooks
-	url = https://github.com/BrendoCosta/dodoco-hooks.git

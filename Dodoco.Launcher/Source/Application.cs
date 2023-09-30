@@ -45,6 +45,13 @@ namespace Dodoco.Application {
 
         }
 
+        static async Task Main(string[] args) {
+
+            Application app = new Application();
+            await app.Run();
+
+        }
+
         public async Task Run() {
 
             if (!this.logFile.Exist())

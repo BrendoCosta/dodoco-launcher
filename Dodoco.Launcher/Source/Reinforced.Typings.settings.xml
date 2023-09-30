@@ -54,7 +54,7 @@
 			Note that in case of using RtDivideTypesAmongFiles, RtTargetFile parameter will 
 			NOT be used anymore.
 		-->
-		<RtTargetDirectory>$(ProjectDir)Web/Source/Generated/</RtTargetDirectory>
+		<RtTargetDirectory>$(ProjectDir)../../Dodoco.Svelte/Source/Generated/</RtTargetDirectory>
 		
 		
 		<!--

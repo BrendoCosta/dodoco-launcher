@@ -69,15 +69,15 @@ cd ./dodoco-launcher
 Execute o launcher direto do código fonte:
 
 ```sh
-dotnet run
+dotnet run --project ./Dodoco.Launcher/Source/Dodoco.Launcher.csproj
 ```
 
 ### Empacotamento
 
-Cria um pacote de distribuição do projeto para o diretório `/bin/Release/net7.0/linux-x64/publish/`:
+Cria um pacote de distribuição do projeto para o diretório `/Dodoco.Launcher/Source/bin/Release/net7.0/linux-x64/publish/`:
 
 ```sh
-dotnet publish
+dotnet publish -c Release
 ```
 
 ## Licença
