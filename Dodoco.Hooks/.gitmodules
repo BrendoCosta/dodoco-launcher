@@ -1,0 +1,6 @@
+[submodule "Source/minhook"]
+	path = Source/Library/minhook
+	url = https://github.com/TsudaKageyu/minhook.git
+[submodule "Source/Library/argparse"]
+	path = Source/Library/argparse
+	url = https://github.com/p-ranav/argparse.git

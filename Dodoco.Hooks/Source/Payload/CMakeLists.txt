@@ -1,0 +1,5 @@
+set(PAYLOAD_SOURCE_FILES "Payload.cpp" "Hooks.cpp")
+add_library(Payload SHARED ${PAYLOAD_SOURCE_FILES})
+set_target_properties(Payload PROPERTIES PREFIX "" SUFFIX ".dll")
+target_link_libraries(Payload -shared --entry=DllMain -mwindows -lpsapi -lshlwapi -lntoskrnl)
+target_link_libraries(Payload DodocoCommon minhook)
