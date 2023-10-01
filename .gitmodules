@@ -4,3 +4,9 @@
 [submodule "Dodoco.Core/MultiStream"]
 	path = Dodoco.Core/MultiStream
 	url = https://github.com/jplane/MultiStream.git
+[submodule "Dodoco.Hooks/Source/Library/minhook"]
+	path = Dodoco.Hooks/Source/Library/minhook
+	url = https://github.com/TsudaKageyu/minhook.git
+[submodule "Dodoco.Hooks/Source/Library/argparse"]
+	path = Dodoco.Hooks/Source/Library/argparse
+	url = https://github.com/p-ranav/argparse.git
