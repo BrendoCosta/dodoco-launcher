@@ -503,7 +503,7 @@ namespace Dodoco.Core.Game {
                         patcher.Initialize(patchFilePath);
 
                         // Patches the old file (it becomes the newer/updated file)
-                        patcher.Patch(oldFileBackupPath, oldFilePath);
+                        patcher.Patch(oldFileBackupPath, oldFilePath, true);
 
                         // Removes the backup file and the patch file
                         File.Delete(oldFileBackupPath);
