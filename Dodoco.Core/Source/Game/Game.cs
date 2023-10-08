@@ -469,7 +469,7 @@ namespace Dodoco.Core.Game {
             GameHdiffFiles hdiffFilesHandler = new GameHdiffFiles(this.Settings.InstallationDirectory);
 
             if (!hdiffFilesHandler.Exist())
-                throw new GameException($"Missing \"{hdiffFilesHandler.FileName}\" file");
+                return;
 
             GameUpdateState previousState = this.UpdateState;
 
@@ -544,7 +544,7 @@ namespace Dodoco.Core.Game {
             GameDeleteFiles deleteFilesHandler = new GameDeleteFiles(this.Settings.InstallationDirectory);
 
             if (!deleteFilesHandler.Exist())
-                throw new GameException($"Missing \"{deleteFilesHandler.FileName}\" file");
+                return;
 
             GameUpdateState previousState = this.UpdateState;
 
