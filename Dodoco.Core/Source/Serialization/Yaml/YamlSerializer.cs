@@ -6,6 +6,7 @@ namespace Dodoco.Core.Serialization.Yaml {
 
             YamlDotNet.Serialization.ISerializer ser = new YamlDotNet.Serialization.SerializerBuilder()
                 .WithTypeConverter(new CultureInfoYamlConverter())
+                .WithTypeConverter(new GameLanguageYamlConverter())
                 .WithTypeConverter(new DirectoryInfoYamlConverter())
                 .WithTypeConverter(new FileInfoYamlConverter())
                 .Build();
@@ -19,6 +20,7 @@ namespace Dodoco.Core.Serialization.Yaml {
             YamlDotNet.Serialization.IDeserializer dsr = new YamlDotNet.Serialization.DeserializerBuilder()
                 .IgnoreUnmatchedProperties()
                 .WithTypeConverter(new CultureInfoYamlConverter())
+                .WithTypeConverter(new GameLanguageYamlConverter())
                 .WithTypeConverter(new DirectoryInfoYamlConverter())
                 .WithTypeConverter(new FileInfoYamlConverter())
                 .Build();

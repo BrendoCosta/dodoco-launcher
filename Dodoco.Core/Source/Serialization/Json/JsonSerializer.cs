@@ -14,6 +14,7 @@ namespace Dodoco.Core.Serialization.Json {
         public JsonSerializer() {
 
             this.options.Converters.Add(new CultureInfoJsonConverter());
+            this.options.Converters.Add(new GameLanguageJsonConverter());
             this.options.Converters.Add(new JsonStringEnumConverter());
 
         }
