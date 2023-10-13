@@ -7,7 +7,7 @@ namespace Dodoco.Core.Game {
         public CultureInfo Language { get; set; } = new CultureInfo("en-US");
         public GameServer Server { get; set; } = GameServer.Global;
         public string InstallationDirectory { get; set; } = Path.Join(Constants.HOME_DIRECTORY, "game");
-        public List<CultureInfo> Voices { get; set; } = new List<CultureInfo>{
+        public List<GameLanguage> Voices { get; set; } = new List<GameLanguage>{
             GameConstants.DEFAULT_VOICE_LANGUAGE
         };
         public Dictionary<GameServer, GameApi> Api { get; set; } = new Dictionary<GameServer, GameApi> {
