@@ -10,13 +10,24 @@ namespace Dodoco.Core.Game {
             { GameServer.Chinese, Encoding.UTF8.GetString(Convert.FromBase64String("WXVhblNoZW4=")) }
         };
 
-        public static CultureInfo DEFAULT_VOICE_LANGUAGE = new CultureInfo("en-US");
-        public static List<CultureInfo> SUPPORTED_VOICE_LANGUAGES = new List<CultureInfo> {
-            new CultureInfo("en-US"),
-            new CultureInfo("zh-CN"),
-            new CultureInfo("ko-KR"),
-            new CultureInfo("ja-JP")
-        };
+        public static GameLanguage DEFAULT_VOICE_LANGUAGE {
+            
+            get => new GameLanguage { Code = "en-us", Name = "English(US)" };
+            
+        }
+
+        public static List<GameLanguage> SUPPORTED_VOICE_LANGUAGES {
+            
+            get => new List<GameLanguage> {
+
+                GameConstants.DEFAULT_VOICE_LANGUAGE,
+                new GameLanguage { Code = "zh-cn", Name = "Chinese" },
+                new GameLanguage { Code = "ja-jp", Name = "Japanese" },
+                new GameLanguage { Code = "ko-kr", Name = "Korean" }
+
+            };
+
+        }
 
     }
 
