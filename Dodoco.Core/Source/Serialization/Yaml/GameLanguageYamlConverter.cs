@@ -13,7 +13,7 @@ public class GameLanguageYamlConverter: IYamlTypeConverter {
     public object? ReadYaml(IParser parser, Type type) {
 
         Scalar scalar = parser.Consume<Scalar>();
-        return GameConstants.SUPPORTED_VOICE_LANGUAGES.Find(someLanguage => someLanguage.Code.ToUpper() == scalar.Value.ToUpper());
+        return GameLanguage.All.Find(someLanguage => someLanguage.Code.ToUpper() == scalar.Value.ToUpper());
 
     }
 
