@@ -7,6 +7,10 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Dodoco.Launcher", "Dodoco.L
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Dodoco.Launcher", "Dodoco.Launcher\Source\Dodoco.Launcher.csproj", "{C418841F-51C5-47EB-A77C-29628E701C8B}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Dodoco.Core", "Dodoco.Core", "{7F193EC9-8BA1-4F7A-A45A-2090F633730D}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Dodoco.Core.Test", "Dodoco.Core\Test\Dodoco.Core.Test.csproj", "{47B84BA1-FCFE-4801-86F2-E530C2A6A6C1}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -20,8 +24,13 @@ Global
 		{C418841F-51C5-47EB-A77C-29628E701C8B}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{C418841F-51C5-47EB-A77C-29628E701C8B}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{C418841F-51C5-47EB-A77C-29628E701C8B}.Release|Any CPU.Build.0 = Release|Any CPU
+		{47B84BA1-FCFE-4801-86F2-E530C2A6A6C1}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{47B84BA1-FCFE-4801-86F2-E530C2A6A6C1}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{47B84BA1-FCFE-4801-86F2-E530C2A6A6C1}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{47B84BA1-FCFE-4801-86F2-E530C2A6A6C1}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{C418841F-51C5-47EB-A77C-29628E701C8B} = {4595D98F-8825-45DC-BD34-510B3C1E8C76}
+		{47B84BA1-FCFE-4801-86F2-E530C2A6A6C1} = {7F193EC9-8BA1-4F7A-A45A-2090F633730D}
 	EndGlobalSection
 EndGlobal
