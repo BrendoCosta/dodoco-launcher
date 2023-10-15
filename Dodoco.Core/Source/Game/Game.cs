@@ -258,7 +258,7 @@ namespace Dodoco.Core.Game {
 
                 }
 
-                Logger.GetInstance().Log($"Sucessfully unzipped downloaded game's segments...");
+                Logger.GetInstance().Log($"Successfully unzipped downloaded game's segments...");
 
                 Logger.GetInstance().Log($"Successfully downloaded the game");
                 this.DownloadState = previousState;
@@ -317,7 +317,7 @@ namespace Dodoco.Core.Game {
 
                 }
                 
-                Logger.GetInstance().Log($"Sucessfully {(isPreUpdate ? "pre-updated" : "updated")} the game to version {remoteVersion.ToString()}");
+                Logger.GetInstance().Log($"Successfully {(isPreUpdate ? "pre-updated" : "updated")} the game to version {remoteVersion.ToString()}");
                 this.UpdateState = previousState;
                 this.AfterGameUpdate.Invoke(this, EventArgs.Empty);
                 return;
@@ -386,7 +386,7 @@ namespace Dodoco.Core.Game {
 
                 }
 
-                Logger.GetInstance().Log($"Sucessfully downloaded game's update package");
+                Logger.GetInstance().Log($"Successfully downloaded game's update package");
                 this.UpdateState = previousState;
                 return;
 
@@ -526,7 +526,7 @@ namespace Dodoco.Core.Game {
 
                 }
 
-                Logger.GetInstance().Log($"Sucessfully applied game's update package patches");
+                Logger.GetInstance().Log($"Successfully applied game's update package patches");
                 this.UpdateState = previousState;
                 return;
 
@@ -587,7 +587,7 @@ namespace Dodoco.Core.Game {
 
                 }
 
-                Logger.GetInstance().Log($"Sucessfully removed game's deprecated files");
+                Logger.GetInstance().Log($"Successfully removed game's deprecated files");
                 this.UpdateState = previousState;
                 return;
 

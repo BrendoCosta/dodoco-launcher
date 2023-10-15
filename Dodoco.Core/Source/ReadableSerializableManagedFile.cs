@@ -19,7 +19,7 @@ namespace Dodoco.Core {
             try {
 
                 fileContents = File.ReadAllText(fullFilePath, System.Text.Encoding.UTF8);
-                Logger.GetInstance().Log($"Succesfully read {InternalName} from {InternalName} file");
+                Logger.GetInstance().Log($"Successfully read {InternalName} from {InternalName} file");
                 
 
             } catch (Exception e) {
