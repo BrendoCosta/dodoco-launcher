@@ -8,7 +8,7 @@ namespace Dodoco.Core.Game {
         public GameServer Server { get; set; } = GameServer.Global;
         public string InstallationDirectory { get; set; } = Path.Join(Constants.HOME_DIRECTORY, "game");
         public List<GameLanguage> Voices { get; set; } = new List<GameLanguage>{
-            GameConstants.DEFAULT_VOICE_LANGUAGE
+            GameLanguage.Default
         };
         public Dictionary<GameServer, GameApi> Api { get; set; } = new Dictionary<GameServer, GameApi> {
 
