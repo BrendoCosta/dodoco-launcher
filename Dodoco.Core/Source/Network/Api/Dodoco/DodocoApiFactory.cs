@@ -1,5 +1,5 @@
 using Dodoco.Core.Game;
-using Dodoco.Core.Network.Api.Company.Launcher.Resource;
+using Dodoco.Core.Protocol.Company.Launcher.Resource;
 using Dodoco.Core.Network.Api.Github.Repos.Content;
 using Dodoco.Core.Network.HTTP;
 using Dodoco.Core.Util.Log;
@@ -22,7 +22,7 @@ namespace Dodoco.Core.Network.Api.Dodoco {
 
         }
 
-        public async Task<Resource> FetchCachedLauncherResource(Version gameVersion, GameServer gameServer) {
+        public async Task<ResourceResponse> FetchCachedLauncherResource(Version gameVersion, GameServer gameServer) {
 
             Logger.GetInstance().Log("Fetching cached launcher resource data from remote servers...");
             List<Content>? contentList = await this.FetchApi<List<Content>>("contents/Api/Cached/Company/Launcher/Resource");
@@ -49,7 +49,7 @@ namespace Dodoco.Core.Network.Api.Dodoco {
 
                                 Logger.GetInstance().Log($"Trying to parse the cached launcher resource file's data");
 
-                                Resource? res = JsonSerializer.Deserialize<Resource>(Convert.FromBase64String(await response.Content.ReadAsStringAsync()), jsonOptions);
+                                ResourceResponse? res = JsonSerializer.Deserialize<ResourceResponse>(Convert.FromBase64String(await response.Content.ReadAsStringAsync()), jsonOptions);
                                 
                                 if (res != null) {
 

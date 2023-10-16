@@ -1,5 +1,5 @@
 using Dodoco.Core.Game;
-using Dodoco.Core.Network.Api.Company.Launcher.Resource;
+using Dodoco.Core.Protocol.Company.Launcher.Resource;
 using Dodoco.Core.Serialization.Json;
 
 using System.Reflection;
@@ -34,13 +34,13 @@ namespace Dodoco.Core.Embed {
 
         }
 
-        public static Resource GetLauncherResource(GameServer gameServer, Version gameVersion) {
+        public static ResourceResponse GetLauncherResource(GameServer gameServer, Version gameVersion) {
 
             foreach (string resourceName in Assembly.GetExecutingAssembly().GetManifestResourceNames()) {
 
                 if (Regex.IsMatch(resourceName, $"(Launcher.Resource.resource_{gameVersion.ToString().Replace(".", "")}_{gameServer.ToString().ToLower()})")) {
 
-                    return new JsonSerializer().Deserialize<Resource>(Encoding.UTF8.GetString(Convert.FromBase64String(EmbeddedResourceManager.GetEmbeddedResourceContent(resourceName))));
+                    return new JsonSerializer().Deserialize<ResourceResponse>(Encoding.UTF8.GetString(Convert.FromBase64String(EmbeddedResourceManager.GetEmbeddedResourceContent(resourceName))));
 
                 }
 

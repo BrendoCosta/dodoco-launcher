@@ -1,4 +1,4 @@
-using Dodoco.Core.Network.Api.Company.Launcher.Resource;
+using Dodoco.Core.Protocol.Company.Launcher.Resource;
 using Dodoco.Core.Wine;
 
 namespace Dodoco.Core.Game {
@@ -16,8 +16,8 @@ namespace Dodoco.Core.Game {
         event EventHandler AfterGameDownload;
         event EventHandler AfterGameUpdate;
 
-        Task<Resource.Game?> GetUpdateAsync();
-        Task<Resource.Game?> GetPreUpdateAsync();
+        Task<ResourceGame?> GetUpdateAsync();
+        Task<ResourceGame?> GetPreUpdateAsync();
         Task<bool> IsPreUpdateDownloadedAsync();
         Task<List<GameFileIntegrityReport>> CheckFilesIntegrity(CancellationToken token = default);
         Task<List<GameFileIntegrityReport>> CheckFilesIntegrity(ProgressReporter<ProgressReport> progress, CancellationToken token = default);

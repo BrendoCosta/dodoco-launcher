@@ -1,7 +1,7 @@
 using Dodoco.Core;
 using Dodoco.Core.Launcher;
 using Dodoco.Core.Game;
-using Dodoco.Core.Network.Api.Company.Launcher.Resource;
+using Dodoco.Core.Protocol.Company.Launcher.Resource;
 using Dodoco.Core.Util.Log;
 
 namespace Dodoco.Application.Control {
@@ -51,7 +51,7 @@ namespace Dodoco.Application.Control {
 
         }
 
-        public async Task<Resource.Game?> GetUpdateAsync() {
+        public async Task<ResourceGame?> GetUpdateAsync() {
 
             if (this.launcher.Game == null)
                 throw new UninitializedEntityException();
@@ -60,7 +60,7 @@ namespace Dodoco.Application.Control {
 
         }
 
-        public async Task<Resource.Game?> GetPreUpdateAsync() {
+        public async Task<ResourceGame?> GetPreUpdateAsync() {
 
             if (this.launcher.Game == null)
                 throw new UninitializedEntityException();

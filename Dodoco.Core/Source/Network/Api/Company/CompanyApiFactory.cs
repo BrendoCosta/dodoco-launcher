@@ -1,5 +1,6 @@
-using Dodoco.Core.Network.Api.Company.Launcher.Content;
-using Dodoco.Core.Network.Api.Company.Launcher.Resource;
+using Dodoco.Core.Protocol.Company.Launcher;
+using Dodoco.Core.Protocol.Company.Launcher.Content;
+using Dodoco.Core.Protocol.Company.Launcher.Resource;
 using Dodoco.Core.Network.HTTP;
 using Dodoco.Core.Util.Log;
 
@@ -25,27 +26,27 @@ namespace Dodoco.Core.Network.Api.Company {
 
         }
 
-        public async Task<Content> FetchLauncherContent() {
+        public async Task<ContentResponse> FetchLauncherContent() {
 
             Logger.GetInstance().Log("Fetching latest game's launcher's content data from remote servers...");
-            Content? content = await this.FetchApi<Content>($"/content?key={this.key}&launcher_id={this.launcherId}&language={this.language.Name.ToLower()}");
+            ContentResponse? content = await this.FetchApi<ContentResponse>($"/content?key={this.key}&launcher_id={this.launcherId}&language={this.language.Name.ToLower()}");
             if (content == null)
                 throw new NetworkException("Failed to fetch content API");
             return content;
 
         }
 
-        public async Task<Resource> FetchLauncherResource() {
+        public async Task<ResourceResponse> FetchLauncherResource() {
 
             Logger.GetInstance().Log("Fetching latest game's launcher's resource data from remote servers...");
-            Resource? resource = await this.FetchApi<Resource>($"/resource?key={this.key}&launcher_id={this.launcherId}");
+            ResourceResponse? resource = await this.FetchApi<ResourceResponse>($"/resource?key={this.key}&launcher_id={this.launcherId}");
             if (resource == null)
                 throw new NetworkException("Failed to fetch resource API");
             return resource;
 
         }
 
-        private async Task<T?> FetchApi<T>(string apiUri) where T: CompanyApi {
+        private async Task<T?> FetchApi<T>(string apiUri) where T: LauncherResponse {
 
             T? data = Activator.CreateInstance<T>();
             string urlToFetch = this.apiBaseUrl + apiUri;

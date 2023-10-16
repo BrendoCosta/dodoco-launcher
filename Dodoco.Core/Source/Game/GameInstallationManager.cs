@@ -1,4 +1,4 @@
-using Dodoco.Core.Network.Api.Company.Launcher.Resource;
+using Dodoco.Core.Protocol.Company.Launcher.Resource;
 using Dodoco.Core.Serialization.Json;
 using Dodoco.Core.Util.Log;
 using Dodoco.Core.Wine;
@@ -103,7 +103,7 @@ namespace Dodoco.Core.Game {
 
         }
 
-        public static IGame CreateGame(Version version, GameSettings settings, Resource resource) {
+        public static IGame CreateGame(Version version, GameSettings settings, ResourceResponse resource) {
 
             Logger.GetInstance().Log($"Creating game instance...");
             
