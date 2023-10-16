@@ -4,8 +4,8 @@ using Dodoco.Core.Launcher.Cache;
 using Dodoco.Core.Launcher.Settings;
 using Dodoco.Core.Network;
 using Dodoco.Core.Network.Api.Company;
-using Dodoco.Core.Network.Api.Company.Launcher.Content;
-using Dodoco.Core.Network.Api.Company.Launcher.Resource;
+using Dodoco.Core.Protocol.Company.Launcher.Content;
+using Dodoco.Core.Protocol.Company.Launcher.Resource;
 using Dodoco.Core.Network.Api.Github.Repos;
 using Dodoco.Core.Util.Log;
 using Dodoco.Core.Wine;
@@ -62,8 +62,8 @@ namespace Dodoco.Core.Launcher {
         public LauncherState State { get; private set; } = LauncherState.UNREADY;
         public LauncherDependency Dependency { get; private set; } = LauncherDependency.NONE;
         
-        public Content Content { get; private set; } = new Content();
-        public Resource Resource { get; private set; } = new Resource();
+        public ContentResponse Content { get; private set; } = new ContentResponse();
+        public ResourceResponse Resource { get; private set; } = new ResourceResponse();
         
         public IGame? Game { get; private set; }
         public IWine? Wine { get; private set; }
@@ -273,7 +273,7 @@ namespace Dodoco.Core.Launcher {
 
                     Logger.GetInstance().Warning($"Current installed game version ({installedGameVersion}) is outdated, the newest game version is {remoteGameVersion}");
 
-                    Resource? oldVersionResource = null;
+                    ResourceResponse? oldVersionResource = null;
 
                     Logger.GetInstance().Log($"Searching for the {installedGameVersion.ToString()} version's resource...");
 

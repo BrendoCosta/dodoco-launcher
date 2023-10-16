@@ -1,6 +1,6 @@
 using Dodoco.Core.Network;
 using Dodoco.Core.Network.Api.Company;
-using Dodoco.Core.Network.Api.Company.Launcher.Resource;
+using Dodoco.Core.Protocol.Company.Launcher.Resource;
 using Dodoco.Core.Network.HTTP;
 using Dodoco.Core.Extension;
 using Dodoco.Core.Util.Log;
@@ -49,7 +49,7 @@ namespace Dodoco.Core.Game {
         public bool IsInstalled { get => GameInstallationManager.CheckGameInstallation(this.Settings.InstallationDirectory, this.Settings.Server); }
         public GameState State { get; private set; } = GameState.READY;
         public IWine? Wine { get; set; }
-        public Resource Resource { get; private set; }
+        public ResourceResponse Resource { get; private set; }
         public Version Version { get => Version.Parse(this.Resource.data.game.latest.version); }
 
         public event EventHandler<GameState> OnStateUpdate = delegate {};
@@ -67,16 +67,16 @@ namespace Dodoco.Core.Game {
 
         }
 
-        public Game(GameSettings settings, Resource resource) {
+        public Game(GameSettings settings, ResourceResponse resource) {
 
             this.Settings = settings;
             this.Resource = resource;
 
         }
 
-        public virtual async Task<Resource.Game?> GetUpdateAsync() {
+        public virtual async Task<ResourceGame?> GetUpdateAsync() {
 
-            Resource latestResource = await this.apiFactory.FetchLauncherResource();
+            ResourceResponse latestResource = await this.apiFactory.FetchLauncherResource();
 
             if (!latestResource.IsSuccessfull())
                 throw new GameException("Invalid resource");
@@ -88,9 +88,9 @@ namespace Dodoco.Core.Game {
 
         }
 
-        public virtual async Task<Resource.Game?> GetPreUpdateAsync() {
+        public virtual async Task<ResourceGame?> GetPreUpdateAsync() {
 
-            Resource latestResource = await this.apiFactory.FetchLauncherResource();
+            ResourceResponse latestResource = await this.apiFactory.FetchLauncherResource();
             
             if (!latestResource.IsSuccessfull())
                 throw new GameException("Invalid resource");
@@ -101,11 +101,11 @@ namespace Dodoco.Core.Game {
 
         public virtual async Task<bool> IsPreUpdateDownloadedAsync() {
 
-            Resource.Game? gameResource = await this.GetPreUpdateAsync();
+            ResourceGame? gameResource = await this.GetPreUpdateAsync();
 
             if (gameResource != null) {
 
-                Version remoteVersion = Version.Parse(((Resource.Game) gameResource).latest.version);
+                Version remoteVersion = Version.Parse(((ResourceGame) gameResource).latest.version);
                 string packageFilenamePattern = @$"(game_{this.Version.ToString().Replace(".", @"\.")}_{remoteVersion.ToString().Replace(".", @"\.")}_hdiff_(\w*)\.zip)";
 
                 if (Directory.EnumerateFiles(this.Settings.InstallationDirectory).ToList().Exists(someFile => Regex.IsMatch(Path.GetFileName(someFile), packageFilenamePattern)))
@@ -128,7 +128,7 @@ namespace Dodoco.Core.Game {
             
                 Logger.GetInstance().Log($"Starting game download...");
 
-                Resource latestResource = await this.apiFactory.FetchLauncherResource();
+                ResourceResponse latestResource = await this.apiFactory.FetchLauncherResource();
                 if (!latestResource.IsSuccessfull())
                     throw new GameException($"Invalid resource");
                 
@@ -138,7 +138,7 @@ namespace Dodoco.Core.Game {
 
                 for (int i = 0; i < latestResource.data.game.latest.segments.Count; i++) {
 
-                    Resource.Segment segment = latestResource.data.game.latest.segments[i];
+                    ResourceSegment segment = latestResource.data.game.latest.segments[i];
                     string segmentFileName = segment.path.Split("/").Last();
 
                     if (!Directory.Exists(this.Settings.InstallationDirectory))
@@ -220,7 +220,7 @@ namespace Dodoco.Core.Game {
                 // Sorts all game's segments and ensures the first one (...zip.001) is a zip archive
 
                 latestResource.data.game.latest.segments.Sort((segmentA, segmentB) => segmentA.path.ToUpper().CompareTo(segmentB.path.ToUpper()));
-                Resource.Segment firstSegment = latestResource.data.game.latest.segments.First();
+                ResourceSegment firstSegment = latestResource.data.game.latest.segments.First();
 
                 using (Stream fileStream = File.OpenRead(Path.Join(this.Settings.InstallationDirectory, firstSegment.path.Split("/").Last()))) {
 
@@ -283,7 +283,7 @@ namespace Dodoco.Core.Game {
 
             try {
 
-                Resource.Game gameResource = isPreUpdate ? await this.GetPreUpdateAsync() ?? throw new GameException("Game pre-update is not available") : await this.GetUpdateAsync() ?? throw new GameException("Game update is not available");
+                ResourceGame gameResource = isPreUpdate ? await this.GetPreUpdateAsync() ?? throw new GameException("Game pre-update is not available") : await this.GetUpdateAsync() ?? throw new GameException("Game update is not available");
 
                 Version remoteVersion = Version.Parse(gameResource.latest.version);
                 string packageFilenamePattern = @$"(game_{this.Version.ToString().Replace(".", @"\.")}_{remoteVersion.ToString().Replace(".", @"\.")}_hdiff_(\w*)\.zip)";
@@ -297,7 +297,7 @@ namespace Dodoco.Core.Game {
                     if (!isPreUpdate)
                         repairTask.Start();
 
-                    Resource.Diff diff = gameResource.diffs.Find(d => Regex.IsMatch(d.name, packageFilenamePattern));
+                    ResourceDiff diff = gameResource.diffs.Find(d => Regex.IsMatch(d.name, packageFilenamePattern));
                     string packageFileFullPath = Path.Join(this.Settings.InstallationDirectory, diff.name);
                     await this.DownloadUpdatePackageAsync(diff, reporter, token);
                     
@@ -331,7 +331,7 @@ namespace Dodoco.Core.Game {
 
         }
         
-        protected virtual async Task DownloadUpdatePackageAsync(Resource.Diff diff, ProgressReporter<ProgressReport>? reporter, CancellationToken token = default) {
+        protected virtual async Task DownloadUpdatePackageAsync(ResourceDiff diff, ProgressReporter<ProgressReport>? reporter, CancellationToken token = default) {
 
             GameUpdateState previousState = this.UpdateState;
 

@@ -1,5 +1,5 @@
 using Dodoco.Core.Network;
-using Dodoco.Core.Network.Api.Company.Launcher.Content;
+using Dodoco.Core.Protocol.Company.Launcher.Content;
 using Dodoco.Core.Network.HTTP;
 using Dodoco.Core.Util.Hash;
 using Dodoco.Core.Util.Log;
@@ -48,8 +48,8 @@ namespace Dodoco.Core.Launcher {
             
         }
 
-        public async Task Update(Content content) => await this.Update(content, null);
-        public async Task Update(Content content, ProgressReporter<ProgressReport>? progress) {
+        public async Task Update(ContentResponse content) => await this.Update(content, null);
+        public async Task Update(ContentResponse content, ProgressReporter<ProgressReport>? progress) {
 
             if (!string.IsNullOrWhiteSpace(content.data.adv.background.ToString())) {
 
