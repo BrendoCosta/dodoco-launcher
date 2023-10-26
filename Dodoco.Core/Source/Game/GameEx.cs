@@ -31,64 +31,35 @@ public class GameEx: IGameEx {
 
     }
 
-
-    /// <summary>
-    /// Determines whether the game is installed.
-    /// </summary>
-    /// <returns>
-    /// True if the game is installed in the GameSettings.InstallationDirectory directory; otherwise, false.
-    /// </returns>
+    /// <inheritdoc />
     public virtual bool CheckGameInstallation() {
 
         return File.Exists(Path.Join(this.Settings.InstallationDirectory, this.GetMainExecutableName()));
 
     }
 
-    /// <summary>
-    /// Returns the name of game's data directory based on the GameSettings.Server value.
-    /// </summary>
-    /// <returns>
-    /// The name of game's data directory.
-    /// </returns>
+    /// <inheritdoc />
     public virtual string GetDataDirectoryName() {
 
         return this.GetGameTitle() + "_Data";
 
     }
 
-    /// <summary>
-    /// Returns the internal game's title (used for data directory, main executable file and so on) based on the GameSettings.Server value.
-    /// </summary>
-    /// <returns>
-    /// The the internal game's title.
-    /// </returns>
+    /// <inheritdoc />
     public virtual string GetGameTitle() {
 
        return this.Settings.Server == GameServer.Global ? "GenshinImpact" : "YuanShen";
 
     }
 
-    /// <summary>
-    /// Returns the game's main executable filename alongs its file extension based on the GameSettings.Server value.
-    /// </summary>
-    /// <returns>
-    /// The the game's main executable name.
-    /// </returns>
+    /// <inheritdoc />
     public virtual string GetMainExecutableName() {
 
         return this.GetGameTitle() + ".exe";
 
     }
 
-    /// <summary>
-    /// Try to determine the game's version from the local installation files.
-    /// If the game is not installed or the file doesn't exist, it will returns the latest 
-    /// game version from resource API.
-    /// </summary>
-    /// <returns>
-    /// An <see cref="T:System.Version"/> object containing the the game's version.
-    /// </returns>
-    /// <exception cref="T:Dodoco.Core.Game.GameException">An error has occurred while fetching the remote server</exception>
+    /// <inheritdoc />
     public virtual async Task<Version> GetGameVersionAsync() {
 
         Logger.GetInstance().Log($"Trying to find the game version...");
@@ -182,6 +153,14 @@ public class GameEx: IGameEx {
 
     }
 
+    /// <summary>
+    /// Try to find the game version from /UnityPlayer.dll file with the regex
+    /// pattern "^(OSRELWin)([\d]+[.][\d]+[.][\d]+)".
+    /// </summary>
+    /// <returns>
+    /// An <see cref="T:System.Version" /> object containing the the game's version
+    /// if it was found inside the file; otherwise <see langword="null"/>.
+    /// </returns>
     protected virtual Version? GetGameVersionFromUnityPlayer() {
 
         string unityPlayerPath = Path.Join(this.Settings.InstallationDirectory, "UnityPlayer.dll");
