@@ -2,11 +2,11 @@ namespace Dodoco.Core.Util.FileSystem {
 
     public static class DataUnit {
 
-        public static readonly double BYTE = 1.0D;
-        public static readonly double KILOBYTE = 1000.0D * BYTE;
-        public static readonly double MEGABYTE = Convert.ToUInt64(Math.Pow(KILOBYTE, 2.0D));
-        public static readonly double GIGABYTE = Convert.ToUInt64(Math.Pow(KILOBYTE, 3.0D));
-        public static readonly double TERABYTE = Convert.ToUInt64(Math.Pow(KILOBYTE, 4.0D));
+        public const double BYTE = 1;
+        public const double KILOBYTE = 10.0e3D;
+        public const double MEGABYTE = 10.0e6D;
+        public const double GIGABYTE = 10.0e9D;
+        public const double TERABYTE = 10.0e12D;
 
     }
 
