@@ -19,7 +19,7 @@ public class GameVoiceManager: IGameVoiceManager {
     /// <returns>
     /// A list containing all installed voices packages' languages for current game installation.
     /// </returns>
-    public virtual List<GameLanguage> GetInstalledVoices() {
+    public virtual IEnumerable<GameLanguage> GetInstalledVoices() {
 
         Logger.GetInstance().Log($"Checking installed game voice packages...");
 
