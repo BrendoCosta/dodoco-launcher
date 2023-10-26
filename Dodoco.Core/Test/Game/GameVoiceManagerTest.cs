@@ -12,7 +12,7 @@ public class GameVoiceManagerTest {
     public void GetInstalledVoices_Test(GameLanguage language) {
 
         GameSettings settings = new GameSettings();
-        settings.InstallationDirectory = Path.Join(Util.TEST_STATIC_DIRECTOY_PATH, "/Game/GameVoiceManagerTest/");
+        settings.InstallationDirectory = Path.Join(Util.TEST_STATIC_DIRECTOY_PATH, "/Game/GameVoiceManagerTest/GetInstalledVoices_Test");
         IGameEx game = new GameEx(settings);
         IGameVoiceManager voiceManager = new GameVoiceManager(game);
         Assert.IsTrue(voiceManager.GetInstalledVoices().Contains(language));
