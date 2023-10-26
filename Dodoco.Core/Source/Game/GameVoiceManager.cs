@@ -11,14 +11,7 @@ public class GameVoiceManager: IGameVoiceManager {
     
     public GameVoiceManager(IGameEx game) => this.Game = game;
 
-    /// <summary>
-    /// Returns a list with all installed voices packages' languages for current game installation.
-    /// To achieve this, the method simply verify if each supported language from <c>GameLanguage.All</c> does have a 
-    /// folder named after it inside "*_Data/StreamingAssets/AudioAssets" directory.
-    /// </summary>
-    /// <returns>
-    /// A list containing all installed voices packages' languages for current game installation.
-    /// </returns>
+    /// <inheritdoc />
     public virtual IEnumerable<GameLanguage> GetInstalledVoices() {
 
         Logger.GetInstance().Log($"Checking installed game voice packages...");
