@@ -9,7 +9,7 @@ public struct ResourceLatest {
     public string md5 { get; set; }
     public string entry { get; set; }
     public List<ResourceVoicePack> voice_packs { get; set; }
-    public Uri decompressed_path { get; set; }
+    public string decompressed_path { get; set; }
     public List<ResourceSegment> segments { get; set; }
     public long package_size { get; set; }
     

@@ -1,5 +1,6 @@
 namespace Dodoco.Core.Game {
 
+    [ObsoleteAttribute("This property is obsolete. Use GameFileIntegrityReportEx instead.", false)]
     public struct GameFileIntegrityReport {
 
         public GameFileIntegrityState localFileIntegrityState { get; set; }
