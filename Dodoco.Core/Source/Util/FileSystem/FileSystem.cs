@@ -4,6 +4,28 @@ namespace Dodoco.Core.Util.FileSystem {
 
     public class FileSystem {
 
+        public static void CopyDirectory(string source, string target, bool overwrite = false) {
+
+            if (!Directory.Exists(source))
+                throw new CoreException("The source directory doesn't exist");
+
+            if (!Directory.Exists(target))
+                Directory.CreateDirectory(target);
+
+            foreach (string filePath in Directory.GetFiles(source)) {
+
+                File.Copy(filePath, Path.Join(target, Path.GetFileName(filePath)), overwrite);
+
+            }
+
+            foreach (string directoryPath in Directory.GetDirectories(source)) {
+
+                CopyDirectory(directoryPath, Path.Join(target, Path.GetFileName(directoryPath)), overwrite);
+
+            }
+
+        }
+
         public static long GetAvailableStorageSpace(string directory) {
 
             /*
