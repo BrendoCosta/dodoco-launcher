@@ -6,9 +6,8 @@ namespace Dodoco.Core.Launcher {
 
         // Directories
 
-        public static string CACHE_DIRECTORY { get; private set; } = Path.Join(Constants.HOME_DIRECTORY, $".cache");
         public static string SETTINGS_DIRECTORY { get; private set; } = Constants.HOME_DIRECTORY;
-        public static string BACKGROUND_IMAGE_DIRECTORY { get; private set; } = CACHE_DIRECTORY;
+        public static string BACKGROUND_IMAGE_DIRECTORY { get; private set; } = Constants.CACHE_DIRECTORY;
         
         // Filenames
         

@@ -7,6 +7,7 @@ namespace Dodoco.Core {
         // Directories
         
         public static string HOME_DIRECTORY { get; private set; } = Path.Join(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), $"/.local/share/{IDENTIFIER}");
+        public static string CACHE_DIRECTORY { get; private set; } = Path.Join(HOME_DIRECTORY, "/.cache/");
         public static string LOG_DIRECTORY { get; private set; } = Path.Join(HOME_DIRECTORY, $"log");
 
         // Filenames

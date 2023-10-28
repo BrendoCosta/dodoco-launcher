@@ -6,7 +6,7 @@ namespace Dodoco.Core.Launcher.Cache {
 
         public LauncherCacheFile(): base(
             "cache",
-            LauncherConstants.CACHE_DIRECTORY,
+            Constants.CACHE_DIRECTORY,
             LauncherConstants.CACHE_FILENAME,
             new JsonSerializer()
         ) {}
