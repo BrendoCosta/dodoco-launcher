@@ -45,7 +45,7 @@ namespace Dodoco.Core {
 
             } else {
 
-                throw new CoreException($"The file {InternalName} doesn't exists");
+                throw new CoreException($"The file {InternalName} already exist");
 
             }
 
