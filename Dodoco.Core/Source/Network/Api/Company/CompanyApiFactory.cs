@@ -16,7 +16,8 @@ namespace Dodoco.Core.Network.Api.Company {
         private string key;
         private int launcherId;
         private CultureInfo language;
-        private static Cache<ResourceResponse> ResourceResponseCache = new Cache<ResourceResponse>(new ResourceResponse());
+        private static Dictionary<Tuple<string, int>, Cache<ResourceResponse>> ResourceResponseCache = new Dictionary<Tuple<string, int>, Cache<ResourceResponse>>();
+        private Tuple<string, int> cacheKey { get => new Tuple<string, int>(this.key, this.launcherId); }
 
         public CompanyApiFactory(string apiBaseUrl, string key, int launcherId, CultureInfo language) {
 
@@ -39,9 +40,15 @@ namespace Dodoco.Core.Network.Api.Company {
 
         public async Task<ResourceResponse> FetchLauncherResource() {
 
-            if (ResourceResponseCache.IsValid()) {
+            if (!ResourceResponseCache.ContainsKey(this.cacheKey)) {
 
-                return ResourceResponseCache.Resource;
+                ResourceResponseCache.Add(cacheKey, new Cache<ResourceResponse>(new ResourceResponse()));
+
+            }
+
+            if (ResourceResponseCache[this.cacheKey].IsValid()) {
+
+                return ResourceResponseCache[this.cacheKey].Resource;
 
             }
 
@@ -50,7 +57,7 @@ namespace Dodoco.Core.Network.Api.Company {
             if (resource == null)
                 throw new NetworkException("Failed to fetch resource API");
 
-            ResourceResponseCache.Update(resource);
+            ResourceResponseCache[this.cacheKey].Update(resource);
             return resource;
 
         }
