@@ -1,7 +1,6 @@
 namespace Dodoco.Core.Test.Game;
 
 using Dodoco.Core.Game;
-using Dodoco.Core.Serialization.Json;
 using Dodoco.Core.Util.FileSystem;
 using NUnit.Framework;
 using Moq;
