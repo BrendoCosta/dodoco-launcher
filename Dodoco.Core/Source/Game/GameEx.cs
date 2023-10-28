@@ -1,5 +1,6 @@
 namespace Dodoco.Core.Game;
 
+using Dodoco.Core.Embed;
 using Dodoco.Core.Network.Api.Company;
 using Dodoco.Core.Protocol.Company.Launcher.Resource;
 using Dodoco.Core.Util.FileSystem;
@@ -13,10 +14,18 @@ using System.Threading.Tasks;
 public class GameEx: IGameEx {
 
     public GameSettings Settings { get; set; }
+    protected GameResourceCacheFile ResourceCacheFile = new GameResourceCacheFile();
 
     public GameEx(GameSettings settings) {
 
         this.Settings = settings;
+        
+        if (!this.ResourceCacheFile.Exist()) {
+
+            this.ResourceCacheFile.Create();
+            this.ResourceCacheFile.Write(new List<GameResourceCache>());
+
+        }
 
     }
 
@@ -98,6 +107,109 @@ public class GameEx: IGameEx {
 
     }
 
+    /// <inheritdoc />
+    public virtual async Task<ResourceResponse> GetResourceAsync() {
+
+        Logger.GetInstance().Log($"Trying to find the resource data for current game version ({(await this.GetGameVersionAsync()).ToString()})...");
+        
+        if (!this.CheckGameInstallation()) {
+
+            // If the game is not installed, return the latest resource from the server
+
+            ResourceResponse remoteResource = await this.ApiFactory.FetchLauncherResource();
+            remoteResource.EnsureSuccessStatusCode();
+
+            Logger.GetInstance().Log($"Game is not installed. Successfully returned the resource from remote server");
+
+            return remoteResource;
+
+        } else {
+
+            ResourceResponse remoteResource = await this.ApiFactory.FetchLauncherResource();
+            remoteResource.EnsureSuccessStatusCode();
+
+            Version installedGameVersion = await this.GetGameVersionAsync();
+            Version remoteGameVersion = Version.Parse(remoteResource.data.game.latest.version);
+            Predicate<GameResourceCache> desiredGameResourceCache = (GameResourceCache x) => {
+                return x.Server == this.Settings.Server && Version.Parse(x.Resource.data.game.latest.version) == installedGameVersion;
+            };
+
+            if (installedGameVersion == remoteGameVersion) {
+
+                // Game is updated
+
+                Logger.GetInstance().Log($"Successfully returned the resource from remote server");
+                return remoteResource;
+
+            } else if (installedGameVersion < remoteGameVersion) {
+
+                /*
+                 * Game is outdated, first it should try to find
+                 * the previous version's resource saved in the cache
+                */
+
+                Logger.GetInstance().Warning($"The current installed game is outdated. The installed version is \"{installedGameVersion.ToString()}\" while the latest one is \"{remoteGameVersion.ToString()}\"");
+
+                ResourceResponse oldVersionResource;
+                
+                if (this.ResourceCacheFile.Exist() && this.ResourceCacheFile.Read().Exists(desiredGameResourceCache)) {
+
+                    // If the resource exist in the cache then we return it
+
+                    oldVersionResource = this.ResourceCacheFile.Read().Find(desiredGameResourceCache).Resource;
+                    Logger.GetInstance().Log($"Successfully returned the resource from local cache");
+
+                } else {
+
+                    // Otherwise we hope to find it in embedded resources
+
+                    oldVersionResource = EmbeddedResourceManager.GetLauncherResource(this.Settings.Server, installedGameVersion);
+                    Logger.GetInstance().Log($"Successfully returned the resource from embedded resources");
+
+                }
+
+                return oldVersionResource;
+
+            } else {
+
+                throw new GameException($"The installed version ({installedGameVersion.ToString()}) can't be greater than the returned by the server ({remoteGameVersion.ToString()})");
+
+            }
+
+        }
+
+    }
+
+    /// <inheritdoc />
+    public virtual async Task UpdateGameResourceCacheAsync() {
+
+        List<GameResourceCache> list = new List<GameResourceCache>();
+        
+        if (!this.ResourceCacheFile.Exist()) {
+
+            this.ResourceCacheFile.Create();
+            this.ResourceCacheFile.Write(new List<GameResourceCache>());
+
+        }
+
+        list = this.ResourceCacheFile.Read();
+        Version gameVersion = await this.GetGameVersionAsync();
+
+        if (!list.Exists(e => (e.Server == this.Settings.Server && Version.Parse(e.Resource.data.game.latest.version) == gameVersion))) {
+
+            list.Add(new GameResourceCache {
+
+                Server = this.Settings.Server,
+                Resource = await this.GetResourceAsync()
+
+            });
+
+            this.ResourceCacheFile.Write(list);
+
+        }
+
+    }
+
     /// <summary>
     /// Try to find the game version from /*_Data/globalgamemanagers file with the regex
     /// pattern "^([1-9]+\.[0-9]+\.[0-9]+)_[\d]+_[\d]+".
@@ -145,7 +257,7 @@ public class GameEx: IGameEx {
 
         } else {
 
-            Logger.GetInstance().Error($"The file \"{globalGameManagersPath}\" doesn't exist");
+            Logger.GetInstance().Warning($"The file \"{globalGameManagersPath}\" doesn't exist");
 
         }
 
@@ -200,7 +312,7 @@ public class GameEx: IGameEx {
 
         } else {
 
-            Logger.GetInstance().Error($"The file \"{unityPlayerPath}\" doesn't exist");
+            Logger.GetInstance().Warning($"The file \"{unityPlayerPath}\" doesn't exist");
 
         }
 
