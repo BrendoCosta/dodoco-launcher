@@ -19,6 +19,8 @@ namespace Dodoco.Core {
 
         }
 
+        public void Update(T newResource) => this.Update(newResource, TimeSpan.FromMinutes(5));
+
         public void Update(T newResource, TimeSpan maxAge) {
 
             this.Resource = newResource;
