@@ -1,6 +1,12 @@
 namespace Dodoco.Core.Test.Game;
 
+using Dodoco.Core.Embed;
 using Dodoco.Core.Game;
+using Dodoco.Core.Network.Api.Company;
+using Dodoco.Core.Protocol.Company.Launcher.Resource;
+using Dodoco.Core.Serialization;
+using Dodoco.Core.Serialization.Json;
+using Moq;
 using NUnit.Framework;
 
 [TestFixture]
@@ -44,6 +50,21 @@ public class GameExTest {
     private static object[] GetGameVersionAsync_Remote_Cases = {
         new object[] { GameServer.Chinese, Path.Join(Util.TEST_STATIC_DIRECTOY_PATH, Guid.NewGuid().ToString()) },
         new object[] { GameServer.Global, Path.Join(Util.TEST_STATIC_DIRECTOY_PATH, Guid.NewGuid().ToString()) }
+    };
+
+    private static object[] GetResource_Updated_Test_Cases = {
+        new object[] { GameServer.Chinese },
+        new object[] { GameServer.Global }
+    };
+
+    private static object[] GetResource_Outdated_Test_Cases = {
+        new object[] { GameServer.Chinese, Path.Join(Util.TEST_STATIC_DIRECTOY_PATH, "/Game/GameExTest/GetResource_Outdated_Test") },
+        new object[] { GameServer.Global, Path.Join(Util.TEST_STATIC_DIRECTOY_PATH, "/Game/GameExTest/GetResource_Outdated_Test") }
+    };
+
+    private static object[] UpdateGameResourceCache_Test_Cases = {
+        new object[] { GameServer.Chinese },
+        new object[] { GameServer.Global }
     };
 
     [SetUp]
@@ -113,6 +134,65 @@ public class GameExTest {
         Version expectedRemoteVersion = Version.Parse((await this.Game.ApiFactory.FetchLauncherResource()).data.game.latest.version);
         Version remoteVersionTaken = await this.Game.GetGameVersionAsync();
         Assert.That(remoteVersionTaken, Is.EqualTo(expectedRemoteVersion));
+
+    }
+
+    [TestCaseSource(nameof(GetResource_Updated_Test_Cases))]
+    public async Task GetResource_Updated_Test(GameServer server) {
+
+        this.Game.Settings.Server = server;
+        this.Game.Settings.InstallationDirectory = Path.Join(Util.TEST_STATIC_DIRECTOY_PATH, Guid.NewGuid().ToString());
+        ResourceResponse expected = await this.Game.ApiFactory.FetchLauncherResource();
+        ResourceResponse taken = await this.Game.GetResourceAsync();
+        IFormatSerializer serializer = new JsonSerializer();
+        Assert.That(serializer.Serialize(taken), Is.EqualTo(serializer.Serialize(expected)));
+
+    }
+
+    [TestCaseSource(nameof(GetResource_Outdated_Test_Cases))]
+    public async Task GetResource_Outdated_Test(GameServer server, string directory) {
+
+        this.Game.Settings.Server = server;
+        this.Game.Settings.InstallationDirectory = directory;
+        ResourceResponse expected = EmbeddedResourceManager.GetLauncherResource(server, Version.Parse("3.8.0"));
+        ResourceResponse taken = await this.Game.GetResourceAsync();
+        IFormatSerializer serializer = new JsonSerializer();
+        Assert.That(serializer.Serialize(taken), Is.EqualTo(serializer.Serialize(expected)));
+
+    }
+
+    [TestCaseSource(nameof(UpdateGameResourceCache_Test_Cases))]
+    public async Task UpdateGameResourceCache_Test(GameServer server) {
+
+        Version targetTestVersion = Version.Parse("3.8.0");
+        this.Game.Settings.Server = server;
+        this.Game.Settings.InstallationDirectory = Path.Join(Util.TEST_STATIC_DIRECTOY_PATH, "/Game/GameExTest/UpdateGameResourceCache_Test");
+        
+        GameResourceCacheFile resourceCacheFile = new GameResourceCacheFile();
+        Predicate<GameResourceCache> desiredCacheEntry = new Predicate<GameResourceCache>(e =>
+            e.Server == server
+            && Version.Parse(e.Resource.data.game.latest.version) == targetTestVersion
+        );
+
+        // If the cache file does exist, it shouldn't contain the cache entry
+
+        if (resourceCacheFile.Exist()) {
+
+            Assert.IsFalse(resourceCacheFile.Read().Exists(desiredCacheEntry));
+
+        }
+
+        await this.Game.UpdateGameResourceCacheAsync();
+
+        // Now both the file and the cache entry should exist
+
+        Assert.IsTrue(resourceCacheFile.Read().Exists(desiredCacheEntry));
+
+        // Remove the created entry from the list
+
+        var list = resourceCacheFile.Read();
+        list.RemoveAll(desiredCacheEntry);
+        resourceCacheFile.Write(list);
 
     }
 

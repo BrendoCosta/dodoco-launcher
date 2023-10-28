@@ -1,6 +1,7 @@
 namespace Dodoco.Core.Game;
 
 using Dodoco.Core.Network.Api.Company;
+using Dodoco.Core.Protocol.Company.Launcher.Resource;
 
 public interface IGameEx {
 
@@ -50,5 +51,24 @@ public interface IGameEx {
     /// </returns>
     /// <exception cref="T:Dodoco.Core.Game.GameException">An error has occurred while fetching the remote server</exception>
     Task<Version> GetGameVersionAsync();
+
+    /// <summary>
+    /// Returns the <see cref="T:Dodoco.Core.Protocol.Company.Launcher.Resource.ResourceResponse"/>
+    /// object used by current game version. This object can be obtained through the remote server when
+    /// the game is either not installed or updated, by the <see cref="T:Dodoco.Core.Game.GameResourceCacheFile"/>
+    /// file or by the library's build-time embedded resources when the game is outdated.
+    /// </summary>
+    /// <returns>
+    /// Returns the <see cref="T:Dodoco.Core.Protocol.Company.Launcher.Resource.ResourceResponse"/>
+    /// object used by current game version.
+    /// </returns>
+    Task<ResourceResponse> GetResourceAsync();
+
+    /// <summary>
+    /// This method updates the content of the <see cref="T:Dodoco.Core.Game.GameResourceCacheFile"/> file to ensure that an
+    /// <see cref="T:Dodoco.Core.Protocol.Company.Launcher.Resource.ResourceResponse"/> for the previous game version
+    /// will be available when the game receives a later update.
+    /// </summary>
+    Task UpdateGameResourceCacheAsync();
 
 }
