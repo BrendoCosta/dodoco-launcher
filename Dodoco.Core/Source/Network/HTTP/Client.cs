@@ -50,17 +50,28 @@ namespace Dodoco.Core.Network.HTTP {
 
         private async Task<HttpResponseMessage> TryToFetch(Task<HttpResponseMessage> fetchTask) {
 
-            for (int i = 1; i < 6; i++) {
+            const int MAX_ATTEMPTS = 5;
+
+            for (int i = 1; i < MAX_ATTEMPTS + 1; i++) {
 
                 try {
 
                     return await fetchTask.WaitAsync(CancellationToken.None);
 
-                } catch (HttpRequestException e) {
+                } catch (TimeoutException e) {
 
-                    int timeOut = 5000 * i;
-                    Logger.GetInstance().Error($"Failed to make a HTTP request to remote servers. Trying again in {timeOut/1000} seconds...", e);
-                    await Task.Delay(timeOut);
+                    if (i < MAX_ATTEMPTS + 1) {
+
+                        TimeSpan timeout = TimeSpan.FromSeconds(5 * i);
+                        this.httpClient.Timeout = timeout;
+                    
+                        Logger.GetInstance().Warning($"HTTP request connection timeout (retrying with timeout = {timeout.TotalSeconds} seconds) ({i}/{MAX_ATTEMPTS})", e);
+
+                    } else {
+
+                        Logger.GetInstance().Error($"HTTP request connection timeout", e);
+
+                    }
 
                 }
 
