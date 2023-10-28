@@ -100,6 +100,13 @@ namespace Dodoco.Core.Network.HTTP {
                 
                 using (Stream downloadStream = await response.Content.ReadAsStreamAsync()) {
 
+                    string? destinationFolder = Path.GetDirectoryName(destinationPath);
+                    if (destinationFolder != null) {
+
+                        Directory.CreateDirectory(destinationFolder);
+
+                    }
+
                     using (FileStream fileStream = new FileStream(destinationPath, FileMode.Create)) {
 
                         byte[] buffer = new byte[5 * ((int) DataUnit.MEGABYTE)];
