@@ -12,7 +12,7 @@ using System.Security.Cryptography;
 
 public class GameIntegrityManager: IGameIntegrityManager {
 
-     private IGameEx _Game;
+    private IGameEx _Game;
     
     private GameIntegrityManagerState _State;
     public GameIntegrityManagerState State {
@@ -85,7 +85,7 @@ public class GameIntegrityManager: IGameIntegrityManager {
 
                     mismatches.Add(new GameFileIntegrityReportEx {
 
-                        State = GameFileIntegrityState.CORRUPTED,
+                        State = GameFileIntegrityState.MISSING,
                         Path = currentEntry.remoteName,
                         LocalChecksum = string.Empty,
                         LocalSize = 0,
