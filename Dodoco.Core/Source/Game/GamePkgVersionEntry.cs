@@ -4,7 +4,7 @@ namespace Dodoco.Core.Game {
 
         public string remoteName { get; set; }
         public string md5 { get; set; }
-        public ulong fileSize { get; set; }
+        public long fileSize { get; set; }
 
     }
 
