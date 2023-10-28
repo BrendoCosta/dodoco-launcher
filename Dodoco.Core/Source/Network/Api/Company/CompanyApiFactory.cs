@@ -16,6 +16,7 @@ namespace Dodoco.Core.Network.Api.Company {
         private string key;
         private int launcherId;
         private CultureInfo language;
+        private static Cache<ResourceResponse> ResourceResponseCache = new Cache<ResourceResponse>(new ResourceResponse());
 
         public CompanyApiFactory(string apiBaseUrl, string key, int launcherId, CultureInfo language) {
 
@@ -38,10 +39,18 @@ namespace Dodoco.Core.Network.Api.Company {
 
         public async Task<ResourceResponse> FetchLauncherResource() {
 
+            if (ResourceResponseCache.IsValid()) {
+
+                return ResourceResponseCache.Resource;
+
+            }
+
             Logger.GetInstance().Log("Fetching latest game's launcher's resource data from remote servers...");
             ResourceResponse? resource = await this.FetchApi<ResourceResponse>($"/resource?key={this.key}&launcher_id={this.launcherId}");
             if (resource == null)
                 throw new NetworkException("Failed to fetch resource API");
+
+            ResourceResponseCache.Update(resource);
             return resource;
 
         }
