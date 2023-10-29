@@ -229,7 +229,7 @@ public class GameUpdateManager: IGameUpdateManager {
         if (gameResource != null) {
 
             Version remoteVersion = Version.Parse(((ResourceGame) gameResource).latest.version);
-            string packageFilenamePattern = @$"(game_{currentVersion.ToString().Replace(".", @"\.")}_{remoteVersion.ToString().Replace(".", @"\.")}_hdiff_(\w*)\.zip)";
+            string packageFilenamePattern = this.GetGameUpdatePackageFilenamePattern(currentVersion, remoteVersion);
 
             if (Directory.EnumerateFiles(this._Game.Settings.InstallationDirectory).ToList().Exists(someFile => Regex.IsMatch(Path.GetFileName(someFile), packageFilenamePattern)))
                 return true;
