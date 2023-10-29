@@ -107,15 +107,6 @@ public class GameEx: IGameEx {
     }
 
     /// <inheritdoc />
-    public virtual async Task<ResourceGame?> GetGamePreUpdateAsync() {
-
-        ResourceResponse latestResource = await this.GetApiFactory().FetchLauncherResource();
-        latestResource.EnsureSuccessStatusCode();
-        return latestResource.data.pre_download_game;
-
-    }
-
-    /// <inheritdoc />
     public virtual async Task<ResourceResponse> GetResourceAsync() {
 
         Logger.GetInstance().Log($"Trying to find the resource data for current game version ({(await this.GetGameVersionAsync()).ToString()})...");
@@ -185,22 +176,6 @@ public class GameEx: IGameEx {
             }
 
         }
-
-    }
-
-    /// <inheritdoc />
-    public virtual async Task<ResourceGame?> GetGameUpdateAsync() {
-
-        if (!this.CheckGameInstallation())
-            return null;
-
-        ResourceResponse latestResource = await this.GetApiFactory().FetchLauncherResource();
-        latestResource.EnsureSuccessStatusCode();
-
-        if (Version.Parse(latestResource.data.game.latest.version) > await this.GetGameVersionAsync())
-            return latestResource.data.game;
-
-        return null;
 
     }
 

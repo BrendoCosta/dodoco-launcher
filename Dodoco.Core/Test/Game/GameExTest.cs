@@ -2,12 +2,10 @@ namespace Dodoco.Core.Test.Game;
 
 using Dodoco.Core.Embed;
 using Dodoco.Core.Game;
-using Dodoco.Core.Network.Api.Company;
-using Dodoco.Core.Protocol.Company.Launcher;
 using Dodoco.Core.Protocol.Company.Launcher.Resource;
 using Dodoco.Core.Serialization;
 using Dodoco.Core.Serialization.Json;
-using Moq;
+
 using NUnit.Framework;
 
 [TestFixture]
@@ -64,11 +62,6 @@ public class GameExTest {
     };
 
     private static object[] UpdateGameResourceCache_Test_Cases = {
-        new object[] { GameServer.Chinese },
-        new object[] { GameServer.Global }
-    };
-
-    private static object[] GetUpdateAsync_Test_Cases = {
         new object[] { GameServer.Chinese },
         new object[] { GameServer.Global }
     };
@@ -199,103 +192,6 @@ public class GameExTest {
         var list = resourceCacheFile.Read();
         list.RemoveAll(desiredCacheEntry);
         resourceCacheFile.Write(list);
-
-    }
-
-    [TestCaseSource(nameof(GetUpdateAsync_Test_Cases))]
-    [Description("GetUpdateAsync() should return null when the game is not installed")]
-    public async Task GetUpdateAsync_Game_Not_Installed(GameServer server) {
-
-        this.Game.Settings.Server = server;
-        this.Game.Settings.InstallationDirectory = Path.Join(Util.TEST_STATIC_DIRECTOY_PATH, Guid.NewGuid().ToString());
-
-        Assert.IsNull(await this.Game.GetGameUpdateAsync());
-
-    }
-
-    [TestCaseSource(nameof(GetUpdateAsync_Test_Cases))]
-    [Description("GetUpdateAsync() should return null if the game is updated")]
-    public async Task GetUpdateAsync_Game_Update(GameServer server) {
-
-        GameSettings settings = new GameSettings {
-
-            Server = server
-
-        };
-
-        Mock<GameEx> gameMock = new Mock<GameEx>(settings);
-        gameMock.CallBase = true;
-        // Lets assume the game is installed
-        gameMock.Setup(m => m.CheckGameInstallation()).Returns(true);
-        // Lets assume the game is updated
-        const string UPDATED_VERSION = "4.0.1";
-        ResourceResponse res = new ResourceResponse {
-            retcode = LauncherResponseStatus.SUCCESS,
-            data = new ResourceData {
-                game = new ResourceGame {
-                    latest = new ResourceLatest {
-                        version = UPDATED_VERSION
-                    }
-                }
-            }
-        };
-        
-        Mock<CompanyApiFactory> apiFactoryMock = new Mock<CompanyApiFactory>(
-            this.Settings.Api[this.Settings.Server].Url,
-            this.Settings.Api[this.Settings.Server].Key,
-            this.Settings.Api[this.Settings.Server].LauncherId,
-            this.Settings.Language
-        );
-        apiFactoryMock.CallBase = true;
-        apiFactoryMock.Setup(m => m.FetchLauncherResource()).Returns(Task<ResourceResponse>.FromResult(res));
-
-        gameMock.Setup(m => m.GetGameVersionAsync()).Returns(Task<ResourceResponse>.FromResult(Version.Parse(UPDATED_VERSION)));
-        gameMock.Setup(m => m.GetApiFactory()).Returns(apiFactoryMock.Object);
-
-        Assert.That(await gameMock.Object.GetGameUpdateAsync(), Is.Null);
-
-    }
-
-    [TestCaseSource(nameof(GetUpdateAsync_Test_Cases))]
-    [Description("GetUpdateAsync() should return the update's resource if the game is outdated")]
-    public async Task GetUpdateAsync_Game_Outdated(GameServer server) {
-
-        GameSettings settings = new GameSettings {
-
-            Server = server
-
-        };
-
-        Mock<GameEx> gameMock = new Mock<GameEx>(settings);
-        gameMock.CallBase = true;
-        // Lets assume the game is installed
-        gameMock.Setup(m => m.CheckGameInstallation()).Returns(true);
-        // Lets assume there is an update and the game is outdated
-        ResourceResponse res = new ResourceResponse {
-            retcode = LauncherResponseStatus.SUCCESS,
-            data = new ResourceData {
-                game = new ResourceGame {
-                    latest = new ResourceLatest {
-                        version = "4.0.1"
-                    }
-                }
-            }
-        };
-        
-        Mock<CompanyApiFactory> apiFactoryMock = new Mock<CompanyApiFactory>(
-            this.Settings.Api[this.Settings.Server].Url,
-            this.Settings.Api[this.Settings.Server].Key,
-            this.Settings.Api[this.Settings.Server].LauncherId,
-            this.Settings.Language
-        );
-        apiFactoryMock.CallBase = true;
-        apiFactoryMock.Setup(m => m.FetchLauncherResource()).Returns(Task<ResourceResponse>.FromResult(res));
-
-        gameMock.Setup(m => m.GetGameVersionAsync()).Returns(Task<ResourceResponse>.FromResult(Version.Parse("3.8.0")));
-        gameMock.Setup(m => m.GetApiFactory()).Returns(apiFactoryMock.Object);
-
-        IFormatSerializer serializer = new JsonSerializer();
-        Assert.That(serializer.Serialize(await gameMock.Object.GetGameUpdateAsync()), Is.EqualTo(serializer.Serialize(res.data.game)));
 
     }
 
