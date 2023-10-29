@@ -28,7 +28,7 @@ namespace Dodoco.Core.Network.Api.Company {
 
         }
 
-        public async Task<ContentResponse> FetchLauncherContent() {
+        public virtual async Task<ContentResponse> FetchLauncherContent() {
 
             Logger.GetInstance().Log("Fetching latest game's launcher's content data from remote servers...");
             ContentResponse? content = await this.FetchApi<ContentResponse>($"/content?key={this.key}&launcher_id={this.launcherId}&language={this.language.Name.ToLower()}");
@@ -38,7 +38,7 @@ namespace Dodoco.Core.Network.Api.Company {
 
         }
 
-        public async Task<ResourceResponse> FetchLauncherResource() {
+        public virtual async Task<ResourceResponse> FetchLauncherResource() {
 
             if (!ResourceResponseCache.ContainsKey(this.cacheKey)) {
 
