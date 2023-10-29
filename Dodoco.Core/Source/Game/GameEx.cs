@@ -29,23 +29,22 @@ public class GameEx: IGameEx {
 
     }
 
-    public CompanyApiFactory ApiFactory {
-    
-        get => new CompanyApiFactory(
-            this.Settings.Api[this.Settings.Server].Url,
-            this.Settings.Api[this.Settings.Server].Key,
-            this.Settings.Api[this.Settings.Server].LauncherId,
-            this.Settings.Language
-        );
-
-    }
-
     /// <inheritdoc />
     public virtual bool CheckGameInstallation() {
 
         return File.Exists(Path.Join(this.Settings.InstallationDirectory, this.GetMainExecutableName()));
 
     }
+
+    /// <inheritdoc />
+    public virtual CompanyApiFactory GetApiFactory() => new CompanyApiFactory(
+        
+        this.Settings.Api[this.Settings.Server].Url,
+        this.Settings.Api[this.Settings.Server].Key,
+        this.Settings.Api[this.Settings.Server].LauncherId,
+        this.Settings.Language
+
+    );
 
     /// <inheritdoc />
     public virtual string GetDataDirectoryName() {
@@ -89,7 +88,7 @@ public class GameEx: IGameEx {
 
             try {
 
-                ResourceResponse resource = await this.ApiFactory.FetchLauncherResource();
+                ResourceResponse resource = await this.GetApiFactory().FetchLauncherResource();
                 resource.EnsureSuccessStatusCode();
                 gameVersion = Version.Parse(resource.data.game.latest.version);
 
@@ -116,7 +115,7 @@ public class GameEx: IGameEx {
 
             // If the game is not installed, return the latest resource from the server
 
-            ResourceResponse remoteResource = await this.ApiFactory.FetchLauncherResource();
+            ResourceResponse remoteResource = await this.GetApiFactory().FetchLauncherResource();
             remoteResource.EnsureSuccessStatusCode();
 
             Logger.GetInstance().Log($"Game is not installed. Successfully returned the resource from remote server");
@@ -125,7 +124,7 @@ public class GameEx: IGameEx {
 
         } else {
 
-            ResourceResponse remoteResource = await this.ApiFactory.FetchLauncherResource();
+            ResourceResponse remoteResource = await this.GetApiFactory().FetchLauncherResource();
             remoteResource.EnsureSuccessStatusCode();
 
             Version installedGameVersion = await this.GetGameVersionAsync();
@@ -177,6 +176,22 @@ public class GameEx: IGameEx {
             }
 
         }
+
+    }
+
+    /// <inheritdoc />
+    public virtual async Task<ResourceGame?> GetGameUpdateAsync() {
+
+        if (!this.CheckGameInstallation())
+            return null;
+
+        ResourceResponse latestResource = await this.GetApiFactory().FetchLauncherResource();
+        latestResource.EnsureSuccessStatusCode();
+
+        if (Version.Parse(latestResource.data.game.latest.version) > await this.GetGameVersionAsync())
+            return latestResource.data.game;
+
+        return null;
 
     }
 
