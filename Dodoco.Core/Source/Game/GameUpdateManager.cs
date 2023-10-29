@@ -437,13 +437,13 @@ public class GameUpdateManager: IGameUpdateManager {
 
         try {
 
-            ResourceGame gameResource = await this.GetGamePreUpdateAsync() ?? throw new GameException("Game pre-update is not available");
+            ResourceGame gameResource = await this.GetGameUpdateAsync() ?? throw new GameException("Game update is not available");
             
             Version currentVersion = await this._Game.GetGameVersionAsync();
             Version remoteVersion = Version.Parse(gameResource.latest.version);
             string packageFilenamePattern = this.GetGameUpdatePackageFilenamePattern(currentVersion, remoteVersion);
 
-            Logger.GetInstance().Log($"Pre-updating the game to version {remoteVersion.ToString()}...");
+            Logger.GetInstance().Log($"Updating the game to version {remoteVersion.ToString()}...");
 
             if (gameResource.diffs.Exists(d => Regex.IsMatch(d.name, packageFilenamePattern))) {
 
@@ -471,13 +471,13 @@ public class GameUpdateManager: IGameUpdateManager {
 
             }
             
-            Logger.GetInstance().Log($"Sucessfully pre-updated the game to version {remoteVersion.ToString()}");
+            Logger.GetInstance().Log($"Sucessfully updated the game to version {remoteVersion.ToString()}");
             this.State = previousState;
             return;
 
         } catch (CoreException e) {
 
-            throw new GameException($"Failed to pre-update the game", e);
+            throw new GameException($"Failed to update the game", e);
 
         } finally {
 
