@@ -57,6 +57,12 @@ public interface IGameEx {
     /// <exception cref="T:Dodoco.Core.Game.GameException">An error has occurred while fetching the remote server</exception>
     Task<Version> GetGameVersionAsync();
 
+    /// <returns>
+    /// Returns the <see cref="T:Dodoco.Core.Protocol.Company.Launcher.Resource.ResourceGame"/>
+    /// object from the game's pre-update if it is available; otherwise returns <see langword="null"/>.
+    /// </returns>
+    Task<ResourceGame?> GetGamePreUpdateAsync();
+
     /// <summary>
     /// Returns the <see cref="T:Dodoco.Core.Protocol.Company.Launcher.Resource.ResourceResponse"/>
     /// object used by current game version. This object can be obtained through the remote server when
