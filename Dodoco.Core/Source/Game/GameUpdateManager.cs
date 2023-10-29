@@ -300,7 +300,7 @@ public class GameUpdateManager: IGameUpdateManager {
         try {
 
             /*
-                * Reads the "deletefiles.txt" file and deletes every listed file
+             * Reads the "deletefiles.txt" file and deletes every listed file
             */
 
             this.State = GameUpdateManagerState.REMOVING_DEPRECATED_FILES;
