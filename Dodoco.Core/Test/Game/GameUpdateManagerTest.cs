@@ -6,9 +6,12 @@ using Dodoco.Core.Protocol.Company.Launcher;
 using Dodoco.Core.Protocol.Company.Launcher.Resource;
 using Dodoco.Core.Serialization;
 using Dodoco.Core.Serialization.Json;
+using Dodoco.Core.Util.FileSystem;
+using Dodoco.Core.Util.Hash;
 
 using Moq;
 using NUnit.Framework;
+using System.Security.Cryptography;
 
 [TestFixture]
 public class GameUpdateManagerTest {
@@ -126,6 +129,98 @@ public class GameUpdateManagerTest {
         IGameUpdateManager updateManager = new GameUpdateManager(gameMock.Object);
         IFormatSerializer serializer = new JsonSerializer();
         Assert.That(serializer.Serialize(await updateManager.GetGameUpdateAsync()), Is.EqualTo(serializer.Serialize(res.data.game)));
+
+    }
+
+    [Test, Description("Test updating an outdated game version to a new version")]
+    public async Task UpdateGameAsync_Test() {
+
+        // Copy the test files into a test directory
+
+        string testRootDirectory = Path.Join(Util.TEST_STATIC_DIRECTOY_PATH, "/Game/GameUpdateManagerTest/");
+        string sourceDirectory = Path.Join(testRootDirectory, "/game_4.0.1/");
+        string targetDirectory = Path.Join(testRootDirectory, "/.UpdateGameAsync_Test/");
+        const string testPackageFilename = "game_4.0.1_4.1.0_hdiff_QSwRBvbj1gaAs7zG.zip";
+        string testPackagePath = Path.Join(testRootDirectory, testPackageFilename);
+
+        FileSystem.CopyDirectory(sourceDirectory, targetDirectory, true);
+        File.Copy(testPackagePath, Path.Join(targetDirectory, testPackageFilename), true);
+
+        // The game installation will be set to the test directory
+
+        this.Game.Settings.Server = GameServer.Global;
+        this.Game.Settings.InstallationDirectory = targetDirectory;
+
+        // Integrity manager will report no errors
+
+        Mock<GameIntegrityManager> integrityManagerMock = new Mock<GameIntegrityManager>(this.Game);
+        integrityManagerMock.CallBase = true;
+        integrityManagerMock.Setup(m => m.GetInstallationIntegrityReportAsync(CancellationToken.None)).Returns(Task.FromResult(new List<GameFileIntegrityReportEx>()));
+
+        // Mocks GetGameUpdateAsync() to return a 4.1.0 ResourceGame
+
+        Mock<GameUpdateManager> updateManagerMock = new Mock<GameUpdateManager>(this.Game);
+        updateManagerMock.CallBase = true;
+        updateManagerMock.Setup(m => m.GetGameUpdateAsync()).Returns(Task.FromResult(
+            (ResourceGame?) new ResourceGame {
+                latest = new ResourceLatest { version = "4.1.0" },
+                diffs = new List<ResourceDiff> {
+                    new ResourceDiff {
+                        name = testPackageFilename,
+                        path = string.Empty,
+                        size = new FileInfo(testPackagePath).Length,
+                        md5 = new Hash(MD5.Create()).ComputeHash(testPackagePath)
+                    }
+                }
+            }
+        ));
+
+        await updateManagerMock.Object.UpdateGameAsync(integrityManagerMock.Object);
+
+        // The game should be at version 4.1.0 now
+
+        Assert.That(await this.Game.GetGameVersionAsync(), Is.EqualTo(Version.Parse("4.1.0")));
+
+        // Returns the fake local pkg_version instead that from ther server
+
+        var helperGetNewVersionPkgVersion = () => {
+            return PkgVersionParser.Parse(
+                string.Join("\r\n", File.ReadAllLines(
+                    Path.Join(testRootDirectory, "/game_4.1.0/pkg_version")
+                    )
+                )
+            );
+        };
+
+        foreach (GamePkgVersionEntry entry in helperGetNewVersionPkgVersion()) {
+
+            Assert.That(
+                File.Exists(Path.Join(this.Settings.InstallationDirectory, entry.remoteName)),
+                Is.True,
+                "All files from the new version should exist"
+            );
+
+        }
+
+        foreach (var fileToDeletePath in new GameDeleteFiles(this.Settings.InstallationDirectory).Read()) {
+
+            Assert.That(
+                File.Exists(Path.Join(this.Settings.InstallationDirectory, fileToDeletePath)),
+                Is.False,
+                "All deprecated files should have been removed from the new version"
+            );
+
+        }
+
+        Mock<GameIntegrityManager> anotherIntegrityManagerMock = new Mock<GameIntegrityManager>(this.Game);
+        anotherIntegrityManagerMock.CallBase = true;
+        anotherIntegrityManagerMock.Setup(m => m.GetPkgVersionAsync()).Returns(Task.FromResult(helperGetNewVersionPkgVersion()));
+        
+        Assert.That(
+            (await anotherIntegrityManagerMock.Object.GetInstallationIntegrityReportAsync()).Count,
+            Is.EqualTo(0),
+            "The updated game should contain no errors i.e. all hdiff patches should have been successfully applied"
+        );
 
     }
 

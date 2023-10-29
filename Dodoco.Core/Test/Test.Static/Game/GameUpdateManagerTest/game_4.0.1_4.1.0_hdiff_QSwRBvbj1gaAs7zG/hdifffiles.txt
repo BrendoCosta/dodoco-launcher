@@ -1,0 +1,5 @@
+{"remoteName": "GenshinImpact_Data/Managed/Metadata/global-metadata.dat"}
+{"remoteName": "GenshinImpact_Data/Managed/Resources/mscorlib.dll-resources.dat"}
+{"remoteName": "GenshinImpact_Data/Managed/Resources/Newtonsoft.Json.dll-resources.dat"}
+{"remoteName": "GenshinImpact_Data/Native/Data/etc/mono/2.0/Browsers/Compat.browser"}
+{"remoteName": "GenshinImpact_Data/Native/Data/etc/mono/2.0/DefaultWsdlHelpGenerator.aspx"}
