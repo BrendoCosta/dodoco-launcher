@@ -6,7 +6,6 @@ using Dodoco.Core.Protocol.Company.Launcher.Resource;
 public interface IGameEx {
 
     GameSettings Settings { get; set; }
-    CompanyApiFactory ApiFactory { get; }
 
     /// <summary>
     /// Determines whether the game is installed.
@@ -15,6 +14,12 @@ public interface IGameEx {
     /// <see langword="true"/> if the game is installed in the directory set in the <see cref="P:Dodoco.Core.Game.GameSettings.InstallationDirectory"/> property; otherwise, <see langword="false"/>.
     /// </returns>
     bool CheckGameInstallation();
+
+    /// <returns>
+    /// Returns the <see cref="T:Dodoco.Core.Network.Api.Company.CompanyApiFactory"/> used
+    /// by the class to fetch the server's APIs.
+    /// </returns>
+    CompanyApiFactory GetApiFactory();
 
     /// <summary>
     /// Returns the name of game's data directory based on the current <see cref="P:Dodoco.Core.Game.GameSettings.Server"/> property's value.
@@ -63,6 +68,15 @@ public interface IGameEx {
     /// object used by current game version.
     /// </returns>
     Task<ResourceResponse> GetResourceAsync();
+
+    /// <summary>
+    /// Verifies if the current game is updated.
+    /// </summary>
+    /// <returns>
+    /// Returns a <see cref="T:Dodoco.Core.Protocol.Company.Launcher.Resource.ResourceResponse"/>
+    /// object if there is a game update; otherwise <see langword="null"/>.
+    /// </returns>
+    Task<ResourceGame?> GetGameUpdateAsync();
 
     /// <summary>
     /// This method updates the content of the <see cref="T:Dodoco.Core.Game.GameResourceCacheFile"/> file to ensure that an
