@@ -29,6 +29,13 @@ public class GameUpdateManagerTest {
         new object[] { "UpdateGameAsync_Without_HDiffFiles_or_DeleteFiles_Test" }
     };
 
+    private static object[] IsGamePreUpdateDownloadedAsync_Test_Cases = {
+        new object[] { GameServer.Chinese, Path.Join(Util.TEST_STATIC_DIRECTOY_PATH, "/Game/GameUpdateManagerTest/IsGamePreUpdateDownloadedAsync_Test/Undownloaded"), false },
+        new object[] { GameServer.Global, Path.Join(Util.TEST_STATIC_DIRECTOY_PATH, "/Game/GameUpdateManagerTest/IsGamePreUpdateDownloadedAsync_Test/Undownloaded"), false },
+        new object[] { GameServer.Chinese, Path.Join(Util.TEST_STATIC_DIRECTOY_PATH, "/Game/GameUpdateManagerTest/IsGamePreUpdateDownloadedAsync_Test/Downloaded"), true },
+        new object[] { GameServer.Global, Path.Join(Util.TEST_STATIC_DIRECTOY_PATH, "/Game/GameUpdateManagerTest/IsGamePreUpdateDownloadedAsync_Test/Downloaded"), true }
+    };
+
     [SetUp]
     public void Init() {
 
@@ -243,6 +250,29 @@ public class GameUpdateManagerTest {
             Is.EqualTo(0),
             "The updated game should contain no errors i.e. all hdiff patches should have been successfully applied"
         );
+
+    }
+
+    [TestCaseSource(nameof(IsGamePreUpdateDownloadedAsync_Test_Cases)), Description("Test the capacity to detect if the pre-update package is downloaded")]
+    public async Task IsGamePreUpdateDownloadedAsync_Test(GameServer server, string directory, bool expected) {
+
+        this.Game.Settings.Server = server;
+        this.Game.Settings.InstallationDirectory = directory;
+
+        Mock<GameUpdateManager> updateManagerMock = new Mock<GameUpdateManager>(this.Game);
+        updateManagerMock.CallBase = true;
+        updateManagerMock.Setup(m => m.GetGamePreUpdateAsync()).Returns(Task.FromResult(
+            (ResourceGame?) new ResourceGame {
+                latest = new ResourceLatest { version = "4.1.0" },
+                diffs = new List<ResourceDiff> {
+                    new ResourceDiff {
+                        name = "game_4.0.1_4.1.0_hdiff_QSwRBvbj1gaAs7zG.zip"
+                    }
+                }
+            }
+        ));
+
+        Assert.That(await updateManagerMock.Object.IsGamePreUpdateDownloadedAsync(), Is.EqualTo(expected));
 
     }
 
