@@ -1,6 +1,7 @@
 
 namespace Dodoco.Core.Game {
 
+    [ObsoleteAttribute("This property is obsolete. Use GameUpdateManagerState instead.", false)]
     public enum GameUpdateState {
 
         UPDATED,
