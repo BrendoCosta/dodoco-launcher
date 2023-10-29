@@ -1,0 +1,2 @@
+some_file_to_be_removed_1
+GenshinImpact_Data/some_file_to_be_removed_2
