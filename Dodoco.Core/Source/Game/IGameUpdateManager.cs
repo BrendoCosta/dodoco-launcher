@@ -1,6 +1,23 @@
 namespace Dodoco.Core.Game;
 
+using Dodoco.Core.Protocol.Company.Launcher.Resource;
+
 public interface IGameUpdateManager: IStatefulEntity<GameUpdateManagerState> {
+
+    /// <returns>
+    /// Returns the <see cref="T:Dodoco.Core.Protocol.Company.Launcher.Resource.ResourceGame"/>
+    /// object from the game's pre-update if it is available; otherwise returns <see langword="null"/>.
+    /// </returns>
+    Task<ResourceGame?> GetGamePreUpdateAsync();
+
+    /// <summary>
+    /// Verifies if the current game is updated.
+    /// </summary>
+    /// <returns>
+    /// Returns a <see cref="T:Dodoco.Core.Protocol.Company.Launcher.Resource.ResourceResponse"/>
+    /// object if there is a game update; otherwise <see langword="null"/>.
+    /// </returns>
+    Task<ResourceGame?> GetGameUpdateAsync();
 
     /// <summary>
     /// Verifies if the game's pre-update package is downloaded in the game's

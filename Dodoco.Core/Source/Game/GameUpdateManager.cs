@@ -189,6 +189,31 @@ public class GameUpdateManager: IGameUpdateManager {
 
     }
 
+    /// <inheritdoc />
+    public virtual async Task<ResourceGame?> GetGamePreUpdateAsync() {
+
+        ResourceResponse latestResource = await this._Game.GetApiFactory().FetchLauncherResource();
+        latestResource.EnsureSuccessStatusCode();
+        return latestResource.data.pre_download_game;
+
+    }
+
+    /// <inheritdoc />
+    public virtual async Task<ResourceGame?> GetGameUpdateAsync() {
+
+        if (!this._Game.CheckGameInstallation())
+            return null;
+
+        ResourceResponse latestResource = await this._Game.GetApiFactory().FetchLauncherResource();
+        latestResource.EnsureSuccessStatusCode();
+
+        if (Version.Parse(latestResource.data.game.latest.version) > await this._Game.GetGameVersionAsync())
+            return latestResource.data.game;
+
+        return null;
+
+    }
+
     protected virtual string GetGameUpdatePackageFilenamePattern(Version currentVersion, Version targetVersion) {
 
         return @$"(game_{currentVersion.ToString().Replace(".", @"\.")}_{targetVersion.ToString().Replace(".", @"\.")}_hdiff_(\w*)\.zip)";
@@ -198,7 +223,7 @@ public class GameUpdateManager: IGameUpdateManager {
     /// <inheritdoc />
     public virtual async Task<bool> IsGamePreUpdateDownloadedAsync() {
 
-        ResourceGame? gameResource = await this._Game.GetGamePreUpdateAsync();
+        ResourceGame? gameResource = await this.GetGamePreUpdateAsync();
         Version currentVersion = await this._Game.GetGameVersionAsync();
 
         if (gameResource != null) {
@@ -224,7 +249,7 @@ public class GameUpdateManager: IGameUpdateManager {
 
         try {
 
-            ResourceGame gameResource = await this._Game.GetGamePreUpdateAsync() ?? throw new GameException("Game pre-update is not available");
+            ResourceGame gameResource = await this.GetGamePreUpdateAsync() ?? throw new GameException("Game pre-update is not available");
             
             Version currentVersion = await this._Game.GetGameVersionAsync();
             Version remoteVersion = Version.Parse(gameResource.latest.version);
@@ -412,7 +437,7 @@ public class GameUpdateManager: IGameUpdateManager {
 
         try {
 
-            ResourceGame gameResource = await this._Game.GetGamePreUpdateAsync() ?? throw new GameException("Game pre-update is not available");
+            ResourceGame gameResource = await this.GetGamePreUpdateAsync() ?? throw new GameException("Game pre-update is not available");
             
             Version currentVersion = await this._Game.GetGameVersionAsync();
             Version remoteVersion = Version.Parse(gameResource.latest.version);
