@@ -39,7 +39,7 @@ public class GameUpdateManager: IGameUpdateManager {
         GameHdiffFiles hdiffFilesHandler = new GameHdiffFiles(this._Game.Settings.InstallationDirectory);
 
         if (!hdiffFilesHandler.Exist())
-            throw new GameException($"Missing \"{hdiffFilesHandler.FileName}\" file");
+            return;
 
         GameUpdateManagerState previousState = this.State;
 
@@ -293,7 +293,7 @@ public class GameUpdateManager: IGameUpdateManager {
         GameDeleteFiles deleteFilesHandler = new GameDeleteFiles(this._Game.Settings.InstallationDirectory);
 
         if (!deleteFilesHandler.Exist())
-            throw new GameException($"Missing \"{deleteFilesHandler.FileName}\" file");
+            return;
 
         GameUpdateManagerState previousState = this.State;
 

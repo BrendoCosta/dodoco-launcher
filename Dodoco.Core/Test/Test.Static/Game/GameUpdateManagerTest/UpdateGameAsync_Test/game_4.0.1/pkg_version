@@ -1,6 +1,6 @@
 {"remoteName": "GenshinImpact.exe", "md5": "9d6d4badb2d3f1ae044b3166b7630b85", "fileSize": 17}
 {"remoteName": "GenshinImpact_Data/globalgamemanagers", "md5": "67fc759e81e5b82b5c3dc3f3e067d082", "fileSize": 578}
-{"remoteName": "GenshinImpact_Data/Managed/Metadata/global-metadata.dat", "md5": "a7affb72939a82e2a077edcfd1f1d26a", "fileSize": 32}
+{"remoteName": "GenshinImpact_Data/Managed/Metadata/global-metadata.dat", "md5": "a4182e154970e5d306fc49b68552b491", "fileSize": 32}
 {"remoteName": "GenshinImpact_Data/Managed/Resources/mscorlib.dll-resources.dat", "md5": "5b861831963fefc0d3f502748208f471", "fileSize": 39}
 {"remoteName": "GenshinImpact_Data/Managed/Resources/Newtonsoft.Json.dll-resources.dat", "md5": "43e46fc177489ce9e177314a0e393aa0", "fileSize": 46}
 {"remoteName": "GenshinImpact_Data/Native/Data/etc/mono/2.0/Browsers/Compat.browser", "md5": "6c7f7453a0bc5dc11d46cdc2dd5f5a85", "fileSize": 27}

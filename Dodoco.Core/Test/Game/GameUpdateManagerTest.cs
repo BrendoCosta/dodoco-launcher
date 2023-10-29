@@ -24,6 +24,11 @@ public class GameUpdateManagerTest {
         new object[] { GameServer.Global }
     };
 
+    private static object[] UpdateGameAsync_Test_Cases = {
+        new object[] { "UpdateGameAsync_Test" },
+        new object[] { "UpdateGameAsync_Without_HDiffFiles_or_DeleteFiles_Test" }
+    };
+
     [SetUp]
     public void Init() {
 
@@ -132,12 +137,12 @@ public class GameUpdateManagerTest {
 
     }
 
-    [Test, Description("Test updating an outdated game version to a new version")]
-    public async Task UpdateGameAsync_Test() {
+    [TestCaseSource(nameof(UpdateGameAsync_Test_Cases)), Description("Test updating an outdated game version to a new version")]
+    public async Task UpdateGameAsync_Test(string textDirectory) {
 
         // Copy the test files into a test directory
 
-        string testRootDirectory = Path.Join(Util.TEST_STATIC_DIRECTOY_PATH, "/Game/GameUpdateManagerTest/");
+        string testRootDirectory = Path.Join(Util.TEST_STATIC_DIRECTOY_PATH, "/Game/GameUpdateManagerTest/", textDirectory);
         string sourceDirectory = Path.Join(testRootDirectory, "/game_4.0.1/");
         string targetDirectory = Path.Join(testRootDirectory, "/.UpdateGameAsync_Test/");
         const string testPackageFilename = "game_4.0.1_4.1.0_hdiff_QSwRBvbj1gaAs7zG.zip";
@@ -151,11 +156,22 @@ public class GameUpdateManagerTest {
         this.Game.Settings.Server = GameServer.Global;
         this.Game.Settings.InstallationDirectory = targetDirectory;
 
-        // Integrity manager will report no errors
-
         Mock<GameIntegrityManager> integrityManagerMock = new Mock<GameIntegrityManager>(this.Game);
         integrityManagerMock.CallBase = true;
-        integrityManagerMock.Setup(m => m.GetInstallationIntegrityReportAsync(CancellationToken.None)).Returns(Task.FromResult(new List<GameFileIntegrityReportEx>()));
+        integrityManagerMock.Setup(m => m.GetPkgVersionAsync()).Returns(Task.FromResult(
+            PkgVersionParser.Parse(
+                string.Join("\r\n", File.ReadAllLines(
+                    Path.Join(testRootDirectory, "/game_4.0.1/pkg_version")
+                    )
+                )
+            )
+        ));
+
+        Assert.That(
+            (await integrityManagerMock.Object.GetInstallationIntegrityReportAsync()).Count,
+            Is.EqualTo(0),
+            "The old version game installation must be upright in order to this test run"
+        );
 
         // Mocks GetGameUpdateAsync() to return a 4.1.0 ResourceGame
 
@@ -201,14 +217,20 @@ public class GameUpdateManagerTest {
             );
 
         }
+        
+        GameDeleteFiles gameDeleteFiles = new GameDeleteFiles(this.Settings.InstallationDirectory);
 
-        foreach (var fileToDeletePath in new GameDeleteFiles(this.Settings.InstallationDirectory).Read()) {
+        if (gameDeleteFiles.Exist()) {
 
-            Assert.That(
-                File.Exists(Path.Join(this.Settings.InstallationDirectory, fileToDeletePath)),
-                Is.False,
-                "All deprecated files should have been removed from the new version"
-            );
+            foreach (var fileToDeletePath in gameDeleteFiles.Read()) {
+
+                Assert.That(
+                    File.Exists(Path.Join(this.Settings.InstallationDirectory, fileToDeletePath)),
+                    Is.False,
+                    "All deprecated files should have been removed from the new version"
+                );
+
+            }
 
         }
 
