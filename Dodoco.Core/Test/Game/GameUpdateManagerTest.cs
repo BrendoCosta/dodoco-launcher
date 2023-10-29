@@ -253,6 +253,56 @@ public class GameUpdateManagerTest {
 
     }
 
+    [Test, Description("UpdateGameAsync should throw an exception when unable to find a diff object whose name matchs the string pattern")]
+    public async Task UpdateGameAsync_Unable_To_Find_Diff_Test() {
+
+        this.Game.Settings.Server = GameServer.Global;
+        this.Game.Settings.InstallationDirectory = Path.Join(Util.TEST_STATIC_DIRECTOY_PATH, "/Game/GameUpdateManagerTest/", "Generic_Installation");
+
+        Mock<GameUpdateManager> updateManagerMock = new Mock<GameUpdateManager>(this.Game);
+        updateManagerMock.CallBase = true;
+        updateManagerMock.Setup(m => m.GetGameUpdateAsync()).Returns(Task.FromResult(
+            (ResourceGame?) new ResourceGame {
+                latest = new ResourceLatest { version = "4.1.0" },
+                diffs = new List<ResourceDiff> {
+                    new ResourceDiff {
+                        name = "gamexx_4.0.1_4.1.0_hdiff_QSwRBvbj1gaAs7zG.zip"
+                    }
+                }
+            }
+        ));
+
+        Mock<GameIntegrityManager> integrityManagerMock = new Mock<GameIntegrityManager>(this.Game);
+        integrityManagerMock.CallBase = true;
+        integrityManagerMock.Setup(m => m.GetInstallationIntegrityReportAsync()).Returns(Task.FromResult(new List<GameFileIntegrityReportEx>()));
+
+        Assert.That(async () => await updateManagerMock.Object.UpdateGameAsync(integrityManagerMock.Object), Throws.Exception.TypeOf<GameException>());
+
+    }
+
+    [Test, Description("PreUpdateGameAsync should throw an exception when unable to find a diff object whose name matchs the string pattern")]
+    public async Task PreUpdateGameAsync_Unable_To_Find_Diff_Test() {
+
+        this.Game.Settings.Server = GameServer.Global;
+        this.Game.Settings.InstallationDirectory = Path.Join(Util.TEST_STATIC_DIRECTOY_PATH, "/Game/GameUpdateManagerTest/", "Generic_Installation");
+
+        Mock<GameUpdateManager> updateManagerMock = new Mock<GameUpdateManager>(this.Game);
+        updateManagerMock.CallBase = true;
+        updateManagerMock.Setup(m => m.GetGamePreUpdateAsync()).Returns(Task.FromResult(
+            (ResourceGame?) new ResourceGame {
+                latest = new ResourceLatest { version = "4.1.0" },
+                diffs = new List<ResourceDiff> {
+                    new ResourceDiff {
+                        name = "gamexx_4.0.1_4.1.0_hdiff_QSwRBvbj1gaAs7zG.zip"
+                    }
+                }
+            }
+        ));
+
+        Assert.That(async () => await updateManagerMock.Object.PreUpdateGameAsync(), Throws.Exception.TypeOf<GameException>());
+
+    }
+
     [TestCaseSource(nameof(IsGamePreUpdateDownloadedAsync_Test_Cases)), Description("Test the capacity to detect if the pre-update package is downloaded")]
     public async Task IsGamePreUpdateDownloadedAsync_Test(GameServer server, string directory, bool expected) {
 

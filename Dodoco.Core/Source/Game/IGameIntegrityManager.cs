@@ -3,7 +3,7 @@ namespace Dodoco.Core.Game;
 public interface IGameIntegrityManager: IStatefulEntity<GameIntegrityManagerState> {
 
     /// <inheritdoc cref="GetInstallationIntegrityReportAsync(Dodoco.Core.ProgressReporter{ProgressReport}?, System.Threading.CancellationToken)"/>
-    Task<List<GameFileIntegrityReportEx>> GetInstallationIntegrityReportAsync(CancellationToken token = default);
+    Task<List<GameFileIntegrityReportEx>> GetInstallationIntegrityReportAsync();
     
     /// <summary>
     /// Verify all game's files searching for either missing files or files whose checksum diffears

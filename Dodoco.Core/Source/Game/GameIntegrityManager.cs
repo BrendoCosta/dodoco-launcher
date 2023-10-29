@@ -29,7 +29,7 @@ public class GameIntegrityManager: IGameIntegrityManager {
     public event EventHandler<GameIntegrityManagerState> OnStateUpdate = delegate {};
     
     /// <inheritdoc />
-    public virtual async Task<List<GameFileIntegrityReportEx>> GetInstallationIntegrityReportAsync(CancellationToken token = default) => await this.GetInstallationIntegrityReportAsync(null, token);
+    public virtual async Task<List<GameFileIntegrityReportEx>> GetInstallationIntegrityReportAsync() => await this.GetInstallationIntegrityReportAsync(null, CancellationToken.None);
     
     /// <inheritdoc />
     public virtual async Task<List<GameFileIntegrityReportEx>> GetInstallationIntegrityReportAsync(ProgressReporter<ProgressReport>? reporter, CancellationToken token = default) {
