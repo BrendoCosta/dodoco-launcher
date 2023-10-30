@@ -1,137 +1,197 @@
+namespace Dodoco.Core.Game;
+
+using Dodoco.Core.Extension;
+using Dodoco.Core.Network.HTTP;
 using Dodoco.Core.Protocol.Company.Launcher.Resource;
-using Dodoco.Core.Serialization.Json;
 using Dodoco.Core.Util.Log;
-using Dodoco.Core.Wine;
+using Dodoco.Core.Util.Hash;
+using Dodoco.Core.Util.FileSystem;
 
-using System.Text;
-using System.Text.RegularExpressions;
+using System.IO.Compression;
+using System.Security.Cryptography;
 
-namespace Dodoco.Core.Game {
+public class GameInstallationManager: IGameInstallationManager {
 
-    public static class GameInstallationManager {
+    private IGameEx _Game;
 
-        public static bool CheckGameInstallation(string gameInstallationDirectory, GameServer gameServer) {
-
-            Logger.GetInstance().Log($"Checking game installation in ({gameInstallationDirectory})...");
-            string gameExecutableFileName = $"{GameConstants.GAME_TITLE[gameServer]}.exe";
-            FileInfo gameExecutable = new FileInfo(Path.Join(gameInstallationDirectory, gameExecutableFileName));
-
-            if (Directory.Exists(gameInstallationDirectory)) {
-
-                if (gameExecutable.Exists) {
-
-                    Logger.GetInstance().Log($"Successfully found game's executable ({gameExecutableFileName}) inside the specified directory ({gameInstallationDirectory})");
-                    return true;
-
-                } else {
-
-                    Logger.GetInstance().Warning($"Unable to find game's executable ({gameExecutableFileName}) inside the specified directory");
-
-                }
-
-            } else {
-
-                Logger.GetInstance().Warning($"The specified game installation directory ({gameInstallationDirectory}) doesn't exists");
-
-            }
-
-            Logger.GetInstance().Warning($"Game not found in specified directory");
-
-            return false;
-
+    private GameInstallationManagerState _State;
+    public GameInstallationManagerState State {
+        get => this._State;
+        protected set {
+            Logger.GetInstance().Debug($"Updating {nameof(GameInstallationManagerState)} from {this._State.ToString()} to {value.ToString()}");
+            this._State = value;
         }
+    }
 
-        public static Version SearchForGameVersion(string gameInstallationDirectory, GameServer gameServer) {
+    /// <inheritdoc />
+    public event EventHandler<GameInstallationManagerState> OnStateUpdate = delegate {};
 
-            DirectoryInfo dataDirectory = new DirectoryInfo(Path.Join(gameInstallationDirectory, $"{GameConstants.GAME_TITLE[gameServer]}_Data"));
-            FileInfo globalGameManagerFile = new FileInfo(Path.Join(dataDirectory.FullName, "globalgamemanagers"));
+    public GameInstallationManager(IGameEx game) => this._Game = game;
 
-            Logger.GetInstance().Log($"Trying to find game's data directory ({dataDirectory.FullName})...");
+    /// <inheritdoc />
+    public virtual async Task<long> GetGamePackageDownloadSize() {
+
+        ResourceResponse latestResource = await this._Game.GetApiFactory().FetchLauncherResource();
+        latestResource.EnsureSuccessStatusCode();
+        return latestResource.data.game.latest.segments.Select(s => s.package_size).Sum();
+
+    }
+
+    /// <inheritdoc />
+    public virtual async Task InstallGameAsync(ProgressReporter<ProgressReport>? progress, bool forceReinstall = false, CancellationToken token = default) {
+        
+        GameInstallationManagerState previousState = this.State;
+
+        try {
+
+            if (this._Game.CheckGameInstallation() && !forceReinstall)
+                throw new GameException("The game is already installed in the selected installation directory");
+
+            Logger.GetInstance().Log($"Installing the the game...");
+
+            ResourceResponse latestResource = await this._Game.GetApiFactory().FetchLauncherResource();
+            if (!latestResource.IsSuccessfull())
+                throw new GameException($"Invalid resource");
             
-            if (dataDirectory.Exists) {
+            Logger.GetInstance().Log($"Downloading game's segments...");
 
-                Logger.GetInstance().Log($"Successfully found game's data directory");
-                Logger.GetInstance().Log($"Trying to find \"{globalGameManagerFile.Name}\" file inside data directory...");
+            double totalBytesTransferred = 0.0D;
 
-                if (globalGameManagerFile.Exists) {
+            for (int i = 0; i < latestResource.data.game.latest.segments.Count; i++) {
 
-                    Logger.GetInstance().Log($"Successfully found \"{globalGameManagerFile.Name}\" file inside data directory");
-                    Logger.GetInstance().Log($"Trying to read \"{globalGameManagerFile.Name}\" file from data directory...");
+                ResourceSegment segment = latestResource.data.game.latest.segments[i];
+                string segmentFileName = segment.path.Split("/").Last();
 
-                    try {
+                if (!Directory.Exists(this._Game.Settings.InstallationDirectory))
+                    Directory.CreateDirectory(this._Game.Settings.InstallationDirectory);
 
-                        byte[] buffer = File.ReadAllBytes(globalGameManagerFile.FullName);
+                if (File.Exists(Path.Join(this._Game.Settings.InstallationDirectory, segmentFileName))) {
 
-                        if (buffer.Length == 0) {
+                    this.State = GameInstallationManagerState.RECOVERING_DOWNLOADED_SEGMENTS;
 
-                            throw new GameException($"The file \"{globalGameManagerFile.Name}\" ({globalGameManagerFile.FullName}) is empty");
+                    ProgressReport report = new ProgressReport {
+                        Done = i + 1,
+                        Total = latestResource.data.game.latest.segments.Count,
+                        Message = Path.Join(this._Game.Settings.InstallationDirectory, segmentFileName)
+                    };
 
-                        }
+                    Logger.GetInstance().Log($"Checking the integrity of the game segment \"{segmentFileName}\"...");
+                    string downloadedSegmentChecksum = new Hash(MD5.Create()).ComputeHash(Path.Join(this._Game.Settings.InstallationDirectory, segmentFileName));
+                    
+                    progress?.Report(report);
 
-                        Logger.GetInstance().Log($"Successfully read \"{globalGameManagerFile.Name}\" file from data directory");
-                        Logger.GetInstance().Log($"Trying to find the game version inside the \"{globalGameManagerFile.Name}\" file...");
+                    if (segment.md5.ToUpper() == downloadedSegmentChecksum.ToUpper()) {
 
-                        string fileContents = Encoding.ASCII.GetString(buffer);
-                        
-                        foreach (Match match in Regex.Matches(fileContents, @"([1-9]+\.[0-9]+\.[0-9]+)_[\d]+_[\d]+")) {
-
-                            Version version = Version.Parse(match.ToString().Split("_")[0]);
-                            Logger.GetInstance().Log($"Successfully found game version ({version}) inside the \"{globalGameManagerFile.Name}\" file");
-                            return version;
-
-                        }
-
-                        throw new GameException($"Can't find the game version inside the \"{globalGameManagerFile.Name}\" file");
-
-                    } catch (Exception e) {
-
-                        throw new GameException($"Failed to read the file \"{globalGameManagerFile.Name}\" ({globalGameManagerFile.FullName})", e);
+                        Logger.GetInstance().Log($"The game segment \"{segmentFileName}\" is already downloaded and its MD5 checksum matchs the remote one, thus its download will be skipped");
+                        totalBytesTransferred += (double) segment.package_size;
+                        continue;
 
                     }
 
-                } else {
+                }
 
-                    throw new GameException($"The file \"{globalGameManagerFile.Name}\" is missing");
+                this.State = GameInstallationManagerState.DOWNLOADING_SEGMENTS;
+                double doneFromLastReport = 0;
+
+                ProgressReporter<ProgressReport> segmentProgress = new ProgressReporter<ProgressReport>();
+                segmentProgress.ProgressChanged += (object? s, ProgressReport e) => {
+
+                    totalBytesTransferred += e.Done - doneFromLastReport;
+                    doneFromLastReport = e.Done;
+
+                    ProgressReport generalProgress = new ProgressReport {
+                        Done = totalBytesTransferred,
+                        Total = latestResource.data.game.latest.package_size,
+                        Rate = e.Rate,
+                        Message = e.Message
+                    };
+
+                    if (e.Rate != null) {
+
+                        generalProgress.EstimatedRemainingTime = TimeSpan.FromSeconds((double) (latestResource.data.game.latest.package_size - (double) totalBytesTransferred) / (double) e.Rate);
+
+                    }
+
+                    progress?.Report(generalProgress);
+
+                };
+
+                Logger.GetInstance().Log($"Downloading the game segment \"{segmentFileName}\" (segment no. {i+1} of {latestResource.data.game.latest.segments.Count})");
+                
+                Logger.GetInstance().Log($"Checking storage device available space...");
+                long storageFreeBytes = FileSystem.GetAvailableStorageSpace(this._Game.Settings.InstallationDirectory); 
+                if (segment.package_size > storageFreeBytes)
+                    throw new GameException($"There is no enough storage space available to download the game's segment {i+1}. The download's process requires {DataUnitFormatter.Format(segment.package_size)} of storage space, but there is only {DataUnitFormatter.Format(storageFreeBytes)} available. Try freeing up storage space and restart the download; already downloaded files will not need to be redownloaded");
+
+                await Client.GetInstance().DownloadFileAsync(new Uri(segment.path), Path.Join(this._Game.Settings.InstallationDirectory, segmentFileName), segmentProgress, token);
+
+                string downloadedSegmentHash = new Hash(MD5.Create()).ComputeHash(Path.Join(this._Game.Settings.InstallationDirectory, segmentFileName));
+                if (segment.md5.ToUpper() != downloadedSegmentHash.ToUpper()) {
+
+                    throw new GameException($"Downloaded game segment \"{segmentFileName}\" MD5 checksum ({downloadedSegmentHash.ToUpper()}) doesn't match the expected remote checksum ({segment.md5.ToUpper()})");
 
                 }
 
-            } else {
-
-                throw new GameException($"Game's data directory ({dataDirectory.FullName}) doesn't exists");
+                Logger.GetInstance().Log($"Successfully downloaded the game segment \"{segmentFileName}\"");
 
             }
 
-        }
-
-        public static IGame CreateGame(Version version, GameSettings settings, ResourceResponse resource) {
-
-            Logger.GetInstance().Log($"Creating game instance...");
+            Logger.GetInstance().Log($"Successfully downloaded all game's segments");
             
-            Logger.GetInstance().Debug($"Version: {version.ToString()}");
-            Logger.GetInstance().Debug($"Server: {settings.Server.ToString()}");
-            Logger.GetInstance().Debug($"Resource: {new JsonSerializer().Serialize(resource)}");
+            this.State = GameInstallationManagerState.UNZIPPING_SEGMENTS;
+            Logger.GetInstance().Log($"Unzipping downloaded game's segments...");
 
-            IGame stable = new Game(settings, resource);
+            // Sorts all game's segments and ensures the first one (...zip.001) is a zip archive
 
-            try {
+            latestResource.data.game.latest.segments.Sort((segmentA, segmentB) => segmentA.path.ToUpper().CompareTo(segmentB.path.ToUpper()));
+            ResourceSegment firstSegment = latestResource.data.game.latest.segments.First();
 
-                return new Dictionary<Version, IGame> {
+            using (Stream fileStream = File.OpenRead(Path.Join(this._Game.Settings.InstallationDirectory, firstSegment.path.Split("/").Last()))) {
 
-                    { Version.Parse("4.1.0"), stable },
-                    { Version.Parse("4.0.1"), stable },
-                    { Version.Parse("4.0.0"), stable },
-                    { Version.Parse("3.8.0"), stable },
-                    { Version.Parse("3.7.0"), stable },
-                    { Version.Parse("3.6.0"), stable }
-
-                }[version];
-
-            } catch (KeyNotFoundException) {
-
-                Logger.GetInstance().Warning($"There is no game interface for the given version ({version.ToString()}). The current stable interface will be used instead, but be aware that unknown errors may occur. Newer launcher updates may add new game interfaces who support the given version.");
-                return stable;
+                const int ZIPFILE_MAGIC_NUMBER_BYTE_SIZE = 4;
+                byte[] zipFileMagicNumber = new byte[ZIPFILE_MAGIC_NUMBER_BYTE_SIZE] { 0x50, 0x4B, 0x03, 0x04 };
+                byte[] buffer = new byte[ZIPFILE_MAGIC_NUMBER_BYTE_SIZE] { 0x00, 0x00, 0x00, 0x00 };
+                
+                fileStream.Seek(0, SeekOrigin.Begin);
+                fileStream.ReadExactly(buffer, 0, ZIPFILE_MAGIC_NUMBER_BYTE_SIZE);
+                
+                if (!buffer.SequenceEqual(zipFileMagicNumber))
+                    throw new GameException("The first game's segment is not a zip file");
 
             }
+
+            /* Creates a single and memory-contiguous stream composed by the filestreams of
+             * each segment file. This eliminates the need of joining all segments into
+             * a single, big zip file before unzipping it, thereby saving disk space and
+             * speeding up the whole process. */
+
+            using (MultiStream.Lib.MultiStream segmentsMultiStream = new MultiStream.Lib.MultiStream(latestResource.data.game.latest.segments.Select(s => File.OpenRead(Path.Join(this._Game.Settings.InstallationDirectory, s.path.Split("/").Last()))))) {
+
+                using (ZipArchive zipArchive = new ZipArchive(segmentsMultiStream, ZipArchiveMode.Read)) {
+
+                    long storageFreeBytes = FileSystem.GetAvailableStorageSpace(this._Game.Settings.InstallationDirectory);
+                    if (zipArchive.GetFullLength() > storageFreeBytes)
+                        throw new GameException($"There is no enough storage space available to unzip the game's segments. This process requires {DataUnitFormatter.Format(zipArchive.GetFullLength())} of storage space, but there is only {DataUnitFormatter.Format(storageFreeBytes)} available. Try freeing up storage space and then try again");
+                    
+                    zipArchive.ExtractToDirectory(this._Game.Settings.InstallationDirectory, true, progress);
+
+                }
+
+            }
+
+            Logger.GetInstance().Log($"Sucessfully unzipped downloaded game's segments");
+            Logger.GetInstance().Log($"Successfully installed the game");
+
+            this.State = previousState;
+            return;
+
+        } catch (CoreException e) {
+
+            throw new GameException("Failed to install the game", e);
+
+        } finally {
+
+            this.State = previousState;
 
         }
 
