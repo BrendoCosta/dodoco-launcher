@@ -47,7 +47,7 @@ namespace Dodoco.Core.Game {
         }
         public GameServer GameServer { get; protected set; }
         public bool IsInstalled { get => GameInstallationManager_Old.CheckGameInstallation(this.Settings.InstallationDirectory, this.Settings.Server); }
-        public GameState State { get; private set; } = GameState.READY;
+        public GameState State { get; private set; } = GameState.IDLE;
         public IWine? Wine { get; set; }
         public ResourceResponse Resource { get; private set; }
         public Version Version { get => Version.Parse(this.Resource.data.game.latest.version); }
@@ -815,7 +815,7 @@ namespace Dodoco.Core.Game {
             if (this.Wine == null)
                 throw new GameException("Wine not initialized");
 
-            if (this.State != GameState.READY)
+            if (this.State != GameState.IDLE)
                 throw new ForbiddenGameStateException(this.State);
 
             GameState savedState = this.State;

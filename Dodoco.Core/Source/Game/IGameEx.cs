@@ -2,8 +2,9 @@ namespace Dodoco.Core.Game;
 
 using Dodoco.Core.Network.Api.Company;
 using Dodoco.Core.Protocol.Company.Launcher.Resource;
+using Dodoco.Core.Wine;
 
-public interface IGameEx {
+public interface IGameEx: IStatefulEntity<GameState> {
 
     GameSettings Settings { get; set; }
 
@@ -68,6 +69,11 @@ public interface IGameEx {
     /// object used by current game version.
     /// </returns>
     Task<ResourceResponse> GetResourceAsync();
+
+    /// <summary>
+    /// Runs the game the specified <see cref="T:Dodoco.Core.Wine.IWine"/> instance.
+    /// </summary>
+    Task Run(IWine wine);
 
     /// <summary>
     /// This method updates the content of the <see cref="T:Dodoco.Core.Game.GameResourceCacheFile"/> file to ensure that an
