@@ -5,6 +5,7 @@ using Dodoco.Core.Network.Api.Company;
 using Dodoco.Core.Protocol.Company.Launcher.Resource;
 using Dodoco.Core.Util.FileSystem;
 using Dodoco.Core.Util.Log;
+using Dodoco.Core.Wine;
 
 using System;
 using System.Text;
@@ -15,6 +16,18 @@ public class GameEx: IGameEx {
 
     public GameSettings Settings { get; set; }
     protected GameResourceCacheFile ResourceCacheFile = new GameResourceCacheFile();
+
+    private GameState _State;
+    public GameState State {
+        get => this._State;
+        protected set {
+            Logger.GetInstance().Debug($"Updating {nameof(GameState)} from {this._State.ToString()} to {value.ToString()}");
+            this._State = value;
+        }
+    }
+
+    /// <inheritdoc />
+    public event EventHandler<GameState> OnStateUpdate = delegate {};
 
     public GameEx(GameSettings settings) {
 
@@ -179,6 +192,32 @@ public class GameEx: IGameEx {
 
     }
 
+    /// <inheritdoc />
+    public virtual async Task Run(IWine wine) {
+
+        if (this.State != GameState.IDLE)
+            throw new GameException("Forbidden state");
+
+        GameState previousState = this.State;
+
+        try {
+
+            await wine.Execute("Starter.exe", new List<string> { 
+                $"\"{Path.Join(this.Settings.InstallationDirectory, this.GetMainExecutableName())}\""
+            });
+
+        } catch (CoreException e) {
+
+            throw new GameException("Failed to run the game", e);
+
+        } finally {
+
+            this.State = previousState;
+
+        }
+
+    }
+    
     /// <inheritdoc />
     public virtual async Task UpdateGameResourceCacheAsync() {
 
