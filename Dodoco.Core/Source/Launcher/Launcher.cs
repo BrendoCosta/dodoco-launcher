@@ -261,13 +261,13 @@ namespace Dodoco.Core.Launcher {
 
             Version remoteGameVersion = Version.Parse(this.Resource.data.game.latest.version);
 
-            if (!GameInstallationManager.CheckGameInstallation(this.Settings.Game.InstallationDirectory, this.Settings.Game.Server)) {
+            if (!GameInstallationManager_Old.CheckGameInstallation(this.Settings.Game.InstallationDirectory, this.Settings.Game.Server)) {
 
-                this.Game = GameInstallationManager.CreateGame(remoteGameVersion, this.Settings.Game, this.Resource);
+                this.Game = GameInstallationManager_Old.CreateGame(remoteGameVersion, this.Settings.Game, this.Resource);
 
             } else {
 
-                Version installedGameVersion = GameInstallationManager.SearchForGameVersion(this.Settings.Game.InstallationDirectory, this.Settings.Game.Server);
+                Version installedGameVersion = GameInstallationManager_Old.SearchForGameVersion(this.Settings.Game.InstallationDirectory, this.Settings.Game.Server);
 
                 if (remoteGameVersion > installedGameVersion) {
 
@@ -292,7 +292,7 @@ namespace Dodoco.Core.Launcher {
 
                     }
 
-                    this.Game = GameInstallationManager.CreateGame(installedGameVersion, this.Settings.Game, oldVersionResource);
+                    this.Game = GameInstallationManager_Old.CreateGame(installedGameVersion, this.Settings.Game, oldVersionResource);
 
                 } else {
 
@@ -305,7 +305,7 @@ namespace Dodoco.Core.Launcher {
 
                     }
 
-                    this.Game = GameInstallationManager.CreateGame(remoteGameVersion, this.Settings.Game, this.Resource);
+                    this.Game = GameInstallationManager_Old.CreateGame(remoteGameVersion, this.Settings.Game, this.Resource);
 
                 }
 
@@ -402,14 +402,14 @@ namespace Dodoco.Core.Launcher {
 
             Version remoteGameVersion = Version.Parse(this.Resource.data.game.latest.version);
 
-            if (!GameInstallationManager.CheckGameInstallation(this.Settings.Game.InstallationDirectory, this.Settings.Game.Server)) {
+            if (!GameInstallationManager_Old.CheckGameInstallation(this.Settings.Game.InstallationDirectory, this.Settings.Game.Server)) {
 
                 this.UpdateDependency(LauncherDependency.GAME_DOWNLOAD);
                 return;
 
             } else {
 
-                Version installedGameVersion = GameInstallationManager.SearchForGameVersion(this.Settings.Game.InstallationDirectory, this.Settings.Game.Server);
+                Version installedGameVersion = GameInstallationManager_Old.SearchForGameVersion(this.Settings.Game.InstallationDirectory, this.Settings.Game.Server);
 
                 if (remoteGameVersion > installedGameVersion) {
 
