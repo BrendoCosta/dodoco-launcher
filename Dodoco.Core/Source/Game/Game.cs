@@ -46,7 +46,7 @@ namespace Dodoco.Core.Game {
             }
         }
         public GameServer GameServer { get; protected set; }
-        public bool IsInstalled { get => GameInstallationManager.CheckGameInstallation(this.Settings.InstallationDirectory, this.Settings.Server); }
+        public bool IsInstalled { get => GameInstallationManager_Old.CheckGameInstallation(this.Settings.InstallationDirectory, this.Settings.Server); }
         public GameState State { get; private set; } = GameState.READY;
         public IWine? Wine { get; set; }
         public ResourceResponse Resource { get; private set; }
@@ -81,7 +81,7 @@ namespace Dodoco.Core.Game {
             if (!latestResource.IsSuccessfull())
                 throw new GameException("Invalid resource");
 
-            if (Version.Parse(latestResource.data.game.latest.version) > GameInstallationManager.SearchForGameVersion(this.Settings.InstallationDirectory, this.Settings.Server))
+            if (Version.Parse(latestResource.data.game.latest.version) > GameInstallationManager_Old.SearchForGameVersion(this.Settings.InstallationDirectory, this.Settings.Server))
                 return latestResource.data.game;
 
             return null;
@@ -660,7 +660,7 @@ namespace Dodoco.Core.Game {
                                     localFileSize = (ulong) file.Length,
                                     remoteFilePath = currentEntry.remoteName,
                                     remoteFileHash = currentEntry.md5.ToUpper(),
-                                    remoteFileSize = currentEntry.fileSize
+                                    remoteFileSize = (ulong) currentEntry.fileSize
 
                                 });
 
@@ -679,7 +679,7 @@ namespace Dodoco.Core.Game {
                                 localFileSize = 0,
                                 remoteFilePath = currentEntry.remoteName,
                                 remoteFileHash = currentEntry.md5.ToUpper(),
-                                remoteFileSize = currentEntry.fileSize
+                                remoteFileSize = (ulong) currentEntry.fileSize
 
                             });
 
