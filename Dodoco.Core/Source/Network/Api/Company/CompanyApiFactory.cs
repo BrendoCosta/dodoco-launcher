@@ -1,3 +1,4 @@
+using Dodoco.Core.Game;
 using Dodoco.Core.Protocol.Company.Launcher;
 using Dodoco.Core.Protocol.Company.Launcher.Content;
 using Dodoco.Core.Protocol.Company.Launcher.Resource;
@@ -15,11 +16,11 @@ namespace Dodoco.Core.Network.Api.Company {
         private string apiBaseUrl;
         private string key;
         private int launcherId;
-        private CultureInfo language;
+        private GameLanguage language;
         private static Dictionary<Tuple<string, int>, Cache<ResourceResponse>> ResourceResponseCache = new Dictionary<Tuple<string, int>, Cache<ResourceResponse>>();
         private Tuple<string, int> cacheKey { get => new Tuple<string, int>(this.key, this.launcherId); }
 
-        public CompanyApiFactory(string apiBaseUrl, string key, int launcherId, CultureInfo language) {
+        public CompanyApiFactory(string apiBaseUrl, string key, int launcherId, GameLanguage language) {
 
             this.apiBaseUrl = apiBaseUrl;
             this.key = key;
