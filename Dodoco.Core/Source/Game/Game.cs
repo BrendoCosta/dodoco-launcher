@@ -292,18 +292,20 @@ namespace Dodoco.Core.Game {
 
                 if (gameResource.diffs.Exists(d => Regex.IsMatch(d.name, packageFilenamePattern))) {
 
-                    Task repairTask = this.RepairGameFiles(reporter, token);
-
-                    if (!isPreUpdate)
-                        repairTask.Start();
-
                     Resource.Diff diff = gameResource.diffs.Find(d => Regex.IsMatch(d.name, packageFilenamePattern));
                     string packageFileFullPath = Path.Join(this.Settings.InstallationDirectory, diff.name);
-                    await this.DownloadUpdatePackageAsync(diff, reporter, token);
                     
                     if (!isPreUpdate) {
 
-                        await repairTask;
+                        await Task.WhenAll(this.RepairGameFiles(reporter, token), this.DownloadUpdatePackageAsync(diff, reporter, token));
+
+                    } else {
+
+                        await this.DownloadUpdatePackageAsync(diff, reporter, token);
+
+                    }
+                    
+                    if (!isPreUpdate) {
 
                         this.UnzipUpdatePackage(packageFileFullPath, reporter, token);
                         this.ApplyUpdatePackagePatches(reporter, token);
@@ -337,11 +339,13 @@ namespace Dodoco.Core.Game {
 
             try {
 
+                Logger.GetInstance().Log($"Starting game's update package download...");
+
                 string packageFileFullPath = Path.Join(this.Settings.InstallationDirectory, diff.name);
 
                 /*
-                    * Downloads the update's package or skips
-                    * its download if already in game's directory
+                 * Downloads the update's package or skips
+                 * its download if already in game's directory
                 */
 
                 this.UpdateState = GameUpdateState.DOWNLOADING_UPDATE_PACKAGE;
