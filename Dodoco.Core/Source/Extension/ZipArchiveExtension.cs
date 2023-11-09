@@ -24,6 +24,9 @@ namespace Dodoco.Core.Extension {
                 string? entryFullDir = Path.GetDirectoryName(entry.FullName);
                 if (entryFullDir != null && !string.IsNullOrEmpty(entryFullDir))
                     Directory.CreateDirectory(Path.Join(directory, entryFullDir));
+                
+                if (entry.FullName.EndsWith("/") && string.IsNullOrWhiteSpace(entry.Name))
+                    continue;
 
                 string path = Path.Join(directory, entry.FullName);
                 entry.ExtractToFile(path, overwrite);
