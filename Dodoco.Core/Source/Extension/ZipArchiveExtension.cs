@@ -15,20 +15,20 @@ namespace Dodoco.Core.Extension {
             for (int i = 0; i < archive.Entries.Count; i++) {
 
                 ZipArchiveEntry entry = archive.Entries[i];
-                string path = Path.Join(directory, entry.FullName);
 
-                if (entry.FullName.EndsWith("/") && string.IsNullOrWhiteSpace(entry.Name)) {
+                /* The ZipArchiveEntry.ExtractToFile method doesn't creates zip archive's internal
+                 * directories due some unknown reason, so we need to create them otherwise an
+                 * UnauthorizedAccessException will be raised up.
+                */
 
-                    /* The ZipArchiveEntry.ExtractToFile method doesn't creates zip archive's internal
-                     * directories due some unknown reason, so we need to create them otherwise an
-                     * UnauthorizedAccessException will be raised up.
-                    */
-
-                    Directory.CreateDirectory(path);
+                string? entryFullDir = Path.GetDirectoryName(entry.FullName);
+                if (entryFullDir != null && !string.IsNullOrEmpty(entryFullDir))
+                    Directory.CreateDirectory(Path.Join(directory, entryFullDir));
+                
+                if (entry.FullName.EndsWith("/") && string.IsNullOrWhiteSpace(entry.Name))
                     continue;
 
-                }
-
+                string path = Path.Join(directory, entry.FullName);
                 entry.ExtractToFile(path, overwrite);
 
                 ProgressReport report = new ProgressReport {

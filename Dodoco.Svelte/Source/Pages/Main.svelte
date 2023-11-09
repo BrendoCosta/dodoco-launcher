@@ -199,7 +199,7 @@
                                 <Icon icon="material-symbols:cloud-download-rounded" />&nbsp;{ $i18nInstance.t("main.button.main.download_game") }
                             </Button>
                         {:else if $_LauncherDependency == LauncherDependency.GAME_UPDATE }
-                            <Button focused disabled={ $_UiStatesHelpers.GameIsUpdating } on:click={async () => {
+                            <Button focused disabled={ $_UiStatesHelpers.GameIsUpdating || $_UiStatesHelpers.GameIsCheckingIntegrity } on:click={async () => {
 
                                 try { await GameController.GetControllerInstance().UpdateAsync(false); }
                                 catch (err) { ErrorHandler.PushError(err); }
